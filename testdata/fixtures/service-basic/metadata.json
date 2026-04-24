@@ -1,0 +1,51 @@
+{
+  "http_requests_total": [
+    {
+      "type": "counter",
+      "help": "Total HTTP requests.",
+      "unit": ""
+    }
+  ],
+  "http_request_duration_seconds_bucket": [
+    {
+      "type": "histogram",
+      "help": "HTTP request duration histogram bucket.",
+      "unit": "seconds"
+    }
+  ],
+  "http_request_duration_seconds_sum": [
+    {
+      "type": "histogram",
+      "help": "HTTP request duration histogram sum.",
+      "unit": "seconds"
+    }
+  ],
+  "http_request_duration_seconds_count": [
+    {
+      "type": "histogram",
+      "help": "HTTP request duration histogram count.",
+      "unit": "seconds"
+    }
+  ],
+  "process_cpu_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Total user and system CPU time spent in seconds.",
+      "unit": "seconds"
+    }
+  ],
+  "process_resident_memory_bytes": [
+    {
+      "type": "gauge",
+      "help": "Resident memory size in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "admin_actions_total": [
+    {
+      "type": "counter",
+      "help": "Admin actions per user (adversarial: carries user_id label).",
+      "unit": ""
+    }
+  ]
+}

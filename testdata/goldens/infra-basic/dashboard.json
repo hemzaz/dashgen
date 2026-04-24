@@ -1,0 +1,251 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 502458146,
+      "type": "row",
+      "title": "cpu",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "id": 575601350,
+      "type": "timeseries",
+      "title": "CPU utilization: node_cpu_seconds_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 230437429,
+      "type": "row",
+      "title": "memory",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "collapsed": false
+    },
+    {
+      "id": 598597405,
+      "type": "timeseries",
+      "title": "Memory used ratio",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1936264687,
+      "type": "row",
+      "title": "disk",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1078917975,
+      "type": "timeseries",
+      "title": "Disk used ratio",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)",
+          "legendFormat": "{{instance}} {{mountpoint}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 714408591,
+      "type": "row",
+      "title": "network",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "collapsed": false
+    },
+    {
+      "id": 443501925,
+      "type": "timeseries",
+      "title": "Network RX: node_network_receive_bytes_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, device) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 443501925,
+      "type": "timeseries",
+      "title": "Network TX: node_network_transmit_bytes_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "dashgen",
+    "infra"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "DashGen — infra (bb790b28)",
+  "uid": "9158e46ce77bb6f7",
+  "version": 1,
+  "weekStart": ""
+}

@@ -1,0 +1,333 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 847996758,
+      "type": "row",
+      "title": "traffic",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "id": 895859167,
+      "type": "timeseries",
+      "title": "Request rate: admin_actions_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(admin_actions_total[5m]))",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 895859167,
+      "type": "timeseries",
+      "title": "Request rate: http_requests_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job, route) (rate(http_requests_total[5m]))",
+          "legendFormat": "{{instance}} {{job}} {{route}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 887320569,
+      "type": "row",
+      "title": "errors",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "collapsed": false
+    },
+    {
+      "id": 2074026023,
+      "type": "timeseries",
+      "title": "5xx error rate: admin_actions_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(admin_actions_total{status_code=~\"5..\"}[5m]))",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2074026023,
+      "type": "timeseries",
+      "title": "5xx error rate: http_requests_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job, route) (rate(http_requests_total{status_code=~\"5..\"}[5m]))",
+          "legendFormat": "{{instance}} {{job}} {{route}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 966139652,
+      "type": "row",
+      "title": "latency",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "collapsed": false
+    },
+    {
+      "id": 425614238,
+      "type": "timeseries",
+      "title": "Latency (p50/p95/p99): http_request_duration_seconds_bucket",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.50, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{instance}} {{job}} {{route}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.95, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{instance}} {{job}} {{route}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.99, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99 {{instance}} {{job}} {{route}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 1655985763,
+      "type": "row",
+      "title": "saturation",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1243427953,
+      "type": "timeseries",
+      "title": "CPU (cores used): process_cpu_seconds_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(process_cpu_seconds_total[5m]))",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1243427953,
+      "type": "timeseries",
+      "title": "Memory: process_resident_memory_bytes",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (process_resident_memory_bytes)",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "dashgen",
+    "service"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "DashGen — service (37946fc0)",
+  "uid": "ac4d3b5370f4b8d0",
+  "version": 1,
+  "weekStart": ""
+}

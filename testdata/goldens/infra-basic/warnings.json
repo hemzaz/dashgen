@@ -1,0 +1,44 @@
+[
+  {
+    "panel_uid": "224efac61a9c9c10",
+    "section": "cpu",
+    "code": "unscoped_aggregation",
+    "detail": "",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "224efac61a9c9c10",
+    "section": "cpu",
+    "code": "unscoped_aggregation",
+    "detail": "1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "9a6f4d643cc3c708",
+    "section": "network",
+    "code": "unscoped_aggregation",
+    "detail": "",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "9a6f4d643cc3c708",
+    "section": "network",
+    "code": "unscoped_aggregation",
+    "detail": "sum by (instance, device) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "9a6f4d643cc3c708",
+    "section": "network",
+    "code": "unscoped_aggregation",
+    "detail": "",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "9a6f4d643cc3c708",
+    "section": "network",
+    "code": "unscoped_aggregation",
+    "detail": "sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[5m]))",
+    "severity": "warning"
+  }
+]

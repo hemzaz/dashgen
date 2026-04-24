@@ -1,0 +1,30 @@
+{
+  "kube_pod_status_phase": [
+    {
+      "type": "gauge",
+      "help": "The pods current phase.",
+      "unit": ""
+    }
+  ],
+  "kube_pod_container_status_restarts_total": [
+    {
+      "type": "counter",
+      "help": "The number of container restarts per container.",
+      "unit": ""
+    }
+  ],
+  "container_cpu_usage_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Cumulative cpu time consumed in seconds.",
+      "unit": "seconds"
+    }
+  ],
+  "container_memory_working_set_bytes": [
+    {
+      "type": "gauge",
+      "help": "Current working set in bytes.",
+      "unit": "bytes"
+    }
+  ]
+}

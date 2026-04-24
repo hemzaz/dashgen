@@ -1,0 +1,51 @@
+{
+  "node_cpu_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Seconds the CPUs spent in each mode.",
+      "unit": "seconds"
+    }
+  ],
+  "node_memory_MemAvailable_bytes": [
+    {
+      "type": "gauge",
+      "help": "Memory information field MemAvailable_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_memory_MemTotal_bytes": [
+    {
+      "type": "gauge",
+      "help": "Memory information field MemTotal_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_filesystem_avail_bytes": [
+    {
+      "type": "gauge",
+      "help": "Filesystem space available to non-root users in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_filesystem_size_bytes": [
+    {
+      "type": "gauge",
+      "help": "Filesystem size in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_network_receive_bytes_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic receive_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_network_transmit_bytes_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic transmit_bytes.",
+      "unit": "bytes"
+    }
+  ]
+}

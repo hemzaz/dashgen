@@ -1,0 +1,81 @@
+package recipes
+
+import "sort"
+
+// Registry is the sorted collection of recipes available to synthesis.
+//
+// Determinism: recipes are stored sorted by Name so that tie-breaking during
+// synthesis is reproducible across runs.
+type Registry struct {
+	recipes []Recipe
+}
+
+// NewRegistry returns an empty registry. Prefer NewServiceRegistry for the
+// v0.1 service profile so callers get the full set of recipes in one call.
+func NewRegistry() *Registry {
+	return &Registry{}
+}
+
+// NewServiceRegistry returns a registry preloaded with every recipe in scope
+// for the v0.1 service profile. Contents:
+//   - service_http_rate
+//   - service_http_errors
+//   - service_http_latency
+//   - service_cpu
+//   - service_memory
+func NewServiceRegistry() *Registry {
+	r := NewRegistry()
+	r.Register(NewServiceHTTPRate())
+	r.Register(NewServiceHTTPErrors())
+	r.Register(NewServiceHTTPLatency())
+	r.Register(NewServiceCPU())
+	r.Register(NewServiceMemory())
+	return r
+}
+
+// NewInfraRegistry returns a registry preloaded with every recipe in scope
+// for the v0.1 infra profile (node_exporter shape).
+func NewInfraRegistry() *Registry {
+	r := NewRegistry()
+	r.Register(NewInfraCPU())
+	r.Register(NewInfraMemory())
+	r.Register(NewInfraDisk())
+	r.Register(NewInfraNetwork())
+	return r
+}
+
+// NewK8sRegistry returns a registry preloaded with every recipe in scope for
+// the v0.1 k8s profile (kube-state-metrics + cAdvisor shape).
+func NewK8sRegistry() *Registry {
+	r := NewRegistry()
+	r.Register(NewK8sPodHealth())
+	r.Register(NewK8sContainerResources())
+	r.Register(NewK8sRestarts())
+	return r
+}
+
+// Register adds a recipe and keeps the internal slice sorted by name. Safe
+// to call multiple times with distinct recipes.
+func (r *Registry) Register(rec Recipe) {
+	if r == nil || rec == nil {
+		return
+	}
+	r.recipes = append(r.recipes, rec)
+	// Sort by Name ascending: this is the authoritative tie-break order for
+	// synth. Two recipes with the same name would collide on UID inputs, so
+	// names must be unique and the sort stays stable.
+	sort.Slice(r.recipes, func(i, j int) bool {
+		return r.recipes[i].Name() < r.recipes[j].Name()
+	})
+}
+
+// All returns the recipes in stable sorted order. The returned slice is a
+// copy so callers cannot mutate the registry.
+func (r *Registry) All() []Recipe {
+	if r == nil {
+		return nil
+	}
+	out := make([]Recipe, len(r.recipes))
+	copy(out, r.recipes)
+	return out
+}

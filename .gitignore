@@ -1,0 +1,12 @@
+/dashgen
+/dist/
+*.out
+*.test
+.DS_Store
+/testdata/tmp/
+.omc/
+.idea/
+.vscode/
+# Captured live-backend fixtures are regeneratable via scripts/capture-prometheus.sh.
+# They can be multi-megabyte and should not live in git.
+/testdata/fixtures/prometheus-demo/
