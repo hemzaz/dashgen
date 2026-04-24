@@ -23,6 +23,7 @@ func NewRegistry() *Registry {
 //   - service_cpu / service_memory                                      (v0.1)
 //   - service_grpc_rate / service_grpc_errors / service_grpc_latency   (v0.2)
 //   - service_goroutines / service_gc_pause                            (v0.2 Go runtime)
+//   - service_db_query_latency / service_tls_expiry / service_cache_hits (v0.2 Tier-2)
 func NewServiceRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewServiceHTTPRate())
@@ -35,6 +36,9 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceGRPCLatency())
 	r.Register(NewServiceGoroutines())
 	r.Register(NewServiceGCPause())
+	r.Register(NewServiceDBQueryLatency())
+	r.Register(NewServiceTLSExpiry())
+	r.Register(NewServiceCacheHits())
 	return r
 }
 
@@ -44,6 +48,7 @@ func NewServiceRegistry() *Registry {
 //   - infra_cpu / infra_memory / infra_disk / infra_network   (v0.1)
 //   - infra_load / infra_filesystem_usage                     (v0.2)
 //   - infra_file_descriptors / infra_nic_errors               (v0.2)
+//   - infra_conntrack / infra_disk_iops                       (v0.2 Tier-2)
 func NewInfraRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewInfraCPU())
@@ -54,6 +59,8 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraFilesystemUsage())
 	r.Register(NewInfraFileDescriptors())
 	r.Register(NewInfraNICErrors())
+	r.Register(NewInfraConntrack())
+	r.Register(NewInfraDiskIOPS())
 	return r
 }
 
@@ -63,6 +70,7 @@ func NewInfraRegistry() *Registry {
 //   - k8s_pod_health / k8s_container_resources / k8s_restarts   (v0.1)
 //   - k8s_deployment_availability / k8s_node_conditions         (v0.2)
 //   - k8s_pvc_usage / k8s_oom_kills                             (v0.2)
+//   - k8s_apiserver_latency                                     (v0.2 Tier-2)
 func NewK8sRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewK8sPodHealth())
@@ -72,6 +80,7 @@ func NewK8sRegistry() *Registry {
 	r.Register(NewK8sNodeConditions())
 	r.Register(NewK8sPVCUsage())
 	r.Register(NewK8sOOMKills())
+	r.Register(NewK8sApiserverLatency())
 	return r
 }
 

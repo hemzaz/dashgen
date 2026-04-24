@@ -61,7 +61,9 @@ func TestNewServiceRegistry_AllRecipesRegisteredInSortedOrder(t *testing.T) {
 	reg := NewServiceRegistry()
 	got := reg.All()
 	want := []string{
+		"service_cache_hits",
 		"service_cpu",
+		"service_db_query_latency",
 		"service_gc_pause",
 		"service_goroutines",
 		"service_grpc_errors",
@@ -71,6 +73,7 @@ func TestNewServiceRegistry_AllRecipesRegisteredInSortedOrder(t *testing.T) {
 		"service_http_latency",
 		"service_http_rate",
 		"service_memory",
+		"service_tls_expiry",
 	}
 	if len(got) != len(want) {
 		t.Fatalf("recipe count = %d, want %d", len(got), len(want))
