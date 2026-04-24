@@ -30,8 +30,15 @@ import (
 // for stable panel UID material.
 var metricNamePattern = regexp.MustCompile(`[a-zA-Z_:][a-zA-Z0-9_:]*`)
 
-// Synthesize builds an IR dashboard from a classified inventory.
+// Synthesize builds an IR dashboard from a classified inventory using the
+// profile's default panel cap.
 func Synthesize(inv *classify.ClassifiedInventory, profile profiles.Profile, reg *recipes.Registry) *ir.Dashboard {
+	return SynthesizeWithCap(inv, profile, reg, 0)
+}
+
+// SynthesizeWithCap is Synthesize with an explicit panel-cap override. A
+// non-positive cap falls back to profiles.PanelCap(profile).
+func SynthesizeWithCap(inv *classify.ClassifiedInventory, profile profiles.Profile, reg *recipes.Registry, capOverride int) *ir.Dashboard {
 	var rawInv *inventory.MetricInventory
 	if inv != nil {
 		rawInv = inv.Inventory
@@ -78,7 +85,10 @@ func Synthesize(inv *classify.ClassifiedInventory, profile profiles.Profile, reg
 	// Enforce the panel cap. Rank panels across the whole dashboard by
 	// (Confidence desc, UID asc) and drop the tail. After the cull, keep
 	// the rows in the original section order.
-	cap := profiles.PanelCap(profile)
+	cap := capOverride
+	if cap <= 0 {
+		cap = profiles.PanelCap(profile)
+	}
 	totalPanels := 0
 	for _, r := range rows {
 		totalPanels += len(r.Panels)

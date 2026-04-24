@@ -16,8 +16,9 @@ const (
 
 // defaultPanelCap is the maximum number of panels any single profile may
 // emit in v0.1. Conservative caps are part of the product contract; see
-// PRODUCT_DOC.md.
-const defaultPanelCap = 8
+// PRODUCT_DOC.md. Operators with high-volume backends can override per-run
+// via --max-panels.
+const defaultPanelCap = 30
 
 // IsKnown reports whether p is one of the closed profile values.
 func IsKnown(p Profile) bool {

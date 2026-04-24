@@ -170,16 +170,34 @@ func classifyOne(m inventory.MetricDescriptor, isHistogramBucket func(string) bo
 		}
 	}
 
-	// Trait: service HTTP hint.
-	if hasAnyLabel(m.Labels, "method", "status_code", "route", "path") {
+	// Trait: service HTTP hint. The label set covers both the
+	// "{method,status_code,route,path}" convention and Go promhttp's
+	// "{handler,code}" convention.
+	if hasAnyLabel(m.Labels, "method", "status_code", "route", "path", "handler", "code") {
 		cm.Traits = append(cm.Traits, TraitServiceHTTP)
 	}
 
-	// Trait: latency histogram.
-	if isHistogramBucket(m.Name) {
+	// Trait: latency histogram. Two paths:
+	//   1. Name ends in "_bucket" with the full _sum+_count trio AND has `le`.
+	//   2. Type was set to histogram by metadata (no _bucket suffix on name)
+	//      and the name itself contains duration/latency. The `le` label is
+	//      assumed because histogram metadata implies a bucket series.
+	nameLower := strings.ToLower(m.Name)
+	switch {
+	case isHistogramBucket(m.Name):
 		base, _ := splitSuffix(m.Name)
-		lower := strings.ToLower(base)
-		if (strings.Contains(lower, "duration") || strings.Contains(lower, "latency")) && hasLabel(m.Labels, "le") {
+		bl := strings.ToLower(base)
+		if (strings.Contains(bl, "duration") || strings.Contains(bl, "latency")) && hasLabel(m.Labels, "le") {
+			cm.Traits = append(cm.Traits, TraitLatencyHistogram)
+		}
+	case cm.Type == inventory.MetricTypeHistogram:
+		// Exclude _sum/_count/_bucket partials. The bare base name
+		// (returned by Prometheus's metadata API) is what we want to
+		// trait; recipes append _bucket when synthesizing the query.
+		if !strings.HasSuffix(m.Name, "_sum") &&
+			!strings.HasSuffix(m.Name, "_count") &&
+			!strings.HasSuffix(m.Name, "_bucket") &&
+			(strings.Contains(nameLower, "duration") || strings.Contains(nameLower, "latency")) {
 			cm.Traits = append(cm.Traits, TraitLatencyHistogram)
 		}
 	}

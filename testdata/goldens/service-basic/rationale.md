@@ -17,10 +17,10 @@
 
 ### errors
 
-- **5xx error rate: admin_actions_total** (confidence: 0.80) — Counter "admin_actions_total" has a status_code label; filtering to 5.. gives a 5xx error rate.
+- **5xx error rate: admin_actions_total** (confidence: 0.80) — Counter "admin_actions_total" has a "status_code" label; filtering to 5.. gives a 5xx error rate.
   - query: `sum by (instance, job) (rate(admin_actions_total{status_code=~"5.."}[5m]))` — verdict: accept
   - warnings: none
-- **5xx error rate: http_requests_total** (confidence: 0.80) — Counter "http_requests_total" has a status_code label; filtering to 5.. gives a 5xx error rate.
+- **5xx error rate: http_requests_total** (confidence: 0.80) — Counter "http_requests_total" has a "status_code" label; filtering to 5.. gives a 5xx error rate.
   - query: `sum by (instance, job, route) (rate(http_requests_total{status_code=~"5.."}[5m]))` — verdict: accept
   - warnings: none
 

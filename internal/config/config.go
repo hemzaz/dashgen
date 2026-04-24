@@ -31,6 +31,9 @@ type RunConfig struct {
 	MetricMatch  string
 	HTTPTimeout  time.Duration
 	RunBudget    time.Duration
+	// MaxPanels overrides the profile's default panel cap. Zero means "use
+	// the profile default" (profiles.PanelCap).
+	MaxPanels    int
 	FileOverride *FileConfig
 	// Exprs holds PromQL expressions supplied via repeated --expr CLI
 	// flags. Consumed by the `validate` subcommand only.

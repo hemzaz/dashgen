@@ -90,7 +90,7 @@ func Run(ctx context.Context, cfg *config.RunConfig) error {
 	default:
 		return fmt.Errorf("generate: unsupported profile %q", profile)
 	}
-	dashboard := synth.Synthesize(classified, profile, registry)
+	dashboard := synth.SynthesizeWithCap(classified, profile, registry, cfg.MaxPanels)
 
 	policy := safety.NewPolicy(nil)
 	// Strict is enforced at the generate layer (after panel assembly) rather

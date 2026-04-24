@@ -80,7 +80,7 @@ func RunTo(ctx context.Context, cfg *config.RunConfig, w io.Writer) error {
 	classified := classify.Classify(inv)
 
 	registry, profileNote := pickRegistry(profile)
-	dashboard := synth.Synthesize(classified, profile, registry)
+	dashboard := synth.SynthesizeWithCap(classified, profile, registry, cfg.MaxPanels)
 
 	pipeline := validate.New(client, safety.NewPolicy(nil), validate.Options{
 		PerQueryTimeout: 5 * time.Second,

@@ -106,6 +106,58 @@ func TestClassify_TableDriven(t *testing.T) {
 			},
 			want: want{typ: inventory.MetricTypeUnknown, family: "stray"},
 		},
+		{
+			name: "service_http_trait_from_handler_label",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "promhttp_metric_handler_requests_total",
+				Labels: []string{"code", "handler"},
+			},
+			want: want{
+				typ:    inventory.MetricTypeCounter,
+				family: "promhttp",
+				traits: []Trait{TraitServiceHTTP},
+			},
+		},
+		{
+			name: "latency_trait_on_bare_histogram_metadata",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "prometheus_http_request_duration_seconds",
+				Type:   inventory.MetricTypeHistogram,
+				Labels: []string{"handler"},
+			},
+			want: want{
+				typ:    inventory.MetricTypeHistogram,
+				family: "prometheus",
+				unit:   "s",
+				traits: []Trait{TraitServiceHTTP, TraitLatencyHistogram},
+			},
+		},
+		{
+			name: "latency_trait_excludes_count_partial",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "prometheus_http_request_duration_seconds_count",
+				Type:   inventory.MetricTypeHistogram,
+				Labels: []string{"handler"},
+			},
+			want: want{
+				typ:    inventory.MetricTypeHistogram,
+				family: "prometheus",
+				traits: []Trait{TraitServiceHTTP},
+			},
+		},
+		{
+			name: "latency_trait_excludes_sum_partial",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "prometheus_http_request_duration_seconds_sum",
+				Type:   inventory.MetricTypeHistogram,
+				Labels: []string{"handler"},
+			},
+			want: want{
+				typ:    inventory.MetricTypeHistogram,
+				family: "prometheus",
+				traits: []Trait{TraitServiceHTTP},
+			},
+		},
 	}
 
 	for _, tc := range tests {

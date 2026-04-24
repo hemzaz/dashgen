@@ -52,11 +52,17 @@ func (r serviceHTTPLatencyRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p
 		// "le" must be present for histogram_quantile; inject it and keep
 		// the sort stable.
 		group = ensureLabel(group, "le")
+		// Prometheus's metadata API returns histogram base names (without
+		// _bucket); the queryable series is always _bucket.
+		queryName := m.Descriptor.Name
+		if !strings.HasSuffix(queryName, "_bucket") {
+			queryName += "_bucket"
+		}
 		queries := make([]ir.QueryCandidate, 0, len(percentiles))
 		for _, pct := range percentiles {
 			expr := fmt.Sprintf(
 				"histogram_quantile(%.2f, sum by (%s) (rate(%s[%s])))",
-				pct.quantile, strings.Join(group, ", "), m.Descriptor.Name, defaultRateWindow,
+				pct.quantile, strings.Join(group, ", "), queryName, defaultRateWindow,
 			)
 			queries = append(queries, ir.QueryCandidate{
 				Expr:         expr,

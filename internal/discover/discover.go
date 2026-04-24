@@ -87,7 +87,15 @@ func (s *PrometheusSource) Discover(ctx context.Context, sel Selector) (*RawInve
 			m.Help = entries[0].Help
 			m.Unit = entries[0].Unit
 		}
-		labels, lerr := s.Client.LabelNames(ctx, name)
+		// Histograms expose only _bucket/_sum/_count as queryable series; the
+		// base name returns no labels. Query the _bucket variant so the
+		// classifier sees `le` and other dimensional labels.
+		labelTarget := name
+		if m.Type == "histogram" && !strings.HasSuffix(name, "_bucket") &&
+			!strings.HasSuffix(name, "_sum") && !strings.HasSuffix(name, "_count") {
+			labelTarget = name + "_bucket"
+		}
+		labels, lerr := s.Client.LabelNames(ctx, labelTarget)
 		if lerr == nil {
 			sort.Strings(labels)
 			m.Labels = labels

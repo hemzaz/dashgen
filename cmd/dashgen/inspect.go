@@ -19,6 +19,7 @@ func newInspectCmd() *cobra.Command {
 		job         string
 		namespace   string
 		metricMatch string
+		maxPanels   int
 	)
 
 	cmd := &cobra.Command{
@@ -47,6 +48,9 @@ func newInspectCmd() *cobra.Command {
 			cfg.Job = job
 			cfg.Namespace = namespace
 			cfg.MetricMatch = metricMatch
+			if maxPanels > 0 {
+				cfg.MaxPanels = maxPanels
+			}
 			return inspect.Run(cmd.Context(), cfg)
 		},
 	}
@@ -58,6 +62,7 @@ func newInspectCmd() *cobra.Command {
 	cmd.Flags().StringVar(&job, "job", "", "restrict discovery to job label")
 	cmd.Flags().StringVar(&namespace, "namespace", "", "restrict discovery to namespace label")
 	cmd.Flags().StringVar(&metricMatch, "metric-match", "", "metric-name substring filter")
+	cmd.Flags().IntVar(&maxPanels, "max-panels", 0, "override the profile's panel cap (0 = profile default)")
 
 	cmd.SetContext(context.Background())
 	return cmd

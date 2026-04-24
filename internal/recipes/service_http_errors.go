@@ -19,11 +19,27 @@ func NewServiceHTTPErrors() Recipe { return &serviceHTTPErrorsRecipe{} }
 func (serviceHTTPErrorsRecipe) Name() string    { return "service_http_errors" }
 func (serviceHTTPErrorsRecipe) Section() string { return "errors" }
 
-// Match requires a counter with a status_code label specifically — the
-// broader service_http trait is not enough because we need the label to
-// build the 5xx filter.
+// httpStatusLabels are the conventional HTTP-status label keys, in priority
+// order. We accept either {status_code,status} (REST middleware convention)
+// or {code} (Go promhttp / many Java frameworks).
+var httpStatusLabels = []string{"status_code", "status", "code"}
+
+// statusLabelOf returns the first httpStatusLabels entry the metric carries,
+// or "" if none. Deterministic: priority is fixed by httpStatusLabels.
+func statusLabelOf(m ClassifiedMetricView) string {
+	for _, l := range httpStatusLabels {
+		if m.HasLabel(l) {
+			return l
+		}
+	}
+	return ""
+}
+
+// Match requires a counter that carries a recognizable HTTP-status label.
+// The broader service_http trait alone is not enough because we need a
+// concrete label to build the 5xx filter.
 func (r serviceHTTPErrorsRecipe) Match(m ClassifiedMetricView) bool {
-	return m.Type == inventory.MetricTypeCounter && m.HasLabel("status_code")
+	return m.Type == inventory.MetricTypeCounter && statusLabelOf(m) != ""
 }
 
 func (r serviceHTTPErrorsRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p profiles.Profile) []ir.Panel {
@@ -35,10 +51,11 @@ func (r serviceHTTPErrorsRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p 
 		if !r.Match(m) {
 			continue
 		}
+		statusLabel := statusLabelOf(m)
 		group := safeGroupLabels(m, "route", "handler")
 		expr := fmt.Sprintf(
-			`sum by (%s) (rate(%s{status_code=~"5.."}[%s]))`,
-			strings.Join(group, ", "), m.Descriptor.Name, defaultRateWindow,
+			`sum by (%s) (rate(%s{%s=~"5.."}[%s]))`,
+			strings.Join(group, ", "), m.Descriptor.Name, statusLabel, defaultRateWindow,
 		)
 		panels = append(panels, ir.Panel{
 			Title: fmt.Sprintf("5xx error rate: %s", m.Descriptor.Name),
@@ -51,8 +68,8 @@ func (r serviceHTTPErrorsRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p 
 			}},
 			Confidence: 0.8,
 			Rationale: fmt.Sprintf(
-				"Counter %q has a status_code label; filtering to 5.. gives a 5xx error rate.",
-				m.Descriptor.Name,
+				"Counter %q has a %q label; filtering to 5.. gives a 5xx error rate.",
+				m.Descriptor.Name, statusLabel,
 			),
 		})
 	}
