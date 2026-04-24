@@ -9,8 +9,8 @@
 ### cpu
 
 - **CPU utilization: node_cpu_seconds_total** (confidence: 0.80) — CPU counter "node_cpu_seconds_total"; 1 minus the idle-mode rate over 5m yields CPU utilization per instance.
-  - query: `1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))` — verdict: accept
+  - warnings: none
 
 ### memory
 
@@ -27,11 +27,11 @@
 ### network
 
 - **Network RX: node_network_receive_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_receive_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
-  - query: `sum by (instance, device) (rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, device) (rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
+  - warnings: none
 - **Network TX: node_network_transmit_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_transmit_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
-  - query: `sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
+  - warnings: none
 
 ## Omitted
 

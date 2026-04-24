@@ -9,23 +9,23 @@
 ### pods
 
 - **Pods by phase: kube_pod_status_phase** (confidence: 0.80) — kube-state-metrics gauge "kube_pod_status_phase"; summed by namespace+phase gives pod counts per phase.
-  - query: `sum by (namespace, phase) (kube_pod_status_phase)` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (namespace, phase) (kube_pod_status_phase)` — verdict: accept
+  - warnings: none
 
 ### workloads
 
 - **Container restart rate: kube_pod_container_status_restarts_total** (confidence: 0.80) — kube-state-metrics counter "kube_pod_container_status_restarts_total"; rate over 15m grouped by namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (rate(kube_pod_container_status_restarts_total[15m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (namespace, pod, container) (rate(kube_pod_container_status_restarts_total[15m]))` — verdict: accept
+  - warnings: none
 
 ### resources
 
 - **Container CPU: container_cpu_usage_seconds_total** (confidence: 0.80) — cAdvisor counter "container_cpu_usage_seconds_total"; rate over 5m per namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m]))` — verdict: accept
+  - warnings: none
 - **Container memory: container_memory_working_set_bytes** (confidence: 0.80) — cAdvisor gauge "container_memory_working_set_bytes"; summed by namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", pod!=""})` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", pod!=""})` — verdict: accept
+  - warnings: none
 
 ## Omitted
 

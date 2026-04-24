@@ -95,6 +95,18 @@ func TestPolicyCardinalityRisk(t *testing.T) {
 			scope:    map[string]string{"namespace": "prod"},
 			want:     "",
 		},
+		{
+			name:     "grouping_by_scope_label_is_bounded",
+			grouping: []string{"instance", "job"},
+			scope:    nil,
+			want:     "",
+		},
+		{
+			name:     "grouping_mixes_scope_label_and_dimension",
+			grouping: []string{"job", "route"},
+			scope:    nil,
+			want:     "",
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

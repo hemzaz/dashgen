@@ -3,12 +3,12 @@ package generate
 import (
 	"bytes"
 	"context"
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"dashgen/internal/config"
+	"dashgen/internal/ir"
 )
 
 // fixtureDir is the path to the canonical first-slice fixture, resolved from
@@ -65,22 +65,66 @@ func TestDeterminism_ServiceBasic(t *testing.T) {
 	}
 }
 
-// TestStrictMode_ServiceBasic asserts that strict mode refuses the run when
-// any validation warning is present. The service-basic fixture produces
-// unscoped_aggregation warnings; strict must turn those into a failure.
-func TestStrictMode_ServiceBasic(t *testing.T) {
-	cfg := &config.RunConfig{
-		FixtureDir: fixtureDir,
-		Profile:    "service",
-		OutDir:     t.TempDir(),
-		Strict:     true,
+// TestFirstStrictWarning covers the strict-mode detection that Run() invokes
+// before rendering. End-to-end strict-mode behavior over a real query is
+// covered by app/validate's `strict_promotes_warning_to_error` case; here we
+// verify the panel-walk logic in isolation so it does not depend on which
+// fixtures happen to produce warnings.
+func TestFirstStrictWarning(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		dash *ir.Dashboard
+		want string
+	}{
+		{name: "nil_dashboard", dash: nil, want: ""},
+		{name: "no_panels", dash: &ir.Dashboard{}, want: ""},
+		{
+			name: "clean_dashboard",
+			dash: &ir.Dashboard{Rows: []ir.Row{{
+				Title: "traffic",
+				Panels: []ir.Panel{{
+					Title:   "rps",
+					Queries: []ir.QueryCandidate{{Verdict: ir.VerdictAccept}},
+				}},
+			}}},
+			want: "",
+		},
+		{
+			name: "panel_level_warning_wins",
+			dash: &ir.Dashboard{Rows: []ir.Row{{
+				Title: "traffic",
+				Panels: []ir.Panel{{
+					Title:    "rps",
+					Warnings: []string{"unscoped_aggregation"},
+					Queries:  []ir.QueryCandidate{{Verdict: ir.VerdictAcceptWithWarning}},
+				}},
+			}}},
+			want: `panel "rps": unscoped_aggregation`,
+		},
+		{
+			name: "query_level_warning_when_panel_clean",
+			dash: &ir.Dashboard{Rows: []ir.Row{{
+				Title: "traffic",
+				Panels: []ir.Panel{{
+					Title: "rps",
+					Queries: []ir.QueryCandidate{{
+						Verdict:      ir.VerdictAcceptWithWarning,
+						WarningCodes: []string{"empty_result"},
+					}},
+				}},
+			}}},
+			want: `query on panel "rps": empty_result`,
+		},
 	}
-	err := Run(context.Background(), cfg)
-	if err == nil {
-		t.Fatal("strict mode: expected error, got nil")
-	}
-	if !errors.Is(err, ErrStrictViolation) {
-		t.Fatalf("strict mode: expected ErrStrictViolation, got %v", err)
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if got := firstStrictWarning(c.dash); got != c.want {
+				t.Fatalf("firstStrictWarning=%q want %q", got, c.want)
+			}
+		})
 	}
 }
 

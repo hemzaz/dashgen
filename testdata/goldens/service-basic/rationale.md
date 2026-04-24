@@ -9,39 +9,39 @@
 ### traffic
 
 - **Request rate: admin_actions_total** (confidence: 0.85) — Counter "admin_actions_total" with HTTP-shaped labels; rate over 5m grouped by instance, job.
-  - query: `sum by (instance, job) (rate(admin_actions_total[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, job) (rate(admin_actions_total[5m]))` — verdict: accept
+  - warnings: none
 - **Request rate: http_requests_total** (confidence: 0.85) — Counter "http_requests_total" with HTTP-shaped labels; rate over 5m grouped by instance, job, route.
-  - query: `sum by (instance, job, route) (rate(http_requests_total[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, job, route) (rate(http_requests_total[5m]))` — verdict: accept
+  - warnings: none
 
 ### errors
 
 - **5xx error rate: admin_actions_total** (confidence: 0.80) — Counter "admin_actions_total" has a status_code label; filtering to 5.. gives a 5xx error rate.
-  - query: `sum by (instance, job) (rate(admin_actions_total{status_code=~"5.."}[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, job) (rate(admin_actions_total{status_code=~"5.."}[5m]))` — verdict: accept
+  - warnings: none
 - **5xx error rate: http_requests_total** (confidence: 0.80) — Counter "http_requests_total" has a status_code label; filtering to 5.. gives a 5xx error rate.
-  - query: `sum by (instance, job, route) (rate(http_requests_total{status_code=~"5.."}[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, job, route) (rate(http_requests_total{status_code=~"5.."}[5m]))` — verdict: accept
+  - warnings: none
 
 ### latency
 
 - **Latency (p50/p95/p99): http_request_duration_seconds_bucket** (confidence: 0.75) — Latency histogram "http_request_duration_seconds_bucket"; p50/p95/p99 via histogram_quantile over 5m with le grouping.
-  - query: `histogram_quantile(0.50, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
-  - query: `histogram_quantile(0.95, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
-  - query: `histogram_quantile(0.99, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `histogram_quantile(0.50, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))` — verdict: accept
+  - warnings: none
+  - query: `histogram_quantile(0.95, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))` — verdict: accept
+  - warnings: none
+  - query: `histogram_quantile(0.99, sum by (instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))` — verdict: accept
+  - warnings: none
 
 ### saturation
 
 - **CPU (cores used): process_cpu_seconds_total** (confidence: 0.80) — CPU-seconds counter "process_cpu_seconds_total"; rate over 5m yields cores consumed.
-  - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept
+  - warnings: none
 - **Memory: process_resident_memory_bytes** (confidence: 0.80) — Memory gauge "process_resident_memory_bytes" summed by instance, job.
-  - query: `sum by (instance, job) (process_resident_memory_bytes)` — verdict: accept_with_warning
-  - warnings: unscoped_aggregation
+  - query: `sum by (instance, job) (process_resident_memory_bytes)` — verdict: accept
+  - warnings: none
 
 ## Omitted
 

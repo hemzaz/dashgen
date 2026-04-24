@@ -127,10 +127,15 @@ func (p *Policy) CardinalityRisk(groupingLabels []string, selectorScope map[stri
 	if len(uniq) == 0 {
 		return ""
 	}
-	// Grouping present; require at least one scope label with a non-empty
-	// value in the selector.
+	// Scoped if either:
+	//   (a) the selector pins a scope label to a concrete value, or
+	//   (b) the grouping itself includes a scope label, which bounds the
+	//       result by the natural cardinality of that label (fleet size).
 	for _, k := range scopeLabels {
 		if v, ok := selectorScope[k]; ok && strings.TrimSpace(v) != "" {
+			return ""
+		}
+		if _, ok := uniq[k]; ok {
 			return ""
 		}
 	}
