@@ -1,0 +1,66 @@
+# golangci-lint configuration for dashgen
+# Scope: deterministic CLI tool — favor correctness and idiom checks
+# over churn-heavy style/complexity enforcement.
+
+run:
+  timeout: 5m
+  tests: true
+  go: '1.25'
+
+output:
+  formats:
+    - format: colored-line-number
+      path: stdout
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true
+
+linters:
+  disable-all: true
+  enable:
+    # Correctness
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    # Error handling
+    - errorlint
+    - bodyclose
+    # Idiom and clarity
+    - gosimple
+    - revive
+    - stylecheck
+    - misspell
+    - unconvert
+    - unparam
+    # Formatting
+    - gofmt
+    - goimports
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 10
+  exclude-dirs:
+    - testdata
+    - vendor
+  exclude-rules:
+    # Tests can be more permissive about error checks for setup/cleanup.
+    - path: _test\.go
+      linters:
+        - errcheck
+        - unparam
+
+linters-settings:
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+  revive:
+    rules:
+      - name: var-naming
+      - name: package-comments
+      - name: exported
+        disabled: true
