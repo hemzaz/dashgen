@@ -89,6 +89,10 @@ func TestRenderDeterministic(t *testing.T) {
 }
 
 func TestRenderGolden(t *testing.T) {
+	// Panel-level warning entries are skipped when the same code appears
+	// on a query of that panel (generate.mergeWarnings rolls query
+	// warnings up to the panel; emitting both produces a duplicate entry
+	// with empty detail on every panel that has any query warning).
 	want := `[
   {
     "panel_uid": "dddddddd77778888",
@@ -103,13 +107,6 @@ func TestRenderGolden(t *testing.T) {
     "code": "query_refused",
     "detail": "banned high-cardinality label trace_id [sum by (trace_id) (rate(http_requests_total[5m]))]",
     "severity": "refuse"
-  },
-  {
-    "panel_uid": "bbbbbbbb33334444",
-    "section": "traffic",
-    "code": "high_cardinality_group",
-    "detail": "",
-    "severity": "warning"
   },
   {
     "panel_uid": "bbbbbbbb33334444",
@@ -181,5 +178,69 @@ func TestRenderSortOrder(t *testing.T) {
 func TestRenderNilDashboard(t *testing.T) {
 	if _, err := Render(nil); err == nil {
 		t.Fatalf("expected error for nil dashboard")
+	}
+}
+
+func TestRenderDedupsPanelAndQueryWarnings(t *testing.T) {
+	// When the same warning code is on both the panel and a query of that
+	// panel, only the query-level entry (which has richer detail) should
+	// be emitted — not two separate entries.
+	d := &ir.Dashboard{
+		UID: "d", Title: "d", Profile: "service",
+		Rows: []ir.Row{{Title: "traffic", Panels: []ir.Panel{{
+			UID:      "p1",
+			Title:    "x",
+			Warnings: []string{"empty_result"},
+			Queries: []ir.QueryCandidate{{
+				Expr:         "rate(foo[5m])",
+				Verdict:      ir.VerdictAcceptWithWarning,
+				WarningCodes: []string{"empty_result"},
+			}},
+		}}}},
+	}
+	out, err := Render(d)
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var entries []map[string]string
+	if err := json.Unmarshal(out, &entries); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("want 1 entry, got %d: %s", len(entries), out)
+	}
+	if entries[0]["detail"] != "rate(foo[5m])" {
+		t.Fatalf("surviving entry should carry query detail, got %q", entries[0]["detail"])
+	}
+}
+
+func TestRenderKeepsPanelOnlyWarning(t *testing.T) {
+	// A panel warning that doesn't appear on any query should still be
+	// emitted — it's a panel-scope signal that would otherwise be lost.
+	d := &ir.Dashboard{
+		UID: "d", Title: "d", Profile: "service",
+		Rows: []ir.Row{{Title: "traffic", Panels: []ir.Panel{{
+			UID:      "p1",
+			Title:    "x",
+			Warnings: []string{"manual_review_needed"},
+			Queries: []ir.QueryCandidate{{
+				Expr:    "rate(foo[5m])",
+				Verdict: ir.VerdictAccept,
+			}},
+		}}}},
+	}
+	out, err := Render(d)
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var entries []map[string]string
+	if err := json.Unmarshal(out, &entries); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("want 1 entry, got %d: %s", len(entries), out)
+	}
+	if entries[0]["code"] != "manual_review_needed" {
+		t.Fatalf("expected panel-only warning preserved, got %v", entries[0])
 	}
 }

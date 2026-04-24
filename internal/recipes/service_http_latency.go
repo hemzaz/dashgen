@@ -20,11 +20,16 @@ func NewServiceHTTPLatency() Recipe { return &serviceHTTPLatencyRecipe{} }
 func (serviceHTTPLatencyRecipe) Name() string    { return "service_http_latency" }
 func (serviceHTTPLatencyRecipe) Section() string { return "latency" }
 
-// Match requires a histogram carrying the latency_histogram trait. The trait
-// itself already required the "_bucket" suffix + "le" label + a base name
-// containing "duration" or "latency", so this stays conservative.
+// Match requires a histogram carrying BOTH the latency_histogram trait and
+// the service_http trait. The latency trait alone fires on any "duration"
+// or "latency" histogram — including non-request histograms like
+// notification latency, query duration, or internal processing time — so
+// we require an HTTP-shape label as the request-handling signal. SPECS
+// Rule 5: prefer omission over weak output.
 func (r serviceHTTPLatencyRecipe) Match(m ClassifiedMetricView) bool {
-	return m.Type == inventory.MetricTypeHistogram && m.HasTrait("latency_histogram")
+	return m.Type == inventory.MetricTypeHistogram &&
+		m.HasTrait("latency_histogram") &&
+		m.HasTrait("service_http")
 }
 
 func (r serviceHTTPLatencyRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p profiles.Profile) []ir.Panel {

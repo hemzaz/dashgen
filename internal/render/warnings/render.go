@@ -78,7 +78,27 @@ func appendPanelEntries(out []entry, section string, p ir.Panel) []entry {
 			Severity: "refuse",
 		})
 	}
+	// Build the set of warning codes that will be emitted at query level
+	// so we can skip the panel-level rollup for those codes. The panel
+	// warnings slice is populated by generate's mergeWarnings from the
+	// same source as q.WarningCodes, so emitting both produces redundant
+	// entries — one with detail="" and one with the query expression.
+	// Keep only codes that do NOT appear on any query (i.e. genuine
+	// panel-scope warnings added elsewhere), as those wouldn't otherwise
+	// surface.
+	queryCodes := make(map[string]struct{})
+	for _, q := range p.Queries {
+		if q.Verdict == ir.VerdictRefuse {
+			continue
+		}
+		for _, code := range q.WarningCodes {
+			queryCodes[code] = struct{}{}
+		}
+	}
 	for _, code := range p.Warnings {
+		if _, ok := queryCodes[code]; ok {
+			continue
+		}
 		out = append(out, entry{
 			PanelUID: p.UID,
 			Section:  section,

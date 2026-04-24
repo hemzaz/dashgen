@@ -19,18 +19,18 @@ import (
 
 // RunConfig is the resolved, immutable configuration for a single CLI run.
 type RunConfig struct {
-	PromURL      string
-	FixtureDir   string
-	Profile      string
-	OutDir       string
-	ConfigPath   string
-	DryRun       bool
-	Strict       bool
-	Job          string
-	Namespace    string
-	MetricMatch  string
-	HTTPTimeout  time.Duration
-	RunBudget    time.Duration
+	PromURL     string
+	FixtureDir  string
+	Profile     string
+	OutDir      string
+	ConfigPath  string
+	DryRun      bool
+	Strict      bool
+	Job         string
+	Namespace   string
+	MetricMatch string
+	HTTPTimeout time.Duration
+	RunBudget   time.Duration
 	// MaxPanels overrides the profile's default panel cap. Zero means "use
 	// the profile default" (profiles.PanelCap).
 	MaxPanels    int

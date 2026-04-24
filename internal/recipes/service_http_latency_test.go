@@ -13,17 +13,30 @@ func TestServiceHTTPLatency_Match(t *testing.T) {
 	pos := ClassifiedMetricView{
 		Descriptor: inventory.MetricDescriptor{Name: "http_request_duration_seconds_bucket"},
 		Type:       inventory.MetricTypeHistogram,
-		Traits:     []string{"latency_histogram"},
+		Traits:     []string{"latency_histogram", "service_http"},
 	}
 	if !r.Match(pos) {
-		t.Errorf("expected match on histogram with latency_histogram trait")
+		t.Errorf("expected match on histogram with both latency_histogram and service_http traits")
 	}
-	neg := ClassifiedMetricView{
+	missingLatency := ClassifiedMetricView{
 		Descriptor: inventory.MetricDescriptor{Name: "generic_bucket"},
 		Type:       inventory.MetricTypeHistogram,
+		Traits:     []string{"service_http"},
 	}
-	if r.Match(neg) {
+	if r.Match(missingLatency) {
 		t.Errorf("expected no match without latency_histogram trait")
+	}
+	// Latency histogram without the HTTP-request signal — e.g., an
+	// alertmanager notification latency histogram: has `le`, name contains
+	// "latency", but no HTTP-shape labels. The recipe must refuse it so we
+	// don't emit a dead HTTP panel from an internal operation histogram.
+	missingHTTP := ClassifiedMetricView{
+		Descriptor: inventory.MetricDescriptor{Name: "notification_latency_seconds_bucket"},
+		Type:       inventory.MetricTypeHistogram,
+		Traits:     []string{"latency_histogram"},
+	}
+	if r.Match(missingHTTP) {
+		t.Errorf("expected no match without service_http trait")
 	}
 }
 
@@ -36,7 +49,7 @@ func TestServiceHTTPLatency_BuildPanels(t *testing.T) {
 				Labels: []string{"job", "le", "route"},
 			},
 			Type:   inventory.MetricTypeHistogram,
-			Traits: []string{"latency_histogram"},
+			Traits: []string{"latency_histogram", "service_http"},
 		}},
 	}
 	panels := r.BuildPanels(inv, profiles.ProfileService)

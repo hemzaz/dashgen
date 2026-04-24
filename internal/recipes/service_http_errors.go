@@ -20,9 +20,15 @@ func (serviceHTTPErrorsRecipe) Name() string    { return "service_http_errors" }
 func (serviceHTTPErrorsRecipe) Section() string { return "errors" }
 
 // httpStatusLabels are the conventional HTTP-status label keys, in priority
-// order. We accept either {status_code,status} (REST middleware convention)
-// or {code} (Go promhttp / many Java frameworks).
-var httpStatusLabels = []string{"status_code", "status", "code"}
+// order. We accept either {status_code} (REST middleware convention) or
+// {code} (Go promhttp / many Java frameworks).
+//
+// The bare "status" label is intentionally excluded: it's ambiguous — in
+// many non-HTTP domains (alertmanager's alerts_received_total, queue
+// workers, cluster membership) "status" holds values like "firing" or
+// "accepted", which would make a 5xx filter silently always-zero and
+// produce a dead panel. SPECS Rule 5: prefer omission over weak output.
+var httpStatusLabels = []string{"status_code", "code"}
 
 // statusLabelOf returns the first httpStatusLabels entry the metric carries,
 // or "" if none. Deterministic: priority is fixed by httpStatusLabels.
