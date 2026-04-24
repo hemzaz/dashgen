@@ -1,0 +1,23 @@
+[
+  {"__name__": "api_http_requests_total", "code": "200", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "api_http_requests_total", "code": "200", "handler": "/api/v1/orders", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "api_http_requests_total", "code": "404", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "api_http_requests_total", "code": "500", "handler": "/api/v1/orders", "instance": "api-1:8080", "job": "api"},
+  {"__name__": "api_http_request_duration_seconds_bucket", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api", "le": "0.1"},
+  {"__name__": "api_http_request_duration_seconds_bucket", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api", "le": "0.5"},
+  {"__name__": "api_http_request_duration_seconds_bucket", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api", "le": "+Inf"},
+  {"__name__": "api_http_request_duration_seconds_sum", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "api_http_request_duration_seconds_count", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "queue_items_received_total", "status": "accepted", "instance": "worker-0:9090", "job": "worker"},
+  {"__name__": "queue_items_received_total", "status": "rejected", "instance": "worker-0:9090", "job": "worker"},
+  {"__name__": "queue_items_received_total", "status": "invalid", "instance": "worker-0:9090", "job": "worker"},
+  {"__name__": "queue_processing_duration_seconds_bucket", "instance": "worker-0:9090", "job": "worker", "le": "0.1"},
+  {"__name__": "queue_processing_duration_seconds_bucket", "instance": "worker-0:9090", "job": "worker", "le": "0.5"},
+  {"__name__": "queue_processing_duration_seconds_bucket", "instance": "worker-0:9090", "job": "worker", "le": "+Inf"},
+  {"__name__": "queue_processing_duration_seconds_sum", "instance": "worker-0:9090", "job": "worker"},
+  {"__name__": "queue_processing_duration_seconds_count", "instance": "worker-0:9090", "job": "worker"},
+  {"__name__": "process_cpu_seconds_total", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "process_cpu_seconds_total", "instance": "worker-0:9090", "job": "worker"},
+  {"__name__": "process_resident_memory_bytes", "instance": "api-0:8080", "job": "api"},
+  {"__name__": "process_resident_memory_bytes", "instance": "worker-0:9090", "job": "worker"}
+]

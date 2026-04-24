@@ -1,0 +1,10 @@
+{
+  "api_http_requests_total": [{"type": "counter", "help": "Total HTTP requests processed by the API, labelled with promhttp code/handler conventions.", "unit": ""}],
+  "api_http_request_duration_seconds": [{"type": "histogram", "help": "HTTP request duration histogram exposed with a bare base name (Prometheus metadata returns the base; queryable series are _bucket/_sum/_count).", "unit": "seconds"}],
+  "queue_items_received_total": [{"type": "counter", "help": "Items the queue worker received from upstream; status holds domain values like accepted/rejected, NOT HTTP status codes.", "unit": ""}],
+  "queue_processing_duration_seconds_bucket": [{"type": "histogram", "help": "Queue item processing duration bucket; no HTTP-shape labels.", "unit": "seconds"}],
+  "queue_processing_duration_seconds_sum": [{"type": "histogram", "help": "Queue item processing duration sum.", "unit": "seconds"}],
+  "queue_processing_duration_seconds_count": [{"type": "histogram", "help": "Queue item processing duration count.", "unit": "seconds"}],
+  "process_cpu_seconds_total": [{"type": "counter", "help": "Total user + system CPU time.", "unit": ""}],
+  "process_resident_memory_bytes": [{"type": "gauge", "help": "Resident set size.", "unit": ""}]
+}
