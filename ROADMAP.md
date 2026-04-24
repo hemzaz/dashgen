@@ -1,4 +1,12 @@
 # DashGen - Staged Product Roadmap
+
+> **v0.2 detail docs**: the stage definitions in this file are the
+> strategic layer. Concrete v0.2 plans live in
+> [`V0.2-PLAN.md`](V0.2-PLAN.md) (phasing, AI scope, CLI surface) and
+> [`RECIPES.md`](RECIPES.md) (per-recipe signals, queries, tests).
+> Engineers implementing v0.2 work against those docs; changes to them
+> should flow back here if they alter scope.
+
 ## Overview
 DashGen is an OSS, CLI-first utility that discovers Prometheus metrics and generates reviewable Grafana dashboards as code.
 Its core promise is:

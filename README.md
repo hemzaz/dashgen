@@ -145,6 +145,23 @@ The capture script hashes each generated PromQL expression with SHA-256 and
 stores the instant-query response under `instant/<hex[:16]>.json`, which is
 the same lookup the `--fixture-dir` backend uses at replay time.
 
+## Roadmap
+
+- **v0.1** (current): deterministic core, three profiles, three CLI
+  commands, three-file output. Validated end-to-end against the public
+  Prometheus demo + Grafana.
+- **v0.2** (planned): optional AI enrichment (titles, rationale,
+  unknown-metric grouping) behind a `--provider` flag, plus a broader
+  recipe catalog. Detailed plan in
+  [`V0.2-PLAN.md`](V0.2-PLAN.md); recipe catalog in
+  [`RECIPES.md`](RECIPES.md). Stage definitions in
+  [`ROADMAP.md`](ROADMAP.md).
+
+AI enrichment in v0.2 is strictly non-overriding: it cannot generate
+PromQL, cannot upgrade a refused verdict, and cannot bypass the
+validation pipeline. Every run with a populated cache is byte-identical
+to the last.
+
 ## License
 
 MIT
