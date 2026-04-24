@@ -92,13 +92,34 @@ func (s *FixtureSource) Discover(_ context.Context, sel Selector) (*RawInventory
 			m.Help = entries[0].Help
 			m.Unit = entries[0].Unit
 		}
-		labels := s.labelsForMetric(name)
+		// Mirror PrometheusSource: for a histogram whose metadata entry
+		// carries the base name, label discovery has to look at _bucket
+		// series (the base name has no queryable series).
+		labelTarget := name
+		if m.Type == "histogram" && !hasHistogramPartialSuffix(name) {
+			if labels := s.labelsForMetric(name + "_bucket"); len(labels) > 0 {
+				labelTarget = name + "_bucket"
+			}
+		}
+		labels := s.labelsForMetric(labelTarget)
 		if len(labels) > 0 {
 			m.Labels = labels
 		}
 		raw.Metrics = append(raw.Metrics, m)
 	}
 	return raw, nil
+}
+
+// hasHistogramPartialSuffix reports whether the metric name already ends in
+// one of the histogram partial suffixes, in which case no _bucket fallback
+// is needed.
+func hasHistogramPartialSuffix(name string) bool {
+	for _, suf := range []string{"_bucket", "_sum", "_count"} {
+		if len(name) > len(suf) && name[len(name)-len(suf):] == suf {
+			return true
+		}
+	}
+	return false
 }
 
 // labelsForMetric returns the sorted union of:

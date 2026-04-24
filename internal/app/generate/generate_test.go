@@ -244,6 +244,68 @@ func TestGolden_K8sBasic(t *testing.T) {
 	assertGolden(t, k8sFixtureDir, "k8s", k8sGoldenDir)
 }
 
+// realisticFixtureDir is a live-shape fixture encoding the patterns that
+// caused false positives on real Prometheus backends: promhttp-convention
+// HTTP metrics (code/handler labels), a bare-histogram base-name latency,
+// plus ambiguous look-alikes — a queue counter whose `status` label is not
+// HTTP and an internal-op duration histogram without HTTP-shape labels.
+const realisticFixtureDir = "../../../testdata/fixtures/service-realistic"
+const realisticGoldenDir = "../../../testdata/goldens/service-realistic"
+
+// TestGolden_ServiceRealistic mirrors the other golden tests but is the
+// regression anchor for live-shape behaviors: it must fail if recipe
+// discrimination regresses.
+func TestGolden_ServiceRealistic(t *testing.T) {
+	assertGolden(t, realisticFixtureDir, "service", realisticGoldenDir)
+}
+
+// TestDeterminism_ServiceRealistic asserts byte-stability across runs for
+// the realistic fixture.
+func TestDeterminism_ServiceRealistic(t *testing.T) {
+	first := runOnceWith(t, realisticFixtureDir, "service")
+	second := runOnceWith(t, realisticFixtureDir, "service")
+	for _, name := range []string{"dashboard.json", "rationale.md", "warnings.json"} {
+		if !bytes.Equal(first[name], second[name]) {
+			t.Errorf("determinism: %s differs across runs", name)
+		}
+	}
+}
+
+// TestDiscrimination_ServiceRealistic is an explicit behavior assertion
+// (not a byte-golden) that checks the specific false-positive cases don't
+// regress even if the golden is ever blindly refreshed.
+func TestDiscrimination_ServiceRealistic(t *testing.T) {
+	out := runOnceWith(t, realisticFixtureDir, "service")
+	dash := out["dashboard.json"]
+	shouldAppear := []string{
+		"api_http_requests_total",                  // rate + errors
+		"api_http_request_duration_seconds_bucket", // latency (bucket suffix synthesized)
+		"process_cpu_seconds_total",                // cpu saturation
+		"process_resident_memory_bytes",            // memory saturation
+	}
+	for _, want := range shouldAppear {
+		if !bytes.Contains(dash, []byte(want)) {
+			t.Errorf("expected dashboard to reference %q", want)
+		}
+	}
+	mustNotAppear := []string{
+		// A queue counter whose `status` label is NOT an HTTP status
+		// (alertmanager-style false positive). Recipe tightening: bare
+		// `status` is excluded from httpStatusLabels.
+		"queue_items_received_total",
+		// An internal-op duration histogram without HTTP-shape labels
+		// (alertmanager_notification_latency-style false positive).
+		// Recipe tightening: service_http_latency requires both
+		// latency_histogram AND service_http traits.
+		"queue_processing_duration_seconds",
+	}
+	for _, nope := range mustNotAppear {
+		if bytes.Contains(dash, []byte(nope)) {
+			t.Errorf("dashboard must NOT reference %q (regression in recipe discrimination)", nope)
+		}
+	}
+}
+
 // TestDeterminism_K8sBasic mirrors TestDeterminism_ServiceBasic.
 func TestDeterminism_K8sBasic(t *testing.T) {
 	first := runOnceWith(t, k8sFixtureDir, "k8s")
