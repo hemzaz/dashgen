@@ -278,10 +278,14 @@ func TestDiscrimination_ServiceRealistic(t *testing.T) {
 	out := runOnceWith(t, realisticFixtureDir, "service")
 	dash := out["dashboard.json"]
 	shouldAppear := []string{
-		"api_http_requests_total",                  // rate + errors
-		"api_http_request_duration_seconds_bucket", // latency (bucket suffix synthesized)
-		"process_cpu_seconds_total",                // cpu saturation
-		"process_resident_memory_bytes",            // memory saturation
+		"api_http_requests_total",                  // rate + errors (v0.1)
+		"api_http_request_duration_seconds_bucket", // HTTP latency (v0.1, bucket suffix synthesized)
+		"process_cpu_seconds_total",                // cpu saturation (v0.1)
+		"process_resident_memory_bytes",            // memory saturation (v0.1)
+		"grpc_server_handled_total",                // gRPC rate + errors (v0.2)
+		"grpc_server_handling_seconds_bucket",      // gRPC latency (v0.2, bucket suffix synthesized)
+		"go_goroutines",                            // Go runtime goroutine count (v0.2)
+		"go_gc_duration_seconds",                   // Go GC pause via summary quantile (v0.2)
 	}
 	for _, want := range shouldAppear {
 		if !bytes.Contains(dash, []byte(want)) {
@@ -298,6 +302,11 @@ func TestDiscrimination_ServiceRealistic(t *testing.T) {
 		// Recipe tightening: service_http_latency requires both
 		// latency_histogram AND service_http traits.
 		"queue_processing_duration_seconds",
+		// A grpc_*-named counter without grpc_method/grpc_service labels
+		// (client-side retries style false positive). Recipe tightening:
+		// service_grpc_rate requires the service_grpc trait, which only
+		// fires when at least one grpc_* label is present on the metric.
+		"grpc_client_retries_total",
 	}
 	for _, nope := range mustNotAppear {
 		if bytes.Contains(dash, []byte(nope)) {

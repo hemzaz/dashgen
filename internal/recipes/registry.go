@@ -17,12 +17,12 @@ func NewRegistry() *Registry {
 }
 
 // NewServiceRegistry returns a registry preloaded with every recipe in scope
-// for the v0.1 service profile. Contents:
-//   - service_http_rate
-//   - service_http_errors
-//   - service_http_latency
-//   - service_cpu
-//   - service_memory
+// for the service profile. HTTP + gRPC RPC families + process saturation.
+//
+//   - service_http_rate / service_http_errors / service_http_latency   (v0.1)
+//   - service_cpu / service_memory                                      (v0.1)
+//   - service_grpc_rate / service_grpc_errors / service_grpc_latency   (v0.2)
+//   - service_goroutines / service_gc_pause                            (v0.2 Go runtime)
 func NewServiceRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewServiceHTTPRate())
@@ -30,6 +30,11 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceHTTPLatency())
 	r.Register(NewServiceCPU())
 	r.Register(NewServiceMemory())
+	r.Register(NewServiceGRPCRate())
+	r.Register(NewServiceGRPCErrors())
+	r.Register(NewServiceGRPCLatency())
+	r.Register(NewServiceGoroutines())
+	r.Register(NewServiceGCPause())
 	return r
 }
 

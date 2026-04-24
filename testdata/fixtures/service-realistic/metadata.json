@@ -6,5 +6,10 @@
   "queue_processing_duration_seconds_sum": [{"type": "histogram", "help": "Queue item processing duration sum.", "unit": "seconds"}],
   "queue_processing_duration_seconds_count": [{"type": "histogram", "help": "Queue item processing duration count.", "unit": "seconds"}],
   "process_cpu_seconds_total": [{"type": "counter", "help": "Total user + system CPU time.", "unit": ""}],
-  "process_resident_memory_bytes": [{"type": "gauge", "help": "Resident set size.", "unit": ""}]
+  "process_resident_memory_bytes": [{"type": "gauge", "help": "Resident set size.", "unit": ""}],
+  "grpc_server_handled_total": [{"type": "counter", "help": "Total number of RPCs completed on the server, regardless of success or failure.", "unit": ""}],
+  "grpc_server_handling_seconds": [{"type": "histogram", "help": "Histogram of response latency (seconds) of gRPC calls handled by the server.", "unit": "seconds"}],
+  "grpc_client_retries_total": [{"type": "counter", "help": "Client-side retry counter; carries no grpc_method/grpc_service labels (regression look-alike).", "unit": ""}],
+  "go_goroutines": [{"type": "gauge", "help": "Number of goroutines that currently exist.", "unit": ""}],
+  "go_gc_duration_seconds": [{"type": "summary", "help": "A summary of the pause duration of garbage collection cycles.", "unit": "seconds"}]
 }

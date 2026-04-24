@@ -45,6 +45,12 @@ const (
 	// based on labels such as method/status_code/route/path.
 	TraitServiceHTTP Trait = "service_http"
 
+	// TraitServiceGRPC marks metrics that look like gRPC service telemetry
+	// based on labels grpc_{method,service,type,code}. gRPC and HTTP are
+	// orthogonal: a metric may carry both traits (e.g., a gateway counter),
+	// but recipes are specific to one or the other.
+	TraitServiceGRPC Trait = "service_grpc"
+
 	// TraitLatencyHistogram marks histogram _bucket descriptors whose base
 	// name strongly suggests latency/duration semantics.
 	TraitLatencyHistogram Trait = "latency_histogram"
@@ -177,17 +183,24 @@ func classifyOne(m inventory.MetricDescriptor, isHistogramBucket func(string) bo
 		cm.Traits = append(cm.Traits, TraitServiceHTTP)
 	}
 
+	// Trait: service gRPC hint. The canonical grpc-go server instrumentation
+	// exposes grpc_method / grpc_service / grpc_type; grpc_code is added on
+	// handled counters. Any one of these is enough to infer gRPC shape.
+	if hasAnyLabel(m.Labels, "grpc_method", "grpc_service", "grpc_type", "grpc_code") {
+		cm.Traits = append(cm.Traits, TraitServiceGRPC)
+	}
+
 	// Trait: latency histogram. Two paths:
 	//   1. Name ends in "_bucket" with the full _sum+_count trio AND has `le`.
-	//   2. Type was set to histogram by metadata (no _bucket suffix on name)
-	//      and the name itself contains duration/latency. The `le` label is
-	//      assumed because histogram metadata implies a bucket series.
-	nameLower := strings.ToLower(m.Name)
+	//   2. Type was set to histogram by metadata (no _bucket suffix on name).
+	// A name is "latency-shaped" if it either mentions duration/latency or
+	// ends in a time-unit suffix (_seconds / _milliseconds). The latter
+	// catches grpc_server_handling_seconds and other canonical server
+	// histograms whose names don't contain the word "duration".
 	switch {
 	case isHistogramBucket(m.Name):
 		base, _ := splitSuffix(m.Name)
-		bl := strings.ToLower(base)
-		if (strings.Contains(bl, "duration") || strings.Contains(bl, "latency")) && hasLabel(m.Labels, "le") {
+		if looksLikeLatencyByName(base) && hasLabel(m.Labels, "le") {
 			cm.Traits = append(cm.Traits, TraitLatencyHistogram)
 		}
 	case cm.Type == inventory.MetricTypeHistogram:
@@ -197,7 +210,7 @@ func classifyOne(m inventory.MetricDescriptor, isHistogramBucket func(string) bo
 		if !strings.HasSuffix(m.Name, "_sum") &&
 			!strings.HasSuffix(m.Name, "_count") &&
 			!strings.HasSuffix(m.Name, "_bucket") &&
-			(strings.Contains(nameLower, "duration") || strings.Contains(nameLower, "latency")) {
+			looksLikeLatencyByName(m.Name) {
 			cm.Traits = append(cm.Traits, TraitLatencyHistogram)
 		}
 	}
@@ -248,6 +261,22 @@ func hasAnyLabel(labels []string, wanted ...string) bool {
 		if hasLabel(labels, w) {
 			return true
 		}
+	}
+	return false
+}
+
+// looksLikeLatencyByName returns true if the metric name suggests a latency
+// histogram either by containing the words "duration"/"latency" or by having
+// a time-unit suffix (_seconds, _milliseconds). The time-unit heuristic is
+// what catches grpc_server_handling_seconds and other canonical histograms
+// whose names don't literally say "duration".
+func looksLikeLatencyByName(name string) bool {
+	lower := strings.ToLower(name)
+	if strings.Contains(lower, "duration") || strings.Contains(lower, "latency") {
+		return true
+	}
+	if strings.HasSuffix(lower, "_seconds") || strings.HasSuffix(lower, "_milliseconds") {
+		return true
 	}
 	return false
 }

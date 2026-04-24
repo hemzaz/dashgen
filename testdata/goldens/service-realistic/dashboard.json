@@ -22,7 +22,39 @@
       "collapsed": false
     },
     {
-      "id": 378386797,
+      "id": 731073021,
+      "type": "timeseries",
+      "title": "gRPC call rate: grpc_server_handled_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (grpc_method, grpc_service, instance, job) (rate(grpc_server_handled_total[5m]))",
+          "legendFormat": "{{grpc_method}} {{grpc_service}} {{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 478551478,
       "type": "timeseries",
       "title": "Request rate: api_http_requests_total",
       "datasource": {
@@ -38,7 +70,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 1
       },
       "targets": [
@@ -66,7 +98,39 @@
       "collapsed": false
     },
     {
-      "id": 29043049,
+      "id": 1590121336,
+      "type": "timeseries",
+      "title": "gRPC error rate: grpc_server_handled_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (grpc_method, grpc_service, instance, job) (rate(grpc_server_handled_total{grpc_code!=\"OK\"}[5m]))",
+          "legendFormat": "{{grpc_method}} {{grpc_service}} {{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 654498439,
       "type": "timeseries",
       "title": "5xx error rate: api_http_requests_total",
       "datasource": {
@@ -82,7 +146,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 10
       },
       "targets": [
@@ -110,7 +174,57 @@
       "collapsed": false
     },
     {
-      "id": 1306830501,
+      "id": 304616848,
+      "type": "timeseries",
+      "title": "gRPC latency (p50/p95/p99): grpc_server_handling_seconds",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.50, sum by (grpc_method, grpc_service, instance, job, le) (rate(grpc_server_handling_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{grpc_method}} {{grpc_service}} {{instance}} {{job}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.95, sum by (grpc_method, grpc_service, instance, job, le) (rate(grpc_server_handling_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{grpc_method}} {{grpc_service}} {{instance}} {{job}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.99, sum by (grpc_method, grpc_service, instance, job, le) (rate(grpc_server_handling_seconds_bucket[5m])))",
+          "legendFormat": "p99 {{grpc_method}} {{grpc_service}} {{instance}} {{job}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 386081776,
       "type": "timeseries",
       "title": "Latency (p50/p95/p99): api_http_request_duration_seconds",
       "datasource": {
@@ -126,7 +240,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 19
       },
       "targets": [
@@ -172,7 +286,7 @@
       "collapsed": false
     },
     {
-      "id": 441575665,
+      "id": 1044972579,
       "type": "timeseries",
       "title": "CPU (cores used): process_cpu_seconds_total",
       "datasource": {
@@ -204,7 +318,71 @@
       ]
     },
     {
-      "id": 441575665,
+      "id": 1044972579,
+      "type": "timeseries",
+      "title": "GC pause: go_gc_duration_seconds",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "avg by (instance, job) (go_gc_duration_seconds{quantile=\"0.99\"})",
+          "legendFormat": "p99 {{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1044972579,
+      "type": "timeseries",
+      "title": "Goroutines: go_goroutines",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": ""
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (instance, job) (go_goroutines)",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1044972579,
       "type": "timeseries",
       "title": "Memory: process_resident_memory_bytes",
       "datasource": {
@@ -221,7 +399,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 36
       },
       "targets": [
         {
@@ -262,8 +440,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "DashGen — service (4109d7ad)",
-  "uid": "90471536aff5a004",
+  "title": "DashGen — service (80dcbe9d)",
+  "uid": "9f8a97e5b4fe462c",
   "version": 1,
   "weekStart": ""
 }

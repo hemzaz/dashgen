@@ -62,6 +62,11 @@ func TestNewServiceRegistry_AllRecipesRegisteredInSortedOrder(t *testing.T) {
 	got := reg.All()
 	want := []string{
 		"service_cpu",
+		"service_gc_pause",
+		"service_goroutines",
+		"service_grpc_errors",
+		"service_grpc_latency",
+		"service_grpc_rate",
 		"service_http_errors",
 		"service_http_latency",
 		"service_http_rate",

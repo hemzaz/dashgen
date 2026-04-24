@@ -119,6 +119,13 @@ func (p *Policy) CardinalityRisk(groupingLabels []string, selectorScope map[stri
 		if l == "" {
 			continue
 		}
+		// `le` is a structural histogram bucket boundary, required by
+		// histogram_quantile and always bounded to a small fixed set
+		// per histogram. It does not represent an operator-visible
+		// cardinality dimension, so exclude it from the count.
+		if l == "le" {
+			continue
+		}
 		uniq[l] = struct{}{}
 	}
 	if len(uniq) > highCardinalityThreshold {

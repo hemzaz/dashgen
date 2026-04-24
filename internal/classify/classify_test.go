@@ -158,6 +158,46 @@ func TestClassify_TableDriven(t *testing.T) {
 				traits: []Trait{TraitServiceHTTP},
 			},
 		},
+		{
+			name: "grpc_trait_from_grpc_method_and_service_labels",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "grpc_server_handled_total",
+				Type:   inventory.MetricTypeCounter,
+				Labels: []string{"grpc_code", "grpc_method", "grpc_service"},
+			},
+			want: want{
+				typ:    inventory.MetricTypeCounter,
+				family: "grpc",
+				traits: []Trait{TraitServiceGRPC},
+			},
+		},
+		{
+			name: "grpc_latency_histogram_gets_both_traits",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "grpc_server_handling_seconds",
+				Type:   inventory.MetricTypeHistogram,
+				Labels: []string{"grpc_method", "grpc_service", "le"},
+			},
+			want: want{
+				typ:    inventory.MetricTypeHistogram,
+				family: "grpc",
+				unit:   "s",
+				traits: []Trait{TraitServiceGRPC, TraitLatencyHistogram},
+			},
+		},
+		{
+			// Regression guard: a counter named grpc_* with no grpc_*
+			// labels must NOT get the service_grpc trait — this is the
+			// "internal client retries counter" look-alike class named in
+			// RECIPES.md §3.1.1.
+			name: "grpc_named_counter_without_grpc_labels_has_no_grpc_trait",
+			descriptor: inventory.MetricDescriptor{
+				Name:   "grpc_client_retries_total",
+				Type:   inventory.MetricTypeCounter,
+				Labels: []string{"instance", "job"},
+			},
+			want: want{typ: inventory.MetricTypeCounter, family: "grpc"},
+		},
 	}
 
 	for _, tc := range tests {
