@@ -24,6 +24,7 @@ func NewRegistry() *Registry {
 //   - service_grpc_rate / service_grpc_errors / service_grpc_latency   (v0.2)
 //   - service_goroutines / service_gc_pause                            (v0.2 Go runtime)
 //   - service_db_query_latency / service_tls_expiry / service_cache_hits (v0.2 Tier-2)
+//   - service_job_success                                               (v0.2 Tier-2)
 func NewServiceRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewServiceHTTPRate())
@@ -39,6 +40,10 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceDBQueryLatency())
 	r.Register(NewServiceTLSExpiry())
 	r.Register(NewServiceCacheHits())
+	r.Register(NewServiceJobSuccess())
+	r.Register(NewServiceClientHTTP())
+	r.Register(NewServiceDBPool())
+	r.Register(NewServiceKafkaConsumerLag())
 	return r
 }
 
@@ -48,7 +53,7 @@ func NewServiceRegistry() *Registry {
 //   - infra_cpu / infra_memory / infra_disk / infra_network   (v0.1)
 //   - infra_load / infra_filesystem_usage                     (v0.2)
 //   - infra_file_descriptors / infra_nic_errors               (v0.2)
-//   - infra_conntrack / infra_disk_iops                       (v0.2 Tier-2)
+//   - infra_conntrack / infra_disk_iops / infra_disk_io_latency (v0.2 Tier-2)
 func NewInfraRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewInfraCPU())
@@ -61,6 +66,8 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraNICErrors())
 	r.Register(NewInfraConntrack())
 	r.Register(NewInfraDiskIOPS())
+	r.Register(NewInfraDiskIOLatency())
+	r.Register(NewInfraNTPOffset())
 	return r
 }
 
@@ -81,6 +88,8 @@ func NewK8sRegistry() *Registry {
 	r.Register(NewK8sPVCUsage())
 	r.Register(NewK8sOOMKills())
 	r.Register(NewK8sApiserverLatency())
+	r.Register(NewK8sEtcdCommit())
+	r.Register(NewK8sHPAScaling())
 	return r
 }
 

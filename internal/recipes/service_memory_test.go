@@ -62,7 +62,9 @@ func TestNewServiceRegistry_AllRecipesRegisteredInSortedOrder(t *testing.T) {
 	got := reg.All()
 	want := []string{
 		"service_cache_hits",
+		"service_client_http",
 		"service_cpu",
+		"service_db_pool",
 		"service_db_query_latency",
 		"service_gc_pause",
 		"service_goroutines",
@@ -72,6 +74,8 @@ func TestNewServiceRegistry_AllRecipesRegisteredInSortedOrder(t *testing.T) {
 		"service_http_errors",
 		"service_http_latency",
 		"service_http_rate",
+		"service_job_success",
+		"service_kafka_consumer_lag",
 		"service_memory",
 		"service_tls_expiry",
 	}
