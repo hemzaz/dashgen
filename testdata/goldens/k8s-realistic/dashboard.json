@@ -1,0 +1,380 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 697428928,
+      "type": "row",
+      "title": "pods",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1661059380,
+      "type": "timeseries",
+      "title": "OOM kills",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, pod) (kube_pod_container_status_terminated_reason{reason=\"OOMKilled\"})",
+          "legendFormat": "{{namespace}} {{pod}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1661059380,
+      "type": "timeseries",
+      "title": "Pods by phase: kube_pod_status_phase",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, phase) (kube_pod_status_phase)",
+          "legendFormat": "{{namespace}} {{phase}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1044837119,
+      "type": "row",
+      "title": "workloads",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "collapsed": false
+    },
+    {
+      "id": 2054965859,
+      "type": "timeseries",
+      "title": "Deployment availability",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, deployment) (kube_deployment_spec_replicas)",
+          "legendFormat": "desired {{namespace}} {{deployment}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, deployment) (kube_deployment_status_replicas_available)",
+          "legendFormat": "available {{namespace}} {{deployment}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, deployment) (kube_deployment_status_replicas_available) / sum by (namespace, deployment) (kube_deployment_spec_replicas)",
+          "legendFormat": "ratio {{namespace}} {{deployment}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 2054965859,
+      "type": "timeseries",
+      "title": "Container restart rate: kube_pod_container_status_restarts_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, pod, container) (rate(kube_pod_container_status_restarts_total[15m]))",
+          "legendFormat": "{{namespace}} {{pod}} {{container}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 727138868,
+      "type": "row",
+      "title": "resources",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1158144146,
+      "type": "timeseries",
+      "title": "Container CPU: container_cpu_usage_seconds_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!=\"\", pod!=\"\"}[5m]))",
+          "legendFormat": "{{namespace}} {{pod}} {{container}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1158144146,
+      "type": "timeseries",
+      "title": "Container memory: container_memory_working_set_bytes",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (namespace, pod, container) (container_memory_working_set_bytes{container!=\"\", pod!=\"\"})",
+          "legendFormat": "{{namespace}} {{pod}} {{container}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1100174864,
+      "type": "timeseries",
+      "title": "Node conditions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": ""
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (node, condition) (kube_node_status_condition{condition=\"NotReady\", status=\"true\"})",
+          "legendFormat": "{{node}} {{condition}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (node, condition) (kube_node_status_condition{condition=\"MemoryPressure\", status=\"true\"})",
+          "legendFormat": "{{node}} {{condition}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (node, condition) (kube_node_status_condition{condition=\"DiskPressure\", status=\"true\"})",
+          "legendFormat": "{{node}} {{condition}}",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (node, condition) (kube_node_status_condition{condition=\"PIDPressure\", status=\"true\"})",
+          "legendFormat": "{{node}} {{condition}}",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "id": 1158144146,
+      "type": "timeseries",
+      "title": "PVC used ratio",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "1 - (sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes) / sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))",
+          "legendFormat": "{{namespace}} {{persistentvolumeclaim}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "dashgen",
+    "k8s"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "DashGen — k8s (7168baf7)",
+  "uid": "836c4beae2695ada",
+  "version": 1,
+  "weekStart": ""
+}

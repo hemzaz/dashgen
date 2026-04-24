@@ -326,6 +326,103 @@ func TestDeterminism_K8sBasic(t *testing.T) {
 	}
 }
 
+// infra-realistic and k8s-realistic are live-shape fixtures (v0.2)
+// mirroring service-realistic: they hold positive-match metrics for
+// every Tier-1 recipe in their profile AND explicit look-alikes that
+// each recipe must NOT match. See RECIPES.md §7.2 and §7.3.
+const infraRealisticFixtureDir = "../../../testdata/fixtures/infra-realistic"
+const infraRealisticGoldenDir = "../../../testdata/goldens/infra-realistic"
+const k8sRealisticFixtureDir = "../../../testdata/fixtures/k8s-realistic"
+const k8sRealisticGoldenDir = "../../../testdata/goldens/k8s-realistic"
+
+func TestGolden_InfraRealistic(t *testing.T) {
+	assertGolden(t, infraRealisticFixtureDir, "infra", infraRealisticGoldenDir)
+}
+
+func TestDeterminism_InfraRealistic(t *testing.T) {
+	first := runOnceWith(t, infraRealisticFixtureDir, "infra")
+	second := runOnceWith(t, infraRealisticFixtureDir, "infra")
+	for _, name := range []string{"dashboard.json", "rationale.md", "warnings.json"} {
+		if !bytes.Equal(first[name], second[name]) {
+			t.Errorf("determinism: %s differs across runs", name)
+		}
+	}
+}
+
+func TestDiscrimination_InfraRealistic(t *testing.T) {
+	out := runOnceWith(t, infraRealisticFixtureDir, "infra")
+	dash := out["dashboard.json"]
+	shouldAppear := []string{
+		"node_cpu_seconds_total",           // infra_cpu (v0.1)
+		"node_filesystem_size_bytes",       // infra_disk (v0.1) + infra_filesystem_usage (v0.2)
+		"node_memory_MemAvailable_bytes",   // infra_memory (v0.1)
+		"node_network_receive_bytes_total", // infra_network (v0.1)
+		"node_load1",                       // infra_load (v0.2)
+		"process_open_fds",                 // infra_file_descriptors (v0.2)
+		"node_network_receive_errs_total",  // infra_nic_errors (v0.2)
+	}
+	for _, want := range shouldAppear {
+		if !bytes.Contains(dash, []byte(want)) {
+			t.Errorf("expected infra dashboard to reference %q", want)
+		}
+	}
+	mustNotAppear := []string{
+		// cAdvisor container metrics have the same "cpu_usage_seconds" /
+		// "memory_working_set" naming shape as node_* but belong in the
+		// k8s profile. Any infra_* recipe that picks these up is a bug.
+		"container_cpu_usage_seconds_total",
+		"container_memory_working_set_bytes",
+	}
+	for _, nope := range mustNotAppear {
+		if bytes.Contains(dash, []byte(nope)) {
+			t.Errorf("infra dashboard must NOT reference %q (profile-bleed regression)", nope)
+		}
+	}
+}
+
+func TestGolden_K8sRealistic(t *testing.T) {
+	assertGolden(t, k8sRealisticFixtureDir, "k8s", k8sRealisticGoldenDir)
+}
+
+func TestDeterminism_K8sRealistic(t *testing.T) {
+	first := runOnceWith(t, k8sRealisticFixtureDir, "k8s")
+	second := runOnceWith(t, k8sRealisticFixtureDir, "k8s")
+	for _, name := range []string{"dashboard.json", "rationale.md", "warnings.json"} {
+		if !bytes.Equal(first[name], second[name]) {
+			t.Errorf("determinism: %s differs across runs", name)
+		}
+	}
+}
+
+func TestDiscrimination_K8sRealistic(t *testing.T) {
+	out := runOnceWith(t, k8sRealisticFixtureDir, "k8s")
+	dash := out["dashboard.json"]
+	shouldAppear := []string{
+		"kube_pod_status_phase",                       // k8s_pod_health (v0.1)
+		"kube_pod_container_status_restarts_total",    // k8s_restarts (v0.1)
+		"container_cpu_usage_seconds_total",           // k8s_container_resources (v0.1)
+		"kube_deployment_status_replicas_available",   // k8s_deployment_availability (v0.2)
+		"kube_node_status_condition",                  // k8s_node_conditions (v0.2)
+		"kubelet_volume_stats_available_bytes",        // k8s_pvc_usage (v0.2)
+		"kube_pod_container_status_terminated_reason", // k8s_oom_kills (v0.2)
+	}
+	for _, want := range shouldAppear {
+		if !bytes.Contains(dash, []byte(want)) {
+			t.Errorf("expected k8s dashboard to reference %q", want)
+		}
+	}
+	mustNotAppear := []string{
+		// node_exporter metric in the fixture — must NOT be picked up
+		// by any k8s recipe (profile-bleed guard).
+		"node_cpu_seconds_total",
+	}
+	for _, nope := range mustNotAppear {
+		if bytes.Contains(dash, []byte(nope)) {
+			t.Errorf("k8s dashboard must NOT reference %q (profile-bleed regression)", nope)
+		}
+	}
+}
+
 func readFile(t *testing.T, path string) []byte {
 	t.Helper()
 	b, err := os.ReadFile(path)

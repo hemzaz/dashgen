@@ -98,7 +98,11 @@ const highCardinalityThreshold = 4
 // scopeLabels are the label keys that constrain a query to a reasonable
 // slice of the fleet. If none appear in the selector scope, broad
 // aggregations are flagged as unscoped.
-var scopeLabels = []string{"instance", "job", "namespace", "pod", "service"}
+//
+// 'node' is the k8s equivalent of 'instance' at cluster-level — a query
+// grouped by (node, ...) is naturally bounded by cluster node count,
+// the same way (instance, job) is bounded by service fleet size.
+var scopeLabels = []string{"instance", "job", "namespace", "pod", "service", "node"}
 
 // CardinalityRisk returns a deterministic warning code when the combination
 // of a grouping set and the ambient selector scope is risky, or "" when the
