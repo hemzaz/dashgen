@@ -47,7 +47,7 @@ func Sections(p Profile) []string {
 	case ProfileService:
 		return []string{"overview", "traffic", "errors", "latency", "saturation"}
 	case ProfileInfra:
-		return []string{"overview", "cpu", "memory", "disk", "network"}
+		return []string{"overview", "cpu", "memory", "disk", "network", "saturation"}
 	case ProfileK8s:
 		return []string{"overview", "pods", "workloads", "resources"}
 	}

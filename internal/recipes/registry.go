@@ -39,23 +39,39 @@ func NewServiceRegistry() *Registry {
 }
 
 // NewInfraRegistry returns a registry preloaded with every recipe in scope
-// for the v0.1 infra profile (node_exporter shape).
+// for the infra profile (node_exporter shape).
+//
+//   - infra_cpu / infra_memory / infra_disk / infra_network   (v0.1)
+//   - infra_load / infra_filesystem_usage                     (v0.2)
+//   - infra_file_descriptors / infra_nic_errors               (v0.2)
 func NewInfraRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewInfraCPU())
 	r.Register(NewInfraMemory())
 	r.Register(NewInfraDisk())
 	r.Register(NewInfraNetwork())
+	r.Register(NewInfraLoad())
+	r.Register(NewInfraFilesystemUsage())
+	r.Register(NewInfraFileDescriptors())
+	r.Register(NewInfraNICErrors())
 	return r
 }
 
 // NewK8sRegistry returns a registry preloaded with every recipe in scope for
-// the v0.1 k8s profile (kube-state-metrics + cAdvisor shape).
+// the k8s profile (kube-state-metrics + cAdvisor shape).
+//
+//   - k8s_pod_health / k8s_container_resources / k8s_restarts   (v0.1)
+//   - k8s_deployment_availability / k8s_node_conditions         (v0.2)
+//   - k8s_pvc_usage / k8s_oom_kills                             (v0.2)
 func NewK8sRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewK8sPodHealth())
 	r.Register(NewK8sContainerResources())
 	r.Register(NewK8sRestarts())
+	r.Register(NewK8sDeploymentAvailability())
+	r.Register(NewK8sNodeConditions())
+	r.Register(NewK8sPVCUsage())
+	r.Register(NewK8sOOMKills())
 	return r
 }
 

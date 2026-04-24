@@ -142,6 +142,38 @@
       ]
     },
     {
+      "id": 1268808201,
+      "type": "timeseries",
+      "title": "Filesystem used ratio",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "(node_filesystem_size_bytes{fstype!=\"\"} - node_filesystem_avail_bytes{fstype!=\"\"}) / node_filesystem_size_bytes{fstype!=\"\"}",
+          "legendFormat": "{{instance}} {{mountpoint}} {{fstype}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "id": 714408591,
       "type": "row",
       "title": "network",

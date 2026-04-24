@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "panel_uid": "cba07a086753aa7b",
+    "section": "disk",
+    "code": "empty_result",
+    "detail": "(node_filesystem_size_bytes{fstype!=\"\"} - node_filesystem_avail_bytes{fstype!=\"\"}) / node_filesystem_size_bytes{fstype!=\"\"}",
+    "severity": "warning"
+  }
+]

@@ -23,6 +23,9 @@
 - **Disk used ratio** (confidence: 0.80) — node_exporter filesystem gauges: 1 - (avail / size) yields used ratio grouped by instance+mountpoint.
   - query: `1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)` — verdict: accept
   - warnings: none
+- **Filesystem used ratio** (confidence: 0.85) — node_exporter filesystem gauge pair: (size - avail) / size yields used ratio per {instance, mountpoint, fstype}.
+  - query: `(node_filesystem_size_bytes{fstype!=""} - node_filesystem_avail_bytes{fstype!=""}) / node_filesystem_size_bytes{fstype!=""}` — verdict: accept_with_warning
+  - warnings: empty_result
 
 ### network
 
