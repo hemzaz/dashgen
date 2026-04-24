@@ -1,0 +1,20 @@
+{
+  "node_cpu_seconds_total": [{"type": "counter", "help": "Seconds the CPUs spent in each mode.", "unit": "seconds"}],
+  "node_load1": [{"type": "gauge", "help": "1m load average.", "unit": ""}],
+  "node_load5": [{"type": "gauge", "help": "5m load average.", "unit": ""}],
+  "node_load15": [{"type": "gauge", "help": "15m load average.", "unit": ""}],
+  "node_filesystem_avail_bytes": [{"type": "gauge", "help": "Filesystem space available to non-root users in bytes.", "unit": "bytes"}],
+  "node_filesystem_size_bytes": [{"type": "gauge", "help": "Filesystem size in bytes.", "unit": "bytes"}],
+  "process_open_fds": [{"type": "gauge", "help": "Number of open file descriptors.", "unit": ""}],
+  "process_max_fds": [{"type": "gauge", "help": "Maximum number of open file descriptors.", "unit": ""}],
+  "node_memory_MemAvailable_bytes": [{"type": "gauge", "help": "Memory information field MemAvailable_bytes.", "unit": "bytes"}],
+  "node_memory_MemTotal_bytes": [{"type": "gauge", "help": "Memory information field MemTotal_bytes.", "unit": "bytes"}],
+  "node_network_receive_bytes_total": [{"type": "counter", "help": "Network device statistic receive_bytes.", "unit": "bytes"}],
+  "node_network_transmit_bytes_total": [{"type": "counter", "help": "Network device statistic transmit_bytes.", "unit": "bytes"}],
+  "node_network_receive_errs_total": [{"type": "counter", "help": "Network device statistic receive_errs.", "unit": ""}],
+  "node_network_transmit_errs_total": [{"type": "counter", "help": "Network device statistic transmit_errs.", "unit": ""}],
+  "node_network_receive_drop_total": [{"type": "counter", "help": "Network device statistic receive_drop.", "unit": ""}],
+  "node_network_transmit_drop_total": [{"type": "counter", "help": "Network device statistic transmit_drop.", "unit": ""}],
+  "container_cpu_usage_seconds_total": [{"type": "counter", "help": "Cumulative cpu time consumed by the container in core-seconds.", "unit": "seconds"}],
+  "container_memory_working_set_bytes": [{"type": "gauge", "help": "Current working set of the container in bytes.", "unit": "bytes"}]
+}
