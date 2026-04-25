@@ -67,7 +67,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 DashGen is a deterministic Prometheus → Grafana dashboard generator (Go,
 `module dashgen`, Go 1.25). The v0.1 core ships end-to-end: discover →
 classify → recipe-driven synth → 5-stage validate → 3-file render. v0.2
-adds a larger recipe catalog (39 recipes total across service/infra/k8s
+adds a larger recipe catalog (44 recipes total across service/infra/k8s
 profiles) and plumbs an optional AI-enrichment seam (`internal/enrich`)
 that is explicitly walled off from PromQL generation and verdicts.
 
