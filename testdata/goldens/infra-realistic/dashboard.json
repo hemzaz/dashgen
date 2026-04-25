@@ -10,7 +10,7 @@
   "liveNow": false,
   "panels": [
     {
-      "id": 1996941133,
+      "id": 26097979207307,
       "type": "row",
       "title": "overview",
       "gridPos": {
@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 2010268993,
+      "id": 8094001123948494,
       "type": "timeseries",
       "title": "Open fds vs max",
       "datasource": {
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": 197298174,
+      "id": 5856533914917978,
       "type": "timeseries",
       "title": "NTP offset",
       "datasource": {
@@ -86,7 +86,7 @@
       ]
     },
     {
-      "id": 502449623,
+      "id": 46904305363252,
       "type": "row",
       "title": "cpu",
       "gridPos": {
@@ -98,7 +98,7 @@
       "collapsed": false
     },
     {
-      "id": 633094971,
+      "id": 8705847734830469,
       "type": "timeseries",
       "title": "CPU utilization: node_cpu_seconds_total",
       "datasource": {
@@ -130,7 +130,7 @@
       ]
     },
     {
-      "id": 633094971,
+      "id": 4572413582634403,
       "type": "timeseries",
       "title": "Load 1m: node_load1",
       "datasource": {
@@ -162,7 +162,7 @@
       ]
     },
     {
-      "id": 633094971,
+      "id": 2272450089341434,
       "type": "timeseries",
       "title": "Load 15m: node_load15",
       "datasource": {
@@ -194,7 +194,7 @@
       ]
     },
     {
-      "id": 633094971,
+      "id": 2032045968089333,
       "type": "timeseries",
       "title": "Load 5m: node_load5",
       "datasource": {
@@ -226,7 +226,7 @@
       ]
     },
     {
-      "id": 230423224,
+      "id": 5862676086589170,
       "type": "row",
       "title": "memory",
       "gridPos": {
@@ -238,7 +238,7 @@
       "collapsed": false
     },
     {
-      "id": 849081939,
+      "id": 5368280867989951,
       "type": "timeseries",
       "title": "Memory used ratio",
       "datasource": {
@@ -270,7 +270,7 @@
       ]
     },
     {
-      "id": 1936250482,
+      "id": 8619873146890386,
       "type": "row",
       "title": "disk",
       "gridPos": {
@@ -282,7 +282,7 @@
       "collapsed": false
     },
     {
-      "id": 750123784,
+      "id": 2427732578868936,
       "type": "timeseries",
       "title": "Disk used ratio",
       "datasource": {
@@ -314,7 +314,7 @@
       ]
     },
     {
-      "id": 454287344,
+      "id": 280518623893763,
       "type": "timeseries",
       "title": "Disk IO busy fraction",
       "datasource": {
@@ -346,7 +346,7 @@
       ]
     },
     {
-      "id": 454287344,
+      "id": 2748530457640321,
       "type": "timeseries",
       "title": "Disk IO weighted time",
       "datasource": {
@@ -378,7 +378,7 @@
       ]
     },
     {
-      "id": 454287344,
+      "id": 5284467885168413,
       "type": "timeseries",
       "title": "Disk read IOPS",
       "datasource": {
@@ -410,7 +410,7 @@
       ]
     },
     {
-      "id": 454287344,
+      "id": 8183292975094344,
       "type": "timeseries",
       "title": "Disk write IOPS",
       "datasource": {
@@ -442,7 +442,7 @@
       ]
     },
     {
-      "id": 511814438,
+      "id": 7940326985066990,
       "type": "timeseries",
       "title": "Filesystem used ratio",
       "datasource": {
@@ -474,7 +474,7 @@
       ]
     },
     {
-      "id": 714384916,
+      "id": 924960794008329,
       "type": "row",
       "title": "network",
       "gridPos": {
@@ -486,7 +486,7 @@
       "collapsed": false
     },
     {
-      "id": 670035104,
+      "id": 4839797433466728,
       "type": "timeseries",
       "title": "Network RX: node_network_receive_bytes_total",
       "datasource": {
@@ -518,7 +518,7 @@
       ]
     },
     {
-      "id": 670035104,
+      "id": 3905282781289037,
       "type": "timeseries",
       "title": "Network TX: node_network_transmit_bytes_total",
       "datasource": {
@@ -550,7 +550,7 @@
       ]
     },
     {
-      "id": 670035104,
+      "id": 1605964115028059,
       "type": "timeseries",
       "title": "NIC RX drops",
       "datasource": {
@@ -582,7 +582,7 @@
       ]
     },
     {
-      "id": 670035104,
+      "id": 736181544933737,
       "type": "timeseries",
       "title": "NIC RX errors",
       "datasource": {
@@ -614,7 +614,7 @@
       ]
     },
     {
-      "id": 670035104,
+      "id": 6665113741313785,
       "type": "timeseries",
       "title": "NIC TX drops",
       "datasource": {
@@ -646,7 +646,7 @@
       ]
     },
     {
-      "id": 670035104,
+      "id": 4406038261067077,
       "type": "timeseries",
       "title": "NIC TX errors",
       "datasource": {
@@ -678,7 +678,7 @@
       ]
     },
     {
-      "id": 1655915685,
+      "id": 8886354565171001,
       "type": "row",
       "title": "saturation",
       "gridPos": {
@@ -690,7 +690,7 @@
       "collapsed": false
     },
     {
-      "id": 1188654313,
+      "id": 7783791565373407,
       "type": "timeseries",
       "title": "Conntrack table saturation",
       "datasource": {
@@ -722,7 +722,7 @@
       ]
     },
     {
-      "id": 303966216,
+      "id": 148371792382875,
       "type": "timeseries",
       "title": "Hardware interrupt rate by CPU",
       "datasource": {

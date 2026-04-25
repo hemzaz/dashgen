@@ -10,7 +10,7 @@
   "liveNow": false,
   "panels": [
     {
-      "id": 502458146,
+      "id": 56799910017151,
       "type": "row",
       "title": "cpu",
       "gridPos": {
@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 575601350,
+      "id": 1038262679002086,
       "type": "timeseries",
       "title": "CPU utilization: node_cpu_seconds_total",
       "datasource": {
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": 230437429,
+      "id": 5879168761012335,
       "type": "row",
       "title": "memory",
       "gridPos": {
@@ -66,7 +66,7 @@
       "collapsed": false
     },
     {
-      "id": 598597405,
+      "id": 1129715502923243,
       "type": "timeseries",
       "title": "Memory used ratio",
       "datasource": {
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "id": 1936264687,
+      "id": 8636365821313551,
       "type": "row",
       "title": "disk",
       "gridPos": {
@@ -110,7 +110,7 @@
       "collapsed": false
     },
     {
-      "id": 1078917975,
+      "id": 6655159823603349,
       "type": "timeseries",
       "title": "Disk used ratio",
       "datasource": {
@@ -142,7 +142,7 @@
       ]
     },
     {
-      "id": 1268808201,
+      "id": 8667751998231216,
       "type": "timeseries",
       "title": "Filesystem used ratio",
       "datasource": {
@@ -174,7 +174,7 @@
       ]
     },
     {
-      "id": 714408591,
+      "id": 952448584713604,
       "type": "row",
       "title": "network",
       "gridPos": {
@@ -186,7 +186,7 @@
       "collapsed": false
     },
     {
-      "id": 443501925,
+      "id": 3281003494981208,
       "type": "timeseries",
       "title": "Network RX: node_network_receive_bytes_total",
       "datasource": {
@@ -218,7 +218,7 @@
       ]
     },
     {
-      "id": 443501925,
+      "id": 3060660265363410,
       "type": "timeseries",
       "title": "Network TX: node_network_transmit_bytes_total",
       "datasource": {

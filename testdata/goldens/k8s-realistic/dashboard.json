@@ -10,7 +10,7 @@
   "liveNow": false,
   "panels": [
     {
-      "id": 697428928,
+      "id": 3684613565774446,
       "type": "row",
       "title": "pods",
       "gridPos": {
@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 807303829,
+      "id": 8083044774729624,
       "type": "timeseries",
       "title": "OOM kills",
       "datasource": {
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": 807303829,
+      "id": 1263736530840127,
       "type": "timeseries",
       "title": "Pods by phase: kube_pod_status_phase",
       "datasource": {
@@ -86,7 +86,7 @@
       ]
     },
     {
-      "id": 1044837119,
+      "id": 8414230295040049,
       "type": "row",
       "title": "workloads",
       "gridPos": {
@@ -98,7 +98,7 @@
       "collapsed": false
     },
     {
-      "id": 107070107,
+      "id": 6744107851663347,
       "type": "timeseries",
       "title": "Deployment availability",
       "datasource": {
@@ -148,7 +148,7 @@
       ]
     },
     {
-      "id": 107070107,
+      "id": 7382201458819960,
       "type": "timeseries",
       "title": "HPA scaling (current vs desired)",
       "datasource": {
@@ -189,7 +189,7 @@
       ]
     },
     {
-      "id": 107070107,
+      "id": 5634215324964406,
       "type": "timeseries",
       "title": "Container restart rate: kube_pod_container_status_restarts_total",
       "datasource": {
@@ -221,7 +221,7 @@
       ]
     },
     {
-      "id": 727146444,
+      "id": 6666749683085496,
       "type": "row",
       "title": "resources",
       "gridPos": {
@@ -233,7 +233,7 @@
       "collapsed": false
     },
     {
-      "id": 1137227682,
+      "id": 539451777586255,
       "type": "timeseries",
       "title": "Apiserver request latency (p50/p95/p99)",
       "datasource": {
@@ -283,7 +283,7 @@
       ]
     },
     {
-      "id": 1982876369,
+      "id": 3360202852778131,
       "type": "timeseries",
       "title": "Container CPU: container_cpu_usage_seconds_total",
       "datasource": {
@@ -315,7 +315,7 @@
       ]
     },
     {
-      "id": 1982876369,
+      "id": 5873824219668650,
       "type": "timeseries",
       "title": "Container memory: container_memory_working_set_bytes",
       "datasource": {
@@ -347,7 +347,7 @@
       ]
     },
     {
-      "id": 1814770559,
+      "id": 1482692162752325,
       "type": "timeseries",
       "title": "CoreDNS request latency (p95)",
       "datasource": {
@@ -379,7 +379,7 @@
       ]
     },
     {
-      "id": 1814770559,
+      "id": 5804397279321494,
       "type": "timeseries",
       "title": "CoreDNS request rate",
       "datasource": {
@@ -411,7 +411,7 @@
       ]
     },
     {
-      "id": 129281901,
+      "id": 9004752278908768,
       "type": "timeseries",
       "title": "etcd backend commit latency (p50/p95/p99)",
       "datasource": {
@@ -461,7 +461,7 @@
       ]
     },
     {
-      "id": 1032596959,
+      "id": 682807409861453,
       "type": "timeseries",
       "title": "Node conditions",
       "datasource": {
@@ -520,7 +520,7 @@
       ]
     },
     {
-      "id": 1982876369,
+      "id": 7419289343203059,
       "type": "timeseries",
       "title": "PVC used ratio",
       "datasource": {
@@ -552,7 +552,7 @@
       ]
     },
     {
-      "id": 2088324913,
+      "id": 5566928614536694,
       "type": "timeseries",
       "title": "Scheduler scheduling attempt latency (p50/p95/p99)",
       "datasource": {

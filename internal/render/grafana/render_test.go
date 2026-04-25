@@ -3,6 +3,7 @@ package grafana
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"dashgen/internal/ir"
@@ -246,5 +247,58 @@ func TestRefID(t *testing.T) {
 func TestRenderNilDashboard(t *testing.T) {
 	if _, err := Render(nil); err == nil {
 		t.Fatalf("expected error for nil dashboard")
+	}
+}
+
+// TestPanelIDsUniqueAcrossAllGoldens guards against the pre-fix
+// regression where panelIntID's int32 modulo produced cross-UID
+// collisions in every committed golden (e.g. service-basic id
+// 895859167 mapped from both `admin_actions_total` and
+// `http_requests_total`). With the wider 53-bit-safe space + full-UID
+// FNV fold this test must stay green for every committed golden.
+//
+// Grafana relies on per-dashboard panel.id uniqueness for deep links
+// and panel-level annotations, so a regression here is a real
+// correctness bug — not a cosmetic concern.
+func TestPanelIDsUniqueAcrossAllGoldens(t *testing.T) {
+	t.Parallel()
+	goldens := []string{
+		"../../../testdata/goldens/service-basic/dashboard.json",
+		"../../../testdata/goldens/service-realistic/dashboard.json",
+		"../../../testdata/goldens/infra-basic/dashboard.json",
+		"../../../testdata/goldens/infra-realistic/dashboard.json",
+		"../../../testdata/goldens/k8s-basic/dashboard.json",
+		"../../../testdata/goldens/k8s-realistic/dashboard.json",
+	}
+	for _, g := range goldens {
+		g := g
+		t.Run(g, func(t *testing.T) {
+			t.Parallel()
+			body, err := os.ReadFile(g)
+			if err != nil {
+				t.Fatalf("read %s: %v", g, err)
+			}
+			var doc struct {
+				Panels []struct {
+					ID    int64  `json:"id"`
+					Type  string `json:"type"`
+					Title string `json:"title"`
+				} `json:"panels"`
+			}
+			if err := json.Unmarshal(body, &doc); err != nil {
+				t.Fatalf("parse %s: %v", g, err)
+			}
+			seen := map[int64]string{}
+			for _, p := range doc.Panels {
+				if p.Type == "row" {
+					continue
+				}
+				if prev, dup := seen[p.ID]; dup {
+					t.Errorf("collision in %s: id=%d shared by %q and %q",
+						g, p.ID, prev, p.Title)
+				}
+				seen[p.ID] = p.Title
+			}
+		})
 	}
 }

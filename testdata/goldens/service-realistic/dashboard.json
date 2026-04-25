@@ -10,7 +10,7 @@
   "liveNow": false,
   "panels": [
     {
-      "id": 847996758,
+      "id": 3664683230984751,
       "type": "row",
       "title": "traffic",
       "gridPos": {
@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 763674621,
+      "id": 4358147397614847,
       "type": "timeseries",
       "title": "Cache hit/miss: redis",
       "datasource": {
@@ -72,7 +72,7 @@
       ]
     },
     {
-      "id": 643411537,
+      "id": 4081783103003619,
       "type": "timeseries",
       "title": "Outbound HTTP call rate: http_client_requests_total",
       "datasource": {
@@ -104,7 +104,7 @@
       ]
     },
     {
-      "id": 455967349,
+      "id": 3189124271347856,
       "type": "timeseries",
       "title": "gRPC call rate: grpc_server_handled_total",
       "datasource": {
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "id": 283234201,
+      "id": 935390770127621,
       "type": "timeseries",
       "title": "Request rate: api_http_requests_total",
       "datasource": {
@@ -168,7 +168,7 @@
       ]
     },
     {
-      "id": 763674621,
+      "id": 5698507001278669,
       "type": "timeseries",
       "title": "Request rate: http_client_requests_total",
       "datasource": {
@@ -200,7 +200,7 @@
       ]
     },
     {
-      "id": 887335721,
+      "id": 6736440888532905,
       "type": "row",
       "title": "errors",
       "gridPos": {
@@ -212,7 +212,7 @@
       "collapsed": false
     },
     {
-      "id": 1380396445,
+      "id": 4680897192552817,
       "type": "timeseries",
       "title": "gRPC error rate: grpc_server_handled_total",
       "datasource": {
@@ -244,7 +244,7 @@
       ]
     },
     {
-      "id": 1595323976,
+      "id": 7882916221743625,
       "type": "timeseries",
       "title": "5xx error rate: api_http_requests_total",
       "datasource": {
@@ -276,7 +276,7 @@
       ]
     },
     {
-      "id": 1515576796,
+      "id": 8167254221429955,
       "type": "timeseries",
       "title": "5xx error rate: http_client_requests_total",
       "datasource": {
@@ -308,7 +308,7 @@
       ]
     },
     {
-      "id": 1515576796,
+      "id": 197333764215995,
       "type": "timeseries",
       "title": "Jobs success/fail rate: worker",
       "datasource": {
@@ -349,7 +349,7 @@
       ]
     },
     {
-      "id": 530739086,
+      "id": 2624093457451905,
       "type": "timeseries",
       "title": "Kafka consumer lag",
       "datasource": {
@@ -381,7 +381,7 @@
       ]
     },
     {
-      "id": 530739086,
+      "id": 3510355203558291,
       "type": "timeseries",
       "title": "Kafka consumer lag (sum)",
       "datasource": {
@@ -413,7 +413,7 @@
       ]
     },
     {
-      "id": 966109348,
+      "id": 6865399725890565,
       "type": "row",
       "title": "latency",
       "gridPos": {
@@ -425,7 +425,7 @@
       "collapsed": false
     },
     {
-      "id": 1743176461,
+      "id": 8828053598507418,
       "type": "timeseries",
       "title": "DB query latency (p50/p95/p99): db_query_duration_seconds",
       "datasource": {
@@ -475,7 +475,7 @@
       ]
     },
     {
-      "id": 1386366367,
+      "id": 6694284171117653,
       "type": "timeseries",
       "title": "gRPC latency (p50/p95/p99): grpc_server_handling_seconds",
       "datasource": {
@@ -525,7 +525,7 @@
       ]
     },
     {
-      "id": 1779260774,
+      "id": 3362057116510518,
       "type": "timeseries",
       "title": "Latency (p50/p95/p99): api_http_request_duration_seconds",
       "datasource": {
@@ -575,7 +575,7 @@
       ]
     },
     {
-      "id": 1655902427,
+      "id": 8870961402376047,
       "type": "row",
       "title": "saturation",
       "gridPos": {
@@ -587,7 +587,7 @@
       "collapsed": false
     },
     {
-      "id": 57549789,
+      "id": 470358068707881,
       "type": "timeseries",
       "title": "CPU (cores used): process_cpu_seconds_total",
       "datasource": {
@@ -619,7 +619,7 @@
       ]
     },
     {
-      "id": 1464189222,
+      "id": 3782910241102035,
       "type": "timeseries",
       "title": "DB pool utilization: go_sql",
       "datasource": {
@@ -651,7 +651,7 @@
       ]
     },
     {
-      "id": 57549789,
+      "id": 3540147214513237,
       "type": "timeseries",
       "title": "GC pause: go_gc_duration_seconds",
       "datasource": {
@@ -683,7 +683,7 @@
       ]
     },
     {
-      "id": 57549789,
+      "id": 4198439789850088,
       "type": "timeseries",
       "title": "Goroutines: go_goroutines",
       "datasource": {
@@ -715,7 +715,7 @@
       ]
     },
     {
-      "id": 57549789,
+      "id": 2272667841999478,
       "type": "timeseries",
       "title": "Memory: process_resident_memory_bytes",
       "datasource": {
@@ -747,7 +747,7 @@
       ]
     },
     {
-      "id": 231958851,
+      "id": 4298530181047445,
       "type": "timeseries",
       "title": "Request size (p50/p95): http_request_size_bytes",
       "datasource": {
@@ -788,7 +788,7 @@
       ]
     },
     {
-      "id": 231958851,
+      "id": 4501252728533847,
       "type": "timeseries",
       "title": "Response Size (p50/p95): http_response_size_bytes",
       "datasource": {
@@ -829,7 +829,7 @@
       ]
     },
     {
-      "id": 1307326866,
+      "id": 600408533459656,
       "type": "timeseries",
       "title": "TLS cert days to expiry: api_tls_not_after_timestamp",
       "datasource": {

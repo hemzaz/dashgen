@@ -38,44 +38,44 @@
 
 ### disk
 
+- **Disk write IOPS** (confidence: 0.85) — node_exporter counter "node_disk_writes_completed_total"; rate over 5m per instance+device.
+  - query: `sum by (instance, device) (rate(node_disk_writes_completed_total[5m]))` — verdict: accept_with_warning
+  - warnings: empty_result
 - **Disk IO busy fraction** (confidence: 0.85) — node_exporter counter "node_disk_io_time_seconds_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_disk_io_time_seconds_total[5m]))` — verdict: accept_with_warning
   - warnings: empty_result
+- **Disk used ratio** (confidence: 0.80) — node_exporter filesystem gauges: 1 - (avail / size) yields used ratio grouped by instance+mountpoint.
+  - query: `1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)` — verdict: accept
+  - warnings: none
 - **Disk IO weighted time** (confidence: 0.85) — node_exporter counter "node_disk_io_time_weighted_seconds_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_disk_io_time_weighted_seconds_total[5m]))` — verdict: accept_with_warning
   - warnings: empty_result
 - **Disk read IOPS** (confidence: 0.85) — node_exporter counter "node_disk_reads_completed_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_disk_reads_completed_total[5m]))` — verdict: accept_with_warning
   - warnings: empty_result
-- **Disk write IOPS** (confidence: 0.85) — node_exporter counter "node_disk_writes_completed_total"; rate over 5m per instance+device.
-  - query: `sum by (instance, device) (rate(node_disk_writes_completed_total[5m]))` — verdict: accept_with_warning
-  - warnings: empty_result
 - **Filesystem used ratio** (confidence: 0.85) — node_exporter filesystem gauge pair: (size - avail) / size yields used ratio per {instance, mountpoint, fstype}.
   - query: `(node_filesystem_size_bytes{fstype!=""} - node_filesystem_avail_bytes{fstype!=""}) / node_filesystem_size_bytes{fstype!=""}` — verdict: accept
-  - warnings: none
-- **Disk used ratio** (confidence: 0.80) — node_exporter filesystem gauges: 1 - (avail / size) yields used ratio grouped by instance+mountpoint.
-  - query: `1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)` — verdict: accept
   - warnings: none
 
 ### network
 
-- **Network RX: node_network_receive_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_receive_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
-  - query: `sum by (instance, device) (rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
-  - warnings: none
-- **Network TX: node_network_transmit_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_transmit_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
-  - query: `sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
+- **NIC TX errors** (confidence: 0.85) — node_exporter counter "node_network_transmit_errs_total"; rate over 5m per instance+device.
+  - query: `sum by (instance, device) (rate(node_network_transmit_errs_total[5m]))` — verdict: accept
   - warnings: none
 - **NIC RX drops** (confidence: 0.85) — node_exporter counter "node_network_receive_drop_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_network_receive_drop_total[5m]))` — verdict: accept
   - warnings: none
+- **Network TX: node_network_transmit_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_transmit_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
+  - query: `sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
+  - warnings: none
 - **NIC RX errors** (confidence: 0.85) — node_exporter counter "node_network_receive_errs_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_network_receive_errs_total[5m]))` — verdict: accept
   - warnings: none
+- **Network RX: node_network_receive_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_receive_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
+  - query: `sum by (instance, device) (rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
+  - warnings: none
 - **NIC TX drops** (confidence: 0.85) — node_exporter counter "node_network_transmit_drop_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_network_transmit_drop_total[5m]))` — verdict: accept
-  - warnings: none
-- **NIC TX errors** (confidence: 0.85) — node_exporter counter "node_network_transmit_errs_total"; rate over 5m per instance+device.
-  - query: `sum by (instance, device) (rate(node_network_transmit_errs_total[5m]))` — verdict: accept
   - warnings: none
 
 ### saturation

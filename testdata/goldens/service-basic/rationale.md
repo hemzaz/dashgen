@@ -36,11 +36,11 @@
 
 ### saturation
 
-- **CPU (cores used): process_cpu_seconds_total** (confidence: 0.80) — CPU-seconds counter "process_cpu_seconds_total"; rate over 5m yields cores consumed.
-  - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept
-  - warnings: none
 - **Memory: process_resident_memory_bytes** (confidence: 0.80) — Memory gauge "process_resident_memory_bytes" summed by instance, job.
   - query: `sum by (instance, job) (process_resident_memory_bytes)` — verdict: accept
+  - warnings: none
+- **CPU (cores used): process_cpu_seconds_total** (confidence: 0.80) — CPU-seconds counter "process_cpu_seconds_total"; rate over 5m yields cores consumed.
+  - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept
   - warnings: none
 
 ## Omitted

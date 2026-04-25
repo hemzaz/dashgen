@@ -1,139 +1,139 @@
 [
   {
-    "panel_uid": "9fa26f8d49706955",
-    "section": "errors",
-    "code": "empty_result",
-    "detail": "max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "9fa26f8d49706955",
-    "section": "errors",
-    "code": "empty_result",
-    "detail": "max by (consumergroup, instance, job, topic) (kafka_consumergroup_lag_sum)",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "9fa26f8d49706955",
-    "section": "errors",
-    "code": "high_cardinality_grouping",
-    "detail": "max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "da55dddbeb33ed30",
-    "section": "errors",
-    "code": "empty_result",
-    "detail": "sum by (instance, job) (rate(http_client_requests_total{status_code=~\"5..\"}[5m]))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "da55dddbeb33ed30",
+    "panel_uid": "5b3b4a641bb08a7c",
     "section": "errors",
     "code": "empty_result",
     "detail": "sum by (instance, job, queue) (rate(worker_jobs_succeeded_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "da55dddbeb33ed30",
+    "panel_uid": "5b3b4a641bb08a7c",
     "section": "errors",
     "code": "empty_result",
     "detail": "sum by (instance, job, queue) (rate(worker_jobs_failed_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "e7e6c30c27a4a0d1",
+    "panel_uid": "89f37de130aa5bc7",
+    "section": "errors",
+    "code": "empty_result",
+    "detail": "sum by (instance, job) (rate(http_client_requests_total{status_code=~\"5..\"}[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "8cab52001a04eea2",
+    "section": "errors",
+    "code": "empty_result",
+    "detail": "max by (consumergroup, instance, job, topic) (kafka_consumergroup_lag_sum)",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "d6cb1565123aa748",
+    "section": "errors",
+    "code": "empty_result",
+    "detail": "max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "d6cb1565123aa748",
+    "section": "errors",
+    "code": "high_cardinality_grouping",
+    "detail": "max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "0d9ea58eea777eb0",
     "section": "latency",
     "code": "empty_result",
     "detail": "histogram_quantile(0.50, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
     "severity": "warning"
   },
   {
-    "panel_uid": "e7e6c30c27a4a0d1",
+    "panel_uid": "0d9ea58eea777eb0",
     "section": "latency",
     "code": "empty_result",
     "detail": "histogram_quantile(0.95, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
     "severity": "warning"
   },
   {
-    "panel_uid": "e7e6c30c27a4a0d1",
+    "panel_uid": "0d9ea58eea777eb0",
     "section": "latency",
     "code": "empty_result",
     "detail": "histogram_quantile(0.99, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
     "severity": "warning"
   },
   {
-    "panel_uid": "5745c126dfd85d48",
+    "panel_uid": "0220784f8508e2b0",
     "section": "saturation",
     "code": "empty_result",
     "detail": "go_sql_stats_connections_in_use / go_sql_stats_connections_max",
     "severity": "warning"
   },
   {
-    "panel_uid": "8dd36942f109f132",
-    "section": "saturation",
-    "code": "empty_result",
-    "detail": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "8dd36942f109f132",
-    "section": "saturation",
-    "code": "empty_result",
-    "detail": "histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "8dd36942f109f132",
-    "section": "saturation",
-    "code": "empty_result",
-    "detail": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "8dd36942f109f132",
-    "section": "saturation",
-    "code": "empty_result",
-    "detail": "histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "cdec3991f378a7f5",
+    "panel_uid": "7352b5c75f41c610",
     "section": "saturation",
     "code": "empty_result",
     "detail": "(api_tls_not_after_timestamp - time()) / 86400",
     "severity": "warning"
   },
   {
-    "panel_uid": "2d84bffd9f7c1fa8",
+    "panel_uid": "9a443523e2250d00",
+    "section": "saturation",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "9a443523e2250d00",
+    "section": "saturation",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "be8cdaeb9ec0bac1",
+    "section": "saturation",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "be8cdaeb9ec0bac1",
+    "section": "saturation",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "acbbdc457b13aa0c",
     "section": "traffic",
     "code": "empty_result",
     "detail": "sum by (instance, job) (rate(redis_cache_hits_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "2d84bffd9f7c1fa8",
+    "panel_uid": "acbbdc457b13aa0c",
     "section": "traffic",
     "code": "empty_result",
     "detail": "sum by (instance, job) (rate(redis_cache_misses_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "2d84bffd9f7c1fa8",
+    "panel_uid": "acbbdc457b13aa0c",
     "section": "traffic",
     "code": "empty_result",
     "detail": "sum by (instance, job) (rate(redis_cache_hits_total[5m])) / (sum by (instance, job) (rate(redis_cache_hits_total[5m])) + sum by (instance, job) (rate(redis_cache_misses_total[5m])))",
     "severity": "warning"
   },
   {
-    "panel_uid": "2d84bffd9f7c1fa8",
+    "panel_uid": "b71fbbc8ae06a655",
     "section": "traffic",
     "code": "empty_result",
     "detail": "sum by (instance, job) (rate(http_client_requests_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "a659ae50c1006cf6",
+    "panel_uid": "d624486fcca3447c",
     "section": "traffic",
     "code": "empty_result",
     "detail": "sum by (host, instance, job) (rate(http_client_requests_total[5m]))",

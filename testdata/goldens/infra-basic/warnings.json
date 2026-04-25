@@ -1,6 +1,6 @@
 [
   {
-    "panel_uid": "cba07a086753aa7b",
+    "panel_uid": "8839c3d46cb1e0bc",
     "section": "disk",
     "code": "empty_result",
     "detail": "(node_filesystem_size_bytes{fstype!=\"\"} - node_filesystem_avail_bytes{fstype!=\"\"}) / node_filesystem_size_bytes{fstype!=\"\"}",

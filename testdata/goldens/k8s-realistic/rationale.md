@@ -17,6 +17,14 @@
 
 ### workloads
 
+- **Container restart rate: kube_pod_container_status_restarts_total** (confidence: 0.80) — kube-state-metrics counter "kube_pod_container_status_restarts_total"; rate over 15m grouped by namespace+pod+container.
+  - query: `sum by (namespace, pod, container) (rate(kube_pod_container_status_restarts_total[15m]))` — verdict: accept
+  - warnings: none
+- **HPA scaling (current vs desired)** (confidence: 0.90) — kube-state-metrics pair "kube_horizontalpodautoscaler_status_current_replicas" + "kube_horizontalpodautoscaler_status_desired_replicas"; current and desired replica counts per namespace+HPA.
+  - query: `sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas)` — verdict: accept_with_warning
+  - warnings: empty_result
+  - query: `sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas)` — verdict: accept_with_warning
+  - warnings: empty_result
 - **Deployment availability** (confidence: 0.90) — kube-state-metrics pair "kube_deployment_spec_replicas" + "kube_deployment_status_replicas_available"; desired, available, and availability ratio per namespace+deployment.
   - query: `sum by (namespace, deployment) (kube_deployment_spec_replicas)` — verdict: accept
   - warnings: none
@@ -24,17 +32,45 @@
   - warnings: none
   - query: `sum by (namespace, deployment) (kube_deployment_status_replicas_available) / sum by (namespace, deployment) (kube_deployment_spec_replicas)` — verdict: accept
   - warnings: none
-- **HPA scaling (current vs desired)** (confidence: 0.90) — kube-state-metrics pair "kube_horizontalpodautoscaler_status_current_replicas" + "kube_horizontalpodautoscaler_status_desired_replicas"; current and desired replica counts per namespace+HPA.
-  - query: `sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas)` — verdict: accept_with_warning
-  - warnings: empty_result
-  - query: `sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas)` — verdict: accept_with_warning
-  - warnings: empty_result
-- **Container restart rate: kube_pod_container_status_restarts_total** (confidence: 0.80) — kube-state-metrics counter "kube_pod_container_status_restarts_total"; rate over 15m grouped by namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (rate(kube_pod_container_status_restarts_total[15m]))` — verdict: accept
-  - warnings: none
 
 ### resources
 
+- **PVC used ratio** (confidence: 0.85) — kubelet PVC gauges: 1 - (available / capacity) yields used ratio per namespace+PVC.
+  - query: `1 - (sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes) / sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))` — verdict: accept
+  - warnings: none
+- **Container memory: container_memory_working_set_bytes** (confidence: 0.80) — cAdvisor gauge "container_memory_working_set_bytes"; summed by namespace+pod+container.
+  - query: `sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", pod!=""})` — verdict: accept
+  - warnings: none
+- **CoreDNS request rate** (confidence: 0.85) — CoreDNS request rate counter "coredns_dns_requests_total"; per-second rate over 5m grouped by server, zone.
+  - query: `sum by (server, zone) (rate(coredns_dns_requests_total[5m]))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+- **CoreDNS request latency (p95)** (confidence: 0.85) — CoreDNS request latency histogram "coredns_dns_request_duration_seconds"; p95 via histogram_quantile over 5m grouped by server, zone, le.
+  - query: `histogram_quantile(0.95, sum by (le, server, zone) (rate(coredns_dns_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+- **etcd backend commit latency (p50/p95/p99)** (confidence: 0.90) — etcd disk backend commit latency histogram "etcd_disk_backend_commit_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m grouped by instance, le. p99 > 25ms sustained indicates control-plane write pressure.
+  - query: `histogram_quantile(0.50, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result
+  - query: `histogram_quantile(0.95, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result
+  - query: `histogram_quantile(0.99, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result
+- **Scheduler scheduling attempt latency (p50/p95/p99)** (confidence: 0.85) — kube-scheduler scheduling attempt latency histogram "scheduler_scheduling_attempt_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m grouped by result, le.
+  - query: `histogram_quantile(0.50, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+  - query: `histogram_quantile(0.95, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+  - query: `histogram_quantile(0.99, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+- **Apiserver request latency (p50/p95/p99)** (confidence: 0.90) — kube-apiserver latency histogram "apiserver_request_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m grouped by verb, resource, le.
+  - query: `histogram_quantile(0.50, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+  - query: `histogram_quantile(0.95, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+  - query: `histogram_quantile(0.99, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result, unscoped_aggregation
+- **Container CPU: container_cpu_usage_seconds_total** (confidence: 0.80) — cAdvisor counter "container_cpu_usage_seconds_total"; rate over 5m per namespace+pod+container.
+  - query: `sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m]))` — verdict: accept
+  - warnings: none
 - **Node conditions** (confidence: 0.90) — kube-state-metrics gauge "kube_node_status_condition"; max by node+condition for each of [NotReady MemoryPressure DiskPressure PIDPressure] shows which nodes are unhealthy.
   - query: `max by (node, condition) (kube_node_status_condition{condition="NotReady", status="true"})` — verdict: accept
   - warnings: none
@@ -44,42 +80,6 @@
   - warnings: none
   - query: `max by (node, condition) (kube_node_status_condition{condition="PIDPressure", status="true"})` — verdict: accept
   - warnings: none
-- **CoreDNS request latency (p95)** (confidence: 0.85) — CoreDNS request latency histogram "coredns_dns_request_duration_seconds"; p95 via histogram_quantile over 5m grouped by server, zone, le.
-  - query: `histogram_quantile(0.95, sum by (le, server, zone) (rate(coredns_dns_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-- **CoreDNS request rate** (confidence: 0.85) — CoreDNS request rate counter "coredns_dns_requests_total"; per-second rate over 5m grouped by server, zone.
-  - query: `sum by (server, zone) (rate(coredns_dns_requests_total[5m]))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-- **Container CPU: container_cpu_usage_seconds_total** (confidence: 0.80) — cAdvisor counter "container_cpu_usage_seconds_total"; rate over 5m per namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m]))` — verdict: accept
-  - warnings: none
-- **Container memory: container_memory_working_set_bytes** (confidence: 0.80) — cAdvisor gauge "container_memory_working_set_bytes"; summed by namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", pod!=""})` — verdict: accept
-  - warnings: none
-- **PVC used ratio** (confidence: 0.85) — kubelet PVC gauges: 1 - (available / capacity) yields used ratio per namespace+PVC.
-  - query: `1 - (sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes) / sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))` — verdict: accept
-  - warnings: none
-- **etcd backend commit latency (p50/p95/p99)** (confidence: 0.90) — etcd disk backend commit latency histogram "etcd_disk_backend_commit_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m grouped by instance, le. p99 > 25ms sustained indicates control-plane write pressure.
-  - query: `histogram_quantile(0.50, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result
-  - query: `histogram_quantile(0.95, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result
-  - query: `histogram_quantile(0.99, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result
-- **Apiserver request latency (p50/p95/p99)** (confidence: 0.90) — kube-apiserver latency histogram "apiserver_request_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m grouped by verb, resource, le.
-  - query: `histogram_quantile(0.50, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-  - query: `histogram_quantile(0.95, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-  - query: `histogram_quantile(0.99, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-- **Scheduler scheduling attempt latency (p50/p95/p99)** (confidence: 0.85) — kube-scheduler scheduling attempt latency histogram "scheduler_scheduling_attempt_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m grouped by result, le.
-  - query: `histogram_quantile(0.50, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-  - query: `histogram_quantile(0.95, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
-  - query: `histogram_quantile(0.99, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result, unscoped_aggregation
 
 ## Omitted
 

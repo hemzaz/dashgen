@@ -10,7 +10,7 @@
   "liveNow": false,
   "panels": [
     {
-      "id": 697428928,
+      "id": 3684613565774446,
       "type": "row",
       "title": "pods",
       "gridPos": {
@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 1647740095,
+      "id": 7042279039356628,
       "type": "timeseries",
       "title": "Pods by phase: kube_pod_status_phase",
       "datasource": {
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": 1044837119,
+      "id": 8414230295040049,
       "type": "row",
       "title": "workloads",
       "gridPos": {
@@ -66,7 +66,7 @@
       "collapsed": false
     },
     {
-      "id": 1643788913,
+      "id": 2094623004081082,
       "type": "timeseries",
       "title": "Container restart rate: kube_pod_container_status_restarts_total",
       "datasource": {
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "id": 727138868,
+      "id": 6657953590059808,
       "type": "row",
       "title": "resources",
       "gridPos": {
@@ -110,7 +110,7 @@
       "collapsed": false
     },
     {
-      "id": 1873660044,
+      "id": 661300320262136,
       "type": "timeseries",
       "title": "Container CPU: container_cpu_usage_seconds_total",
       "datasource": {
@@ -142,7 +142,7 @@
       ]
     },
     {
-      "id": 1873660044,
+      "id": 4612134405366662,
       "type": "timeseries",
       "title": "Container memory: container_memory_working_set_bytes",
       "datasource": {

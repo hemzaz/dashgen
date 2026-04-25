@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strings"
 
 	"dashgen/internal/classify"
 	"dashgen/internal/ids"
@@ -132,35 +133,87 @@ func snapshotOf(inv *classify.ClassifiedInventory) recipes.ClassifiedInventorySn
 	}
 }
 
-// assignPanelUID fills in a stable UID for a panel using (dashboardUID,
-// section, metricName, kind). metricName is pulled from the first query's
-// expression; if we cannot extract one, the recipe name is used so UIDs
-// never collapse to the same material.
+// assignPanelUID fills in a stable UID for a panel using
+// (dashboardUID, section, recipeName/metricName, kind). The recipe
+// name is composed into the metric-name slot so two distinct recipes
+// matching the same metric in the same section (e.g. service_http_rate
+// and service_client_http both keying off http_client_requests_total
+// in the "traffic" section) produce distinct UIDs. metricName is
+// pulled from the first query's expression; if extraction fails, the
+// recipe name alone is used.
 func assignPanelUID(p ir.Panel, dashboardUID, section, recipeName string) ir.Panel {
-	metricName := recipeName
+	metricName := ""
 	if len(p.Queries) > 0 {
-		if m := firstIdentifier(p.Queries[0].Expr); m != "" {
-			metricName = m
-		}
+		metricName = firstIdentifier(p.Queries[0].Expr)
 	}
-	p.UID = ids.PanelUID(dashboardUID, section, metricName, string(p.Kind))
+	material := recipeName
+	if metricName != "" {
+		material = recipeName + "/" + metricName
+	}
+	p.UID = ids.PanelUID(dashboardUID, section, material, string(p.Kind))
 	return p
 }
 
-// firstIdentifier extracts the first PromQL-valid metric identifier from an
-// expression. Function names like "sum", "rate", "histogram_quantile" are
-// skipped so the panel UID keys off the underlying metric.
+// firstIdentifier extracts the first PromQL-valid metric identifier
+// from an expression so it can become panel-UID material. Two-pass
+// strategy:
+//
+//  1. If the expression contains a counter-rate wrapper (rate(),
+//     irate(), increase(), delta()), the inner argument's leading
+//     identifier IS the metric — return it. This catches the recipe
+//     pattern `sum by (...) (rate(<metric>[5m]))` and the histogram
+//     pattern `histogram_quantile(0.95, sum by (le) (rate(<metric>_bucket[5m])))`
+//     without being fooled by the by-clause label names.
+//  2. Otherwise return the first token that is NOT a known PromQL
+//     function/keyword AND contains at least one underscore. The
+//     underscore filter is the load-bearing heuristic against
+//     by-clause labels (instance, job, le, namespace, pod, mode,
+//     handler, code, ...) and Prometheus's own short labels — every
+//     metric a dashgen recipe emits contains at least one underscore
+//     (http_requests_total, node_cpu_seconds_total, kube_pod_status_phase,
+//     etc.). The historical short skip-list (sum/rate/by/...) was not
+//     enough on its own and is retained as belt-and-braces.
+//
+// Returns "" if no identifier matches; the caller falls back to the
+// recipe name so panel UIDs never collapse to identical material.
 func firstIdentifier(expr string) string {
+	if m := identifierInsideRate(expr); m != "" {
+		return m
+	}
 	tokens := metricNamePattern.FindAllString(expr, -1)
 	skip := map[string]bool{
-		"sum": true, "rate": true, "histogram_quantile": true,
+		"sum": true, "rate": true, "irate": true, "increase": true,
+		"delta": true, "histogram_quantile": true,
 		"by": true, "on": true, "ignoring": true, "without": true,
 		"avg": true, "max": true, "min": true, "count": true,
-		"le": true,
+		"stddev": true, "stdvar": true, "topk": true, "bottomk": true,
+		"quantile": true, "le": true,
 	}
 	for _, t := range tokens {
-		if !skip[t] {
-			return t
+		if skip[t] {
+			continue
+		}
+		if !strings.Contains(t, "_") {
+			continue
+		}
+		return t
+	}
+	return ""
+}
+
+// identifierInsideRate scans expr for the first occurrence of a
+// counter-rate wrapper and returns the leading identifier of its
+// argument. Returns "" if no rate-style wrapper is found.
+func identifierInsideRate(expr string) string {
+	for _, fn := range []string{"rate(", "irate(", "increase(", "delta("} {
+		idx := strings.Index(expr, fn)
+		if idx < 0 {
+			continue
+		}
+		inner := expr[idx+len(fn):]
+		m := metricNamePattern.FindString(inner)
+		if m != "" {
+			return m
 		}
 	}
 	return ""

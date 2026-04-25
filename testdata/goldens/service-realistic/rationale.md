@@ -8,6 +8,9 @@
 
 ### traffic
 
+- **Request rate: api_http_requests_total** (confidence: 0.85) — Counter "api_http_requests_total" with HTTP-shaped labels; rate over 5m grouped by handler, instance, job.
+  - query: `sum by (handler, instance, job) (rate(api_http_requests_total[5m]))` — verdict: accept
+  - warnings: none
 - **Cache hit/miss: redis** (confidence: 0.80) — cache hit/miss pair redis_cache_hits_total / redis_cache_misses_total: rates per second and hit ratio per (instance, job).
   - query: `sum by (instance, job) (rate(redis_cache_hits_total[5m]))` — verdict: accept_with_warning
   - warnings: empty_result
@@ -15,33 +18,18 @@
   - warnings: empty_result
   - query: `sum by (instance, job) (rate(redis_cache_hits_total[5m])) / (sum by (instance, job) (rate(redis_cache_hits_total[5m])) + sum by (instance, job) (rate(redis_cache_misses_total[5m])))` — verdict: accept_with_warning
   - warnings: empty_result
-- **Request rate: http_client_requests_total** (confidence: 0.85) — Counter "http_client_requests_total" with HTTP-shaped labels; rate over 5m grouped by instance, job.
-  - query: `sum by (instance, job) (rate(http_client_requests_total[5m]))` — verdict: accept_with_warning
-  - warnings: empty_result
-- **Request rate: api_http_requests_total** (confidence: 0.85) — Counter "api_http_requests_total" with HTTP-shaped labels; rate over 5m grouped by handler, instance, job.
-  - query: `sum by (handler, instance, job) (rate(api_http_requests_total[5m]))` — verdict: accept
-  - warnings: none
 - **gRPC call rate: grpc_server_handled_total** (confidence: 0.85) — Counter "grpc_server_handled_total" carries gRPC-shape labels; rate over 5m grouped by grpc_method, grpc_service, instance, job.
   - query: `sum by (grpc_method, grpc_service, instance, job) (rate(grpc_server_handled_total[5m]))` — verdict: accept
   - warnings: none
+- **Request rate: http_client_requests_total** (confidence: 0.85) — Counter "http_client_requests_total" with HTTP-shaped labels; rate over 5m grouped by instance, job.
+  - query: `sum by (instance, job) (rate(http_client_requests_total[5m]))` — verdict: accept_with_warning
+  - warnings: empty_result
 - **Outbound HTTP call rate: http_client_requests_total** (confidence: 0.75) — Counter "http_client_requests_total" has "client" in name and an HTTP-status label; rate over 5m grouped by host, instance, job.
   - query: `sum by (host, instance, job) (rate(http_client_requests_total[5m]))` — verdict: accept_with_warning
   - warnings: empty_result
 
 ### errors
 
-- **gRPC error rate: grpc_server_handled_total** (confidence: 0.85) — Counter "grpc_server_handled_total" has a grpc_code label; filtering to grpc_code!="OK" gives the RPC error rate.
-  - query: `sum by (grpc_method, grpc_service, instance, job) (rate(grpc_server_handled_total{grpc_code!="OK"}[5m]))` — verdict: accept
-  - warnings: none
-- **Kafka consumer lag** (confidence: 0.85) — kafka_exporter gauge "kafka_consumergroup_lag"; max by consumergroup/topic/partition avoids double-counting when multiple replicas report the same partition.
-  - query: `max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)` — verdict: accept_with_warning
-  - warnings: empty_result, high_cardinality_grouping
-- **Kafka consumer lag (sum)** (confidence: 0.85) — kafka_exporter gauge "kafka_consumergroup_lag_sum"; max by consumergroup/topic/partition avoids double-counting when multiple replicas report the same partition.
-  - query: `max by (consumergroup, instance, job, topic) (kafka_consumergroup_lag_sum)` — verdict: accept_with_warning
-  - warnings: empty_result
-- **5xx error rate: http_client_requests_total** (confidence: 0.80) — Counter "http_client_requests_total" has a "status_code" label; filtering to 5.. gives a 5xx error rate.
-  - query: `sum by (instance, job) (rate(http_client_requests_total{status_code=~"5.."}[5m]))` — verdict: accept_with_warning
-  - warnings: empty_result
 - **Jobs success/fail rate: worker** (confidence: 0.80) — job success/failure pair worker_jobs_succeeded_total / worker_jobs_failed_total: rates per second per (instance, job, queue).
   - query: `sum by (instance, job, queue) (rate(worker_jobs_succeeded_total[5m]))` — verdict: accept_with_warning
   - warnings: empty_result
@@ -50,9 +38,28 @@
 - **5xx error rate: api_http_requests_total** (confidence: 0.80) — Counter "api_http_requests_total" has a "code" label; filtering to 5.. gives a 5xx error rate.
   - query: `sum by (handler, instance, job) (rate(api_http_requests_total{code=~"5.."}[5m]))` — verdict: accept
   - warnings: none
+- **5xx error rate: http_client_requests_total** (confidence: 0.80) — Counter "http_client_requests_total" has a "status_code" label; filtering to 5.. gives a 5xx error rate.
+  - query: `sum by (instance, job) (rate(http_client_requests_total{status_code=~"5.."}[5m]))` — verdict: accept_with_warning
+  - warnings: empty_result
+- **Kafka consumer lag (sum)** (confidence: 0.85) — kafka_exporter gauge "kafka_consumergroup_lag_sum"; max by consumergroup/topic/partition avoids double-counting when multiple replicas report the same partition.
+  - query: `max by (consumergroup, instance, job, topic) (kafka_consumergroup_lag_sum)` — verdict: accept_with_warning
+  - warnings: empty_result
+- **Kafka consumer lag** (confidence: 0.85) — kafka_exporter gauge "kafka_consumergroup_lag"; max by consumergroup/topic/partition avoids double-counting when multiple replicas report the same partition.
+  - query: `max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)` — verdict: accept_with_warning
+  - warnings: empty_result, high_cardinality_grouping
+- **gRPC error rate: grpc_server_handled_total** (confidence: 0.85) — Counter "grpc_server_handled_total" has a grpc_code label; filtering to grpc_code!="OK" gives the RPC error rate.
+  - query: `sum by (grpc_method, grpc_service, instance, job) (rate(grpc_server_handled_total{grpc_code!="OK"}[5m]))` — verdict: accept
+  - warnings: none
 
 ### latency
 
+- **DB query latency (p50/p95/p99): db_query_duration_seconds** (confidence: 0.75) — DB query latency histogram "db_query_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m with le grouping.
+  - query: `histogram_quantile(0.50, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result
+  - query: `histogram_quantile(0.95, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result
+  - query: `histogram_quantile(0.99, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
+  - warnings: empty_result
 - **gRPC latency (p50/p95/p99): grpc_server_handling_seconds** (confidence: 0.85) — gRPC latency histogram "grpc_server_handling_seconds"; p50/p95/p99 via histogram_quantile over 5m with grpc_service/grpc_method + le grouping.
   - query: `histogram_quantile(0.50, sum by (grpc_method, grpc_service, instance, job, le) (rate(grpc_server_handling_seconds_bucket[5m])))` — verdict: accept
   - warnings: none
@@ -67,44 +74,37 @@
   - warnings: none
   - query: `histogram_quantile(0.99, sum by (handler, instance, job, le) (rate(api_http_request_duration_seconds_bucket[5m])))` — verdict: accept
   - warnings: none
-- **DB query latency (p50/p95/p99): db_query_duration_seconds** (confidence: 0.75) — DB query latency histogram "db_query_duration_seconds"; p50/p95/p99 via histogram_quantile over 5m with le grouping.
-  - query: `histogram_quantile(0.50, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result
-  - query: `histogram_quantile(0.95, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result
-  - query: `histogram_quantile(0.99, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))` — verdict: accept_with_warning
-  - warnings: empty_result
 
 ### saturation
 
-- **CPU (cores used): process_cpu_seconds_total** (confidence: 0.80) — CPU-seconds counter "process_cpu_seconds_total"; rate over 5m yields cores consumed.
-  - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept
-  - warnings: none
-- **GC pause: go_gc_duration_seconds** (confidence: 0.85) — Summary "go_gc_duration_seconds": p99 selected via quantile label; avg by (instance, job) collapses replicas.
-  - query: `avg by (instance, job) (go_gc_duration_seconds{quantile="0.99"})` — verdict: accept
-  - warnings: none
-- **Goroutines: go_goroutines** (confidence: 0.90) — Gauge "go_goroutines" aggregated with max by (instance, job); max rather than sum because each process reports its own count — summing across instances would misleadingly inflate the number.
-  - query: `max by (instance, job) (go_goroutines)` — verdict: accept
-  - warnings: none
-- **Memory: process_resident_memory_bytes** (confidence: 0.80) — Memory gauge "process_resident_memory_bytes" summed by instance, job.
-  - query: `sum by (instance, job) (process_resident_memory_bytes)` — verdict: accept
-  - warnings: none
 - **DB pool utilization: go_sql** (confidence: 0.80) — go_sql_stats_connections_in_use / go_sql_stats_connections_max: connection pool utilisation ratio. Values near 1.0 indicate pool exhaustion.
   - query: `go_sql_stats_connections_in_use / go_sql_stats_connections_max` — verdict: accept_with_warning
   - warnings: empty_result
+- **CPU (cores used): process_cpu_seconds_total** (confidence: 0.80) — CPU-seconds counter "process_cpu_seconds_total"; rate over 5m yields cores consumed.
+  - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept
+  - warnings: none
+- **TLS cert days to expiry: api_tls_not_after_timestamp** (confidence: 0.80) — Cert-expiry timestamp gauge "api_tls_not_after_timestamp"; (metric - time()) / 86400 yields days until expiry.
+  - query: `(api_tls_not_after_timestamp - time()) / 86400` — verdict: accept_with_warning
+  - warnings: empty_result
+- **GC pause: go_gc_duration_seconds** (confidence: 0.85) — Summary "go_gc_duration_seconds": p99 selected via quantile label; avg by (instance, job) collapses replicas.
+  - query: `avg by (instance, job) (go_gc_duration_seconds{quantile="0.99"})` — verdict: accept
+  - warnings: none
 - **Request size (p50/p95): http_request_size_bytes** (confidence: 0.75) — Request-size histogram "http_request_size_bytes"; p50/p95 via histogram_quantile over 5m with le grouping.
   - query: `histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))` — verdict: accept_with_warning
   - warnings: empty_result
   - query: `histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))` — verdict: accept_with_warning
   - warnings: empty_result
+- **Goroutines: go_goroutines** (confidence: 0.90) — Gauge "go_goroutines" aggregated with max by (instance, job); max rather than sum because each process reports its own count — summing across instances would misleadingly inflate the number.
+  - query: `max by (instance, job) (go_goroutines)` — verdict: accept
+  - warnings: none
 - **Response Size (p50/p95): http_response_size_bytes** (confidence: 0.75) — Response size histogram "http_response_size_bytes"; p50/p95 via histogram_quantile over 5m with le grouping.
   - query: `histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))` — verdict: accept_with_warning
   - warnings: empty_result
   - query: `histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))` — verdict: accept_with_warning
   - warnings: empty_result
-- **TLS cert days to expiry: api_tls_not_after_timestamp** (confidence: 0.80) — Cert-expiry timestamp gauge "api_tls_not_after_timestamp"; (metric - time()) / 86400 yields days until expiry.
-  - query: `(api_tls_not_after_timestamp - time()) / 86400` — verdict: accept_with_warning
-  - warnings: empty_result
+- **Memory: process_resident_memory_bytes** (confidence: 0.80) — Memory gauge "process_resident_memory_bytes" summed by instance, job.
+  - query: `sum by (instance, job) (process_resident_memory_bytes)` — verdict: accept
+  - warnings: none
 
 ## Omitted
 

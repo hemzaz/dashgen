@@ -10,7 +10,7 @@
   "liveNow": false,
   "panels": [
     {
-      "id": 847996758,
+      "id": 3664683230984751,
       "type": "row",
       "title": "traffic",
       "gridPos": {
@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 895859167,
+      "id": 5761400309270084,
       "type": "timeseries",
       "title": "Request rate: admin_actions_total",
       "datasource": {
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": 895859167,
+      "id": 3747690827992872,
       "type": "timeseries",
       "title": "Request rate: http_requests_total",
       "datasource": {
@@ -86,7 +86,7 @@
       ]
     },
     {
-      "id": 887320569,
+      "id": 6718848702481529,
       "type": "row",
       "title": "errors",
       "gridPos": {
@@ -98,7 +98,7 @@
       "collapsed": false
     },
     {
-      "id": 2074026023,
+      "id": 5061454542720378,
       "type": "timeseries",
       "title": "5xx error rate: admin_actions_total",
       "datasource": {
@@ -130,7 +130,7 @@
       ]
     },
     {
-      "id": 2074026023,
+      "id": 2666870031824485,
       "type": "timeseries",
       "title": "5xx error rate: http_requests_total",
       "datasource": {
@@ -162,7 +162,7 @@
       ]
     },
     {
-      "id": 966139652,
+      "id": 6900584097993317,
       "type": "row",
       "title": "latency",
       "gridPos": {
@@ -174,7 +174,7 @@
       "collapsed": false
     },
     {
-      "id": 425614238,
+      "id": 3358741141922910,
       "type": "timeseries",
       "title": "Latency (p50/p95/p99): http_request_duration_seconds_bucket",
       "datasource": {
@@ -224,7 +224,7 @@
       ]
     },
     {
-      "id": 1655985763,
+      "id": 8967718425658615,
       "type": "row",
       "title": "saturation",
       "gridPos": {
@@ -236,7 +236,7 @@
       "collapsed": false
     },
     {
-      "id": 1243427953,
+      "id": 4651419525474720,
       "type": "timeseries",
       "title": "CPU (cores used): process_cpu_seconds_total",
       "datasource": {
@@ -268,7 +268,7 @@
       ]
     },
     {
-      "id": 1243427953,
+      "id": 5934002140152772,
       "type": "timeseries",
       "title": "Memory: process_resident_memory_bytes",
       "datasource": {

@@ -1,48 +1,48 @@
 [
   {
-    "panel_uid": "1b13dff0c6032056",
-    "section": "disk",
-    "code": "empty_result",
-    "detail": "sum by (instance, device) (rate(node_disk_io_time_seconds_total[5m]))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "1b13dff0c6032056",
-    "section": "disk",
-    "code": "empty_result",
-    "detail": "sum by (instance, device) (rate(node_disk_io_time_weighted_seconds_total[5m]))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "1b13dff0c6032056",
-    "section": "disk",
-    "code": "empty_result",
-    "detail": "sum by (instance, device) (rate(node_disk_reads_completed_total[5m]))",
-    "severity": "warning"
-  },
-  {
-    "panel_uid": "1b13dff0c6032056",
+    "panel_uid": "95cb2f943c87524a",
     "section": "disk",
     "code": "empty_result",
     "detail": "sum by (instance, device) (rate(node_disk_writes_completed_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "0bc287fe77240f05",
+    "panel_uid": "9e3afa69b5684c79",
+    "section": "disk",
+    "code": "empty_result",
+    "detail": "sum by (instance, device) (rate(node_disk_io_time_seconds_total[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "b14a8a242c857e56",
+    "section": "disk",
+    "code": "empty_result",
+    "detail": "sum by (instance, device) (rate(node_disk_io_time_weighted_seconds_total[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "daabd9f974faa9d6",
+    "section": "disk",
+    "code": "empty_result",
+    "detail": "sum by (instance, device) (rate(node_disk_reads_completed_total[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "ad24b5fa30485675",
     "section": "overview",
     "code": "empty_result",
     "detail": "max by (instance, job) (node_timex_offset_seconds)",
     "severity": "warning"
   },
   {
-    "panel_uid": "121e280860d61c12",
+    "panel_uid": "52a788c0b8df180e",
     "section": "saturation",
     "code": "empty_result",
     "detail": "sum by (instance, cpu) (rate(node_interrupts_total[5m]))",
     "severity": "warning"
   },
   {
-    "panel_uid": "c6d96ce8c53abc84",
+    "panel_uid": "f342c92995b401e4",
     "section": "saturation",
     "code": "empty_result",
     "detail": "node_nf_conntrack_entries / node_nf_conntrack_entries_limit",
