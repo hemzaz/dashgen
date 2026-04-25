@@ -77,6 +77,8 @@ func TestNewServiceRegistry_AllRecipesRegisteredInSortedOrder(t *testing.T) {
 		"service_job_success",
 		"service_kafka_consumer_lag",
 		"service_memory",
+		"service_request_size",
+		"service_response_size",
 		"service_tls_expiry",
 	}
 	if len(got) != len(want) {

@@ -25,6 +25,7 @@ func NewRegistry() *Registry {
 //   - service_goroutines / service_gc_pause                            (v0.2 Go runtime)
 //   - service_db_query_latency / service_tls_expiry / service_cache_hits (v0.2 Tier-2)
 //   - service_job_success                                               (v0.2 Tier-2)
+//   - service_request_size / service_response_size                     (v0.2 Tier-2 stragglers)
 func NewServiceRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewServiceHTTPRate())
@@ -44,6 +45,8 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceClientHTTP())
 	r.Register(NewServiceDBPool())
 	r.Register(NewServiceKafkaConsumerLag())
+	r.Register(NewServiceRequestSize())
+	r.Register(NewServiceResponseSize())
 	return r
 }
 
@@ -54,6 +57,7 @@ func NewServiceRegistry() *Registry {
 //   - infra_load / infra_filesystem_usage                     (v0.2)
 //   - infra_file_descriptors / infra_nic_errors               (v0.2)
 //   - infra_conntrack / infra_disk_iops / infra_disk_io_latency (v0.2 Tier-2)
+//   - infra_interrupts                                          (v0.2 Tier-2 stragglers)
 func NewInfraRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewInfraCPU())
@@ -68,6 +72,7 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraDiskIOPS())
 	r.Register(NewInfraDiskIOLatency())
 	r.Register(NewInfraNTPOffset())
+	r.Register(NewInfraInterrupts())
 	return r
 }
 
@@ -78,6 +83,7 @@ func NewInfraRegistry() *Registry {
 //   - k8s_deployment_availability / k8s_node_conditions         (v0.2)
 //   - k8s_pvc_usage / k8s_oom_kills                             (v0.2)
 //   - k8s_apiserver_latency                                     (v0.2 Tier-2)
+//   - k8s_scheduler_latency / k8s_coredns                       (v0.2 Tier-2 stragglers)
 func NewK8sRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewK8sPodHealth())
@@ -90,6 +96,8 @@ func NewK8sRegistry() *Registry {
 	r.Register(NewK8sApiserverLatency())
 	r.Register(NewK8sEtcdCommit())
 	r.Register(NewK8sHPAScaling())
+	r.Register(NewK8sSchedulerLatency())
+	r.Register(NewK8sCoreDNS())
 	return r
 }
 
