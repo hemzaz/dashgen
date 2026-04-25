@@ -1,15 +1,247 @@
 {
-  "api_http_requests_total": [{"type": "counter", "help": "Total HTTP requests processed by the API, labelled with promhttp code/handler conventions.", "unit": ""}],
-  "api_http_request_duration_seconds": [{"type": "histogram", "help": "HTTP request duration histogram exposed with a bare base name (Prometheus metadata returns the base; queryable series are _bucket/_sum/_count).", "unit": "seconds"}],
-  "queue_items_received_total": [{"type": "counter", "help": "Items the queue worker received from upstream; status holds domain values like accepted/rejected, NOT HTTP status codes.", "unit": ""}],
-  "queue_processing_duration_seconds_bucket": [{"type": "histogram", "help": "Queue item processing duration bucket; no HTTP-shape labels.", "unit": "seconds"}],
-  "queue_processing_duration_seconds_sum": [{"type": "histogram", "help": "Queue item processing duration sum.", "unit": "seconds"}],
-  "queue_processing_duration_seconds_count": [{"type": "histogram", "help": "Queue item processing duration count.", "unit": "seconds"}],
-  "process_cpu_seconds_total": [{"type": "counter", "help": "Total user + system CPU time.", "unit": ""}],
-  "process_resident_memory_bytes": [{"type": "gauge", "help": "Resident set size.", "unit": ""}],
-  "grpc_server_handled_total": [{"type": "counter", "help": "Total number of RPCs completed on the server, regardless of success or failure.", "unit": ""}],
-  "grpc_server_handling_seconds": [{"type": "histogram", "help": "Histogram of response latency (seconds) of gRPC calls handled by the server.", "unit": "seconds"}],
-  "grpc_client_retries_total": [{"type": "counter", "help": "Client-side retry counter; carries no grpc_method/grpc_service labels (regression look-alike).", "unit": ""}],
-  "go_goroutines": [{"type": "gauge", "help": "Number of goroutines that currently exist.", "unit": ""}],
-  "go_gc_duration_seconds": [{"type": "summary", "help": "A summary of the pause duration of garbage collection cycles.", "unit": "seconds"}]
+  "api_http_request_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "HTTP request duration histogram exposed with a bare base name (Prometheus metadata returns the base; queryable series are _bucket/_sum/_count).",
+      "unit": "seconds"
+    }
+  ],
+  "api_http_requests_total": [
+    {
+      "type": "counter",
+      "help": "Total HTTP requests processed by the API, labelled with promhttp code/handler conventions.",
+      "unit": ""
+    }
+  ],
+  "api_tls_not_after_timestamp": [
+    {
+      "type": "gauge",
+      "help": "Unix timestamp at which the TLS certificate becomes invalid.",
+      "unit": ""
+    }
+  ],
+  "cache_client_hits_total": [
+    {
+      "type": "counter",
+      "help": "Total cache client hit/miss events; has client in name but no HTTP-status label (look-alike negative for service_client_http).",
+      "unit": ""
+    }
+  ],
+  "cache_items_evicted_total": [
+    {
+      "type": "counter",
+      "help": "Cache eviction counter; look-alike for cache_hits (wrong suffix).",
+      "unit": ""
+    }
+  ],
+  "consumer_processed_total": [
+    {
+      "type": "counter",
+      "help": "Total messages processed by the consumer worker; not a Kafka lag gauge.",
+      "unit": ""
+    }
+  ],
+  "db_query_count_total": [
+    {
+      "type": "counter",
+      "help": "Total database queries executed; name contains query but type is counter not histogram (look-alike negative for service_db_query_latency).",
+      "unit": ""
+    }
+  ],
+  "db_query_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "Duration of database query executions in seconds, instrumented at the repository layer.",
+      "unit": "seconds"
+    }
+  ],
+  "db_request_size_bytes": [
+    {
+      "type": "histogram",
+      "help": "Database query payload size histogram; labelled by query_type, not method/handler.",
+      "unit": ""
+    }
+  ],
+  "db_response_size_bytes": [
+    {
+      "type": "histogram",
+      "help": "Database response payload size histogram; labelled by query_type, not method/handler.",
+      "unit": ""
+    }
+  ],
+  "go_gc_duration_seconds": [
+    {
+      "type": "summary",
+      "help": "A summary of the pause duration of garbage collection cycles.",
+      "unit": "seconds"
+    }
+  ],
+  "go_memstats_alloc_bytes": [
+    {
+      "type": "gauge",
+      "help": "Number of bytes allocated and still in use by the Go heap; look-alike negative for service_memory (not in memoryMetricNames closed set).",
+      "unit": "bytes"
+    }
+  ],
+  "go_goroutines": [
+    {
+      "type": "gauge",
+      "help": "Number of goroutines that currently exist.",
+      "unit": ""
+    }
+  ],
+  "go_sql_stats_connections_in_use": [
+    {
+      "type": "gauge",
+      "help": "Number of connections currently in use by sql.DB (prometheus/client_golang go_sql_stats instrumentation).",
+      "unit": ""
+    }
+  ],
+  "go_sql_stats_connections_max": [
+    {
+      "type": "gauge",
+      "help": "Maximum number of open connections configured for sql.DB (sql.DB.SetMaxOpenConns).",
+      "unit": ""
+    }
+  ],
+  "grpc_client_retries_total": [
+    {
+      "type": "counter",
+      "help": "Client-side retry counter; carries no grpc_method/grpc_service labels (regression look-alike).",
+      "unit": ""
+    }
+  ],
+  "grpc_server_handled_total": [
+    {
+      "type": "counter",
+      "help": "Total number of RPCs completed on the server, regardless of success or failure.",
+      "unit": ""
+    }
+  ],
+  "grpc_server_handling_seconds": [
+    {
+      "type": "histogram",
+      "help": "Histogram of response latency (seconds) of gRPC calls handled by the server.",
+      "unit": "seconds"
+    }
+  ],
+  "http_client_requests_total": [
+    {
+      "type": "counter",
+      "help": "Total outbound HTTP client requests made by this service, labelled with target host and HTTP status code.",
+      "unit": ""
+    }
+  ],
+  "http_request_size_bytes": [
+    {
+      "type": "histogram",
+      "help": "HTTP request body size histogram labelled by method and handler.",
+      "unit": ""
+    }
+  ],
+  "http_response_size_bytes": [
+    {
+      "type": "histogram",
+      "help": "HTTP response body size histogram labelled by method and handler.",
+      "unit": ""
+    }
+  ],
+  "kafka_consumergroup_lag": [
+    {
+      "type": "gauge",
+      "help": "Number of messages a consumer group is behind the latest offset, per partition (kafka_exporter).",
+      "unit": ""
+    }
+  ],
+  "kafka_consumergroup_lag_sum": [
+    {
+      "type": "gauge",
+      "help": "Aggregate consumer group lag summed across all partitions (kafka_exporter).",
+      "unit": ""
+    }
+  ],
+  "probe_ssl_earliest_cert_expiry": [
+    {
+      "type": "gauge",
+      "help": "Earliest SSL cert expiry from blackbox_exporter; look-alike for tls_expiry (wrong suffix length).",
+      "unit": ""
+    }
+  ],
+  "process_cpu_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Total user + system CPU time.",
+      "unit": ""
+    }
+  ],
+  "process_resident_memory_bytes": [
+    {
+      "type": "gauge",
+      "help": "Resident set size.",
+      "unit": ""
+    }
+  ],
+  "queue_items_received_total": [
+    {
+      "type": "counter",
+      "help": "Items the queue worker received from upstream; status holds domain values like accepted/rejected, NOT HTTP status codes.",
+      "unit": ""
+    }
+  ],
+  "queue_processing_duration_seconds_bucket": [
+    {
+      "type": "histogram",
+      "help": "Queue item processing duration bucket; no HTTP-shape labels.",
+      "unit": "seconds"
+    }
+  ],
+  "queue_processing_duration_seconds_count": [
+    {
+      "type": "histogram",
+      "help": "Queue item processing duration count.",
+      "unit": "seconds"
+    }
+  ],
+  "queue_processing_duration_seconds_sum": [
+    {
+      "type": "histogram",
+      "help": "Queue item processing duration sum.",
+      "unit": "seconds"
+    }
+  ],
+  "redis_cache_hits_total": [
+    {
+      "type": "counter",
+      "help": "Total number of Redis cache hits.",
+      "unit": ""
+    }
+  ],
+  "redis_cache_misses_total": [
+    {
+      "type": "counter",
+      "help": "Total number of Redis cache misses.",
+      "unit": ""
+    }
+  ],
+  "worker_jobs_completed_total": [
+    {
+      "type": "counter",
+      "help": "Jobs completed with status label; look-alike for job_success (shape B, wrong name pattern).",
+      "unit": ""
+    }
+  ],
+  "worker_jobs_failed_total": [
+    {
+      "type": "counter",
+      "help": "Total background jobs that failed.",
+      "unit": ""
+    }
+  ],
+  "worker_jobs_succeeded_total": [
+    {
+      "type": "counter",
+      "help": "Total background jobs that completed successfully.",
+      "unit": ""
+    }
+  ]
 }

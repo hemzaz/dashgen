@@ -1,20 +1,240 @@
 {
-  "node_cpu_seconds_total": [{"type": "counter", "help": "Seconds the CPUs spent in each mode.", "unit": "seconds"}],
-  "node_load1": [{"type": "gauge", "help": "1m load average.", "unit": ""}],
-  "node_load5": [{"type": "gauge", "help": "5m load average.", "unit": ""}],
-  "node_load15": [{"type": "gauge", "help": "15m load average.", "unit": ""}],
-  "node_filesystem_avail_bytes": [{"type": "gauge", "help": "Filesystem space available to non-root users in bytes.", "unit": "bytes"}],
-  "node_filesystem_size_bytes": [{"type": "gauge", "help": "Filesystem size in bytes.", "unit": "bytes"}],
-  "process_open_fds": [{"type": "gauge", "help": "Number of open file descriptors.", "unit": ""}],
-  "process_max_fds": [{"type": "gauge", "help": "Maximum number of open file descriptors.", "unit": ""}],
-  "node_memory_MemAvailable_bytes": [{"type": "gauge", "help": "Memory information field MemAvailable_bytes.", "unit": "bytes"}],
-  "node_memory_MemTotal_bytes": [{"type": "gauge", "help": "Memory information field MemTotal_bytes.", "unit": "bytes"}],
-  "node_network_receive_bytes_total": [{"type": "counter", "help": "Network device statistic receive_bytes.", "unit": "bytes"}],
-  "node_network_transmit_bytes_total": [{"type": "counter", "help": "Network device statistic transmit_bytes.", "unit": "bytes"}],
-  "node_network_receive_errs_total": [{"type": "counter", "help": "Network device statistic receive_errs.", "unit": ""}],
-  "node_network_transmit_errs_total": [{"type": "counter", "help": "Network device statistic transmit_errs.", "unit": ""}],
-  "node_network_receive_drop_total": [{"type": "counter", "help": "Network device statistic receive_drop.", "unit": ""}],
-  "node_network_transmit_drop_total": [{"type": "counter", "help": "Network device statistic transmit_drop.", "unit": ""}],
-  "container_cpu_usage_seconds_total": [{"type": "counter", "help": "Cumulative cpu time consumed by the container in core-seconds.", "unit": "seconds"}],
-  "container_memory_working_set_bytes": [{"type": "gauge", "help": "Current working set of the container in bytes.", "unit": "bytes"}]
+  "container_cpu_usage_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Cumulative cpu time consumed by the container in core-seconds.",
+      "unit": "seconds"
+    }
+  ],
+  "container_fs_reads_total": [
+    {
+      "type": "counter",
+      "help": "Cumulative count of reads made on a filesystem.",
+      "unit": ""
+    }
+  ],
+  "container_fs_usage_bytes": [
+    {
+      "type": "gauge",
+      "help": "Number of bytes that are consumed by the container on this filesystem; look-alike negative for infra_disk (node_filesystem_* name required).",
+      "unit": "bytes"
+    }
+  ],
+  "container_memory_usage_bytes": [
+    {
+      "type": "gauge",
+      "help": "Current memory usage, including all memory regardless of when it was accessed; look-alike negative for infra_memory (node_memory_Mem* name required).",
+      "unit": "bytes"
+    }
+  ],
+  "container_memory_working_set_bytes": [
+    {
+      "type": "gauge",
+      "help": "Current working set of the container in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "container_network_receive_bytes_total": [
+    {
+      "type": "counter",
+      "help": "Cumulative count of bytes received over the network by the container; look-alike negative for infra_network (node_network_* name required).",
+      "unit": "bytes"
+    }
+  ],
+  "node_cpu_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Seconds the CPUs spent in each mode.",
+      "unit": "seconds"
+    }
+  ],
+  "node_disk_io_time_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Total seconds spent doing I/Os.",
+      "unit": "seconds"
+    }
+  ],
+  "node_disk_io_time_weighted_seconds_total": [
+    {
+      "type": "counter",
+      "help": "The weighted number of seconds spent doing I/Os.",
+      "unit": "seconds"
+    }
+  ],
+  "node_disk_read_bytes_total": [
+    {
+      "type": "counter",
+      "help": "The total number of bytes read successfully.",
+      "unit": "bytes"
+    }
+  ],
+  "node_disk_reads_completed_total": [
+    {
+      "type": "counter",
+      "help": "The total number of reads completed successfully.",
+      "unit": ""
+    }
+  ],
+  "node_disk_writes_completed_total": [
+    {
+      "type": "counter",
+      "help": "The total number of writes completed successfully.",
+      "unit": ""
+    }
+  ],
+  "node_filesystem_avail_bytes": [
+    {
+      "type": "gauge",
+      "help": "Filesystem space available to non-root users in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_filesystem_size_bytes": [
+    {
+      "type": "gauge",
+      "help": "Filesystem size in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_interrupts_total": [
+    {
+      "type": "counter",
+      "help": "Total number of interrupts serviced.",
+      "unit": ""
+    }
+  ],
+  "node_load1": [
+    {
+      "type": "gauge",
+      "help": "1m load average.",
+      "unit": ""
+    }
+  ],
+  "node_load15": [
+    {
+      "type": "gauge",
+      "help": "15m load average.",
+      "unit": ""
+    }
+  ],
+  "node_load5": [
+    {
+      "type": "gauge",
+      "help": "5m load average.",
+      "unit": ""
+    }
+  ],
+  "node_memory_MemAvailable_bytes": [
+    {
+      "type": "gauge",
+      "help": "Memory information field MemAvailable_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_memory_MemTotal_bytes": [
+    {
+      "type": "gauge",
+      "help": "Memory information field MemTotal_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_network_receive_bytes_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic receive_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_network_receive_drop_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic receive_drop.",
+      "unit": ""
+    }
+  ],
+  "node_network_receive_errs_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic receive_errs.",
+      "unit": ""
+    }
+  ],
+  "node_network_transmit_bytes_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic transmit_bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "node_network_transmit_drop_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic transmit_drop.",
+      "unit": ""
+    }
+  ],
+  "node_network_transmit_errs_total": [
+    {
+      "type": "counter",
+      "help": "Network device statistic transmit_errs.",
+      "unit": ""
+    }
+  ],
+  "node_nf_conntrack_entries": [
+    {
+      "type": "gauge",
+      "help": "Number of currently allocated flow entries for connection tracking.",
+      "unit": ""
+    }
+  ],
+  "node_nf_conntrack_entries_limit": [
+    {
+      "type": "gauge",
+      "help": "Maximum size of connection tracking table.",
+      "unit": ""
+    }
+  ],
+  "node_softirqs_total": [
+    {
+      "type": "counter",
+      "help": "Total number of software interrupts serviced.",
+      "unit": ""
+    }
+  ],
+  "node_timex_offset_seconds": [
+    {
+      "type": "gauge",
+      "help": "Time offset in between local system and reference clock.",
+      "unit": "seconds"
+    }
+  ],
+  "process_cpu_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Total user and system CPU time spent in seconds; look-alike negative for infra_cpu (name must be node_cpu_seconds_total).",
+      "unit": "seconds"
+    }
+  ],
+  "process_max_fds": [
+    {
+      "type": "gauge",
+      "help": "Maximum number of open file descriptors.",
+      "unit": ""
+    }
+  ],
+  "process_open_fds": [
+    {
+      "type": "gauge",
+      "help": "Number of open file descriptors.",
+      "unit": ""
+    }
+  ],
+  "process_start_time_seconds": [
+    {
+      "type": "gauge",
+      "help": "Start time of the process since unix epoch in seconds.",
+      "unit": "seconds"
+    }
+  ]
 }

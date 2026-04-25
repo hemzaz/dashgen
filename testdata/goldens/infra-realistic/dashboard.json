@@ -22,7 +22,7 @@
       "collapsed": false
     },
     {
-      "id": 2046341765,
+      "id": 2010268993,
       "type": "timeseries",
       "title": "Open fds vs max",
       "datasource": {
@@ -54,6 +54,38 @@
       ]
     },
     {
+      "id": 197298174,
+      "type": "timeseries",
+      "title": "NTP offset",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (instance, job) (node_timex_offset_seconds)",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "id": 502449623,
       "type": "row",
       "title": "cpu",
@@ -66,7 +98,7 @@
       "collapsed": false
     },
     {
-      "id": 1941039813,
+      "id": 633094971,
       "type": "timeseries",
       "title": "CPU utilization: node_cpu_seconds_total",
       "datasource": {
@@ -98,7 +130,7 @@
       ]
     },
     {
-      "id": 1941039813,
+      "id": 633094971,
       "type": "timeseries",
       "title": "Load 1m: node_load1",
       "datasource": {
@@ -130,7 +162,7 @@
       ]
     },
     {
-      "id": 1941039813,
+      "id": 633094971,
       "type": "timeseries",
       "title": "Load 15m: node_load15",
       "datasource": {
@@ -162,7 +194,7 @@
       ]
     },
     {
-      "id": 1941039813,
+      "id": 633094971,
       "type": "timeseries",
       "title": "Load 5m: node_load5",
       "datasource": {
@@ -206,7 +238,7 @@
       "collapsed": false
     },
     {
-      "id": 2003861882,
+      "id": 849081939,
       "type": "timeseries",
       "title": "Memory used ratio",
       "datasource": {
@@ -250,7 +282,7 @@
       "collapsed": false
     },
     {
-      "id": 1641508350,
+      "id": 750123784,
       "type": "timeseries",
       "title": "Disk used ratio",
       "datasource": {
@@ -282,9 +314,9 @@
       ]
     },
     {
-      "id": 571740435,
+      "id": 454287344,
       "type": "timeseries",
-      "title": "Filesystem used ratio",
+      "title": "Disk IO busy fraction",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -307,6 +339,134 @@
             "type": "prometheus",
             "uid": "$datasource"
           },
+          "expr": "sum by (instance, device) (rate(node_disk_io_time_seconds_total[5m]))",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 454287344,
+      "type": "timeseries",
+      "title": "Disk IO weighted time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, device) (rate(node_disk_io_time_weighted_seconds_total[5m]))",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 454287344,
+      "type": "timeseries",
+      "title": "Disk read IOPS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "iops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, device) (rate(node_disk_reads_completed_total[5m]))",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 454287344,
+      "type": "timeseries",
+      "title": "Disk write IOPS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "iops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 52
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, device) (rate(node_disk_writes_completed_total[5m]))",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 511814438,
+      "type": "timeseries",
+      "title": "Filesystem used ratio",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
           "expr": "(node_filesystem_size_bytes{fstype!=\"\"} - node_filesystem_avail_bytes{fstype!=\"\"}) / node_filesystem_size_bytes{fstype!=\"\"}",
           "legendFormat": "{{instance}} {{mountpoint}} {{fstype}}",
           "refId": "A"
@@ -314,19 +474,19 @@
       ]
     },
     {
-      "id": 714369764,
+      "id": 714384916,
       "type": "row",
       "title": "network",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 60
       },
       "collapsed": false
     },
     {
-      "id": 148405600,
+      "id": 670035104,
       "type": "timeseries",
       "title": "Network RX: node_network_receive_bytes_total",
       "datasource": {
@@ -343,7 +503,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 45
+        "y": 61
       },
       "targets": [
         {
@@ -358,7 +518,7 @@
       ]
     },
     {
-      "id": 148405600,
+      "id": 670035104,
       "type": "timeseries",
       "title": "Network TX: node_network_transmit_bytes_total",
       "datasource": {
@@ -375,7 +535,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 45
+        "y": 61
       },
       "targets": [
         {
@@ -390,7 +550,7 @@
       ]
     },
     {
-      "id": 148405600,
+      "id": 670035104,
       "type": "timeseries",
       "title": "NIC RX drops",
       "datasource": {
@@ -407,7 +567,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 53
+        "y": 69
       },
       "targets": [
         {
@@ -422,7 +582,7 @@
       ]
     },
     {
-      "id": 148405600,
+      "id": 670035104,
       "type": "timeseries",
       "title": "NIC RX errors",
       "datasource": {
@@ -439,7 +599,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 53
+        "y": 69
       },
       "targets": [
         {
@@ -454,7 +614,7 @@
       ]
     },
     {
-      "id": 148405600,
+      "id": 670035104,
       "type": "timeseries",
       "title": "NIC TX drops",
       "datasource": {
@@ -471,7 +631,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 61
+        "y": 77
       },
       "targets": [
         {
@@ -486,7 +646,7 @@
       ]
     },
     {
-      "id": 148405600,
+      "id": 670035104,
       "type": "timeseries",
       "title": "NIC TX errors",
       "datasource": {
@@ -503,7 +663,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 61
+        "y": 77
       },
       "targets": [
         {
@@ -513,6 +673,82 @@
           },
           "expr": "sum by (instance, device) (rate(node_network_transmit_errs_total[5m]))",
           "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1655915685,
+      "type": "row",
+      "title": "saturation",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 85
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1188654313,
+      "type": "timeseries",
+      "title": "Conntrack table saturation",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 86
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "node_nf_conntrack_entries / node_nf_conntrack_entries_limit",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 303966216,
+      "type": "timeseries",
+      "title": "Hardware interrupt rate by CPU",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 86
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, cpu) (rate(node_interrupts_total[5m]))",
+          "legendFormat": "{{instance}} cpu{{cpu}}",
           "refId": "A"
         }
       ]
@@ -544,8 +780,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "DashGen — infra (e5713ce0)",
-  "uid": "780530dda8cc0e99",
+  "title": "DashGen — infra (2e4b8390)",
+  "uid": "6d972971806873fe",
   "version": 1,
   "weekStart": ""
 }

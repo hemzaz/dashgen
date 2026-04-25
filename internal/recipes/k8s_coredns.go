@@ -55,7 +55,7 @@ type k8sCoreDNSRecipe struct{}
 func NewK8sCoreDNS() Recipe { return &k8sCoreDNSRecipe{} }
 
 func (k8sCoreDNSRecipe) Name() string    { return "k8s_coredns" }
-func (k8sCoreDNSRecipe) Section() string { return "latency" }
+func (k8sCoreDNSRecipe) Section() string { return "resources" }
 
 // Match returns true for the CoreDNS latency histogram or the request-rate
 // counter. Name equality is used for both to avoid claiming unrelated metrics.

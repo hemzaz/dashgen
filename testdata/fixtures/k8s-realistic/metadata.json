@@ -1,13 +1,156 @@
 {
-  "kube_pod_status_phase": [{"type": "gauge", "help": "The pods current phase.", "unit": ""}],
-  "kube_pod_container_status_restarts_total": [{"type": "counter", "help": "The number of container restarts per container.", "unit": ""}],
-  "container_cpu_usage_seconds_total": [{"type": "counter", "help": "Cumulative cpu time consumed in seconds.", "unit": "seconds"}],
-  "container_memory_working_set_bytes": [{"type": "gauge", "help": "Current working set in bytes.", "unit": "bytes"}],
-  "kube_deployment_spec_replicas": [{"type": "gauge", "help": "Number of desired pods for a deployment.", "unit": ""}],
-  "kube_deployment_status_replicas_available": [{"type": "gauge", "help": "The number of available replicas per deployment.", "unit": ""}],
-  "kube_node_status_condition": [{"type": "gauge", "help": "The condition of a cluster node.", "unit": ""}],
-  "kubelet_volume_stats_available_bytes": [{"type": "gauge", "help": "Number of available bytes in the volume.", "unit": "bytes"}],
-  "kubelet_volume_stats_capacity_bytes": [{"type": "gauge", "help": "Capacity in bytes of the volume.", "unit": "bytes"}],
-  "kube_pod_container_status_terminated_reason": [{"type": "gauge", "help": "Describes the reason the container is currently in terminated state.", "unit": ""}],
-  "node_cpu_seconds_total": [{"type": "counter", "help": "Seconds the CPUs spent in each mode.", "unit": "seconds"}]
+  "apiserver_request_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "Response latency distribution in seconds for each verb, resource and subresource.",
+      "unit": "seconds"
+    }
+  ],
+  "apiserver_response_size_bytes": [
+    {
+      "type": "histogram",
+      "help": "Response size in bytes for each verb, resource and subresource.",
+      "unit": "bytes"
+    }
+  ],
+  "container_cpu_usage_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Cumulative cpu time consumed in seconds.",
+      "unit": "seconds"
+    }
+  ],
+  "container_memory_working_set_bytes": [
+    {
+      "type": "gauge",
+      "help": "Current working set in bytes.",
+      "unit": "bytes"
+    }
+  ],
+  "coredns_dns_request_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "Histogram of the time each request took.",
+      "unit": "seconds"
+    }
+  ],
+  "coredns_dns_requests_total": [
+    {
+      "type": "counter",
+      "help": "Counter of DNS requests made per zone, protocol and family.",
+      "unit": ""
+    }
+  ],
+  "coredns_health_request_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "Histogram of the time each request to the health endpoint took.",
+      "unit": "seconds"
+    }
+  ],
+  "etcd_disk_backend_commit_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "The latency distributions of commit called by backend.",
+      "unit": ""
+    }
+  ],
+  "etcd_disk_wal_fsync_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "The latency distributions of fsync called by WAL.",
+      "unit": ""
+    }
+  ],
+  "kube_deployment_spec_replicas": [
+    {
+      "type": "gauge",
+      "help": "Number of desired pods for a deployment.",
+      "unit": ""
+    }
+  ],
+  "kube_deployment_status_replicas_available": [
+    {
+      "type": "gauge",
+      "help": "The number of available replicas per deployment.",
+      "unit": ""
+    }
+  ],
+  "kube_horizontalpodautoscaler_status_current_replicas": [
+    {
+      "type": "gauge",
+      "help": "Current number of replicas of pods managed by this autoscaler.",
+      "unit": ""
+    }
+  ],
+  "kube_horizontalpodautoscaler_status_desired_replicas": [
+    {
+      "type": "gauge",
+      "help": "Desired number of replicas of pods managed by this autoscaler.",
+      "unit": ""
+    }
+  ],
+  "kube_node_status_condition": [
+    {
+      "type": "gauge",
+      "help": "The condition of a cluster node.",
+      "unit": ""
+    }
+  ],
+  "kube_pod_container_status_restarts_total": [
+    {
+      "type": "counter",
+      "help": "The number of container restarts per container.",
+      "unit": ""
+    }
+  ],
+  "kube_pod_container_status_terminated_reason": [
+    {
+      "type": "gauge",
+      "help": "Describes the reason the container is currently in terminated state.",
+      "unit": ""
+    }
+  ],
+  "kube_pod_status_phase": [
+    {
+      "type": "gauge",
+      "help": "The pods current phase.",
+      "unit": ""
+    }
+  ],
+  "kubelet_volume_stats_available_bytes": [
+    {
+      "type": "gauge",
+      "help": "Number of available bytes in the volume.",
+      "unit": "bytes"
+    }
+  ],
+  "kubelet_volume_stats_capacity_bytes": [
+    {
+      "type": "gauge",
+      "help": "Capacity in bytes of the volume.",
+      "unit": "bytes"
+    }
+  ],
+  "node_cpu_seconds_total": [
+    {
+      "type": "counter",
+      "help": "Seconds the CPUs spent in each mode.",
+      "unit": "seconds"
+    }
+  ],
+  "scheduler_pod_scheduling_attempts": [
+    {
+      "type": "counter",
+      "help": "Number of attempts to successfully schedule pods.",
+      "unit": ""
+    }
+  ],
+  "scheduler_scheduling_attempt_duration_seconds": [
+    {
+      "type": "histogram",
+      "help": "Scheduling attempt duration in seconds (e.g. scheduling algorithm latency)",
+      "unit": "seconds"
+    }
+  ]
 }

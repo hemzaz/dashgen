@@ -1,1 +1,149 @@
-[]
+[
+  {
+    "panel_uid": "6c2b337f125dfd0f",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.95, sum by (le, server, zone) (rate(coredns_dns_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "6c2b337f125dfd0f",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "sum by (server, zone) (rate(coredns_dns_requests_total[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "6c2b337f125dfd0f",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.95, sum by (le, server, zone) (rate(coredns_dns_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "6c2b337f125dfd0f",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "sum by (server, zone) (rate(coredns_dns_requests_total[5m]))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "87b4af6cf06e07c0",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.50, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "87b4af6cf06e07c0",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.95, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "87b4af6cf06e07c0",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.99, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "c3c8b7a1f76682fc",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.50, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "c3c8b7a1f76682fc",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.95, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "c3c8b7a1f76682fc",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.99, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "c3c8b7a1f76682fc",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.50, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "c3c8b7a1f76682fc",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.95, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "c3c8b7a1f76682fc",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.99, sum by (le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "fc794f309beab7d5",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.50, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "fc794f309beab7d5",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.95, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "fc794f309beab7d5",
+    "section": "resources",
+    "code": "empty_result",
+    "detail": "histogram_quantile(0.99, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "fc794f309beab7d5",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.50, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "fc794f309beab7d5",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.95, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "fc794f309beab7d5",
+    "section": "resources",
+    "code": "unscoped_aggregation",
+    "detail": "histogram_quantile(0.99, sum by (le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "8661c29a34ba182a",
+    "section": "workloads",
+    "code": "empty_result",
+    "detail": "sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas)",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "8661c29a34ba182a",
+    "section": "workloads",
+    "code": "empty_result",
+    "detail": "sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas)",
+    "severity": "warning"
+  }
+]

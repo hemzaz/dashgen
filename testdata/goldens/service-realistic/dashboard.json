@@ -22,7 +22,89 @@
       "collapsed": false
     },
     {
-      "id": 731073021,
+      "id": 763674621,
+      "type": "timeseries",
+      "title": "Cache hit/miss: redis",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(redis_cache_hits_total[5m]))",
+          "legendFormat": "{{instance}} {{job}} hits",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(redis_cache_misses_total[5m]))",
+          "legendFormat": "{{instance}} {{job}} misses",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(redis_cache_hits_total[5m])) / (sum by (instance, job) (rate(redis_cache_hits_total[5m])) + sum by (instance, job) (rate(redis_cache_misses_total[5m])))",
+          "legendFormat": "{{instance}} {{job}} hit ratio",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 643411537,
+      "type": "timeseries",
+      "title": "Outbound HTTP call rate: http_client_requests_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (host, instance, job) (rate(http_client_requests_total[5m]))",
+          "legendFormat": "{{host}} {{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 455967349,
       "type": "timeseries",
       "title": "gRPC call rate: grpc_server_handled_total",
       "datasource": {
@@ -39,7 +121,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 1
+        "y": 9
       },
       "targets": [
         {
@@ -54,7 +136,7 @@
       ]
     },
     {
-      "id": 478551478,
+      "id": 283234201,
       "type": "timeseries",
       "title": "Request rate: api_http_requests_total",
       "datasource": {
@@ -71,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 1
+        "y": 9
       },
       "targets": [
         {
@@ -86,19 +168,51 @@
       ]
     },
     {
-      "id": 887320569,
+      "id": 763674621,
+      "type": "timeseries",
+      "title": "Request rate: http_client_requests_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(http_client_requests_total[5m]))",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 887335721,
       "type": "row",
       "title": "errors",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 25
       },
       "collapsed": false
     },
     {
-      "id": 1590121336,
+      "id": 1380396445,
       "type": "timeseries",
       "title": "gRPC error rate: grpc_server_handled_total",
       "datasource": {
@@ -115,7 +229,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 26
       },
       "targets": [
         {
@@ -130,7 +244,7 @@
       ]
     },
     {
-      "id": 654498439,
+      "id": 1595323976,
       "type": "timeseries",
       "title": "5xx error rate: api_http_requests_total",
       "datasource": {
@@ -147,7 +261,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 26
       },
       "targets": [
         {
@@ -162,19 +276,206 @@
       ]
     },
     {
-      "id": 966139652,
+      "id": 1515576796,
+      "type": "timeseries",
+      "title": "5xx error rate: http_client_requests_total",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job) (rate(http_client_requests_total{status_code=~\"5..\"}[5m]))",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1515576796,
+      "type": "timeseries",
+      "title": "Jobs success/fail rate: worker",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job, queue) (rate(worker_jobs_succeeded_total[5m]))",
+          "legendFormat": "{{instance}} {{job}} {{queue}} success",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "sum by (instance, job, queue) (rate(worker_jobs_failed_total[5m]))",
+          "legendFormat": "{{instance}} {{job}} {{queue}} failure",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 530739086,
+      "type": "timeseries",
+      "title": "Kafka consumer lag",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 42
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (consumergroup, instance, job, partition, topic) (kafka_consumergroup_lag)",
+          "legendFormat": "{{consumergroup}} {{instance}} {{job}} {{partition}} {{topic}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 530739086,
+      "type": "timeseries",
+      "title": "Kafka consumer lag (sum)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 42
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "max by (consumergroup, instance, job, topic) (kafka_consumergroup_lag_sum)",
+          "legendFormat": "{{consumergroup}} {{instance}} {{job}} {{topic}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 966109348,
       "type": "row",
       "title": "latency",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 50
       },
       "collapsed": false
     },
     {
-      "id": 304616848,
+      "id": 1743176461,
+      "type": "timeseries",
+      "title": "DB query latency (p50/p95/p99): db_query_duration_seconds",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 51
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.50, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{instance}} {{job}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.95, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{instance}} {{job}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.99, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99 {{instance}} {{job}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 1386366367,
       "type": "timeseries",
       "title": "gRPC latency (p50/p95/p99): grpc_server_handling_seconds",
       "datasource": {
@@ -190,8 +491,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 19
+        "x": 12,
+        "y": 51
       },
       "targets": [
         {
@@ -224,7 +525,7 @@
       ]
     },
     {
-      "id": 386081776,
+      "id": 1779260774,
       "type": "timeseries",
       "title": "Latency (p50/p95/p99): api_http_request_duration_seconds",
       "datasource": {
@@ -240,8 +541,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 19
+        "x": 0,
+        "y": 59
       },
       "targets": [
         {
@@ -274,19 +575,19 @@
       ]
     },
     {
-      "id": 1655985763,
+      "id": 1655902427,
       "type": "row",
       "title": "saturation",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 67
       },
       "collapsed": false
     },
     {
-      "id": 1044972579,
+      "id": 57549789,
       "type": "timeseries",
       "title": "CPU (cores used): process_cpu_seconds_total",
       "datasource": {
@@ -303,7 +604,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 68
       },
       "targets": [
         {
@@ -318,7 +619,39 @@
       ]
     },
     {
-      "id": 1044972579,
+      "id": 1464189222,
+      "type": "timeseries",
+      "title": "DB pool utilization: go_sql",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 68
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "go_sql_stats_connections_in_use / go_sql_stats_connections_max",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 57549789,
       "type": "timeseries",
       "title": "GC pause: go_gc_duration_seconds",
       "datasource": {
@@ -334,8 +667,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 28
+        "x": 0,
+        "y": 76
       },
       "targets": [
         {
@@ -350,7 +683,7 @@
       ]
     },
     {
-      "id": 1044972579,
+      "id": 57549789,
       "type": "timeseries",
       "title": "Goroutines: go_goroutines",
       "datasource": {
@@ -366,8 +699,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 36
+        "x": 12,
+        "y": 76
       },
       "targets": [
         {
@@ -382,7 +715,7 @@
       ]
     },
     {
-      "id": 1044972579,
+      "id": 57549789,
       "type": "timeseries",
       "title": "Memory: process_resident_memory_bytes",
       "datasource": {
@@ -398,8 +731,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 36
+        "x": 0,
+        "y": 84
       },
       "targets": [
         {
@@ -408,6 +741,120 @@
             "uid": "$datasource"
           },
           "expr": "sum by (instance, job) (process_resident_memory_bytes)",
+          "legendFormat": "{{instance}} {{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 231958851,
+      "type": "timeseries",
+      "title": "Request size (p50/p95): http_request_size_bytes",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 84
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
+          "legendFormat": "p50 {{handler}} {{instance}} {{job}} {{method}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
+          "legendFormat": "p95 {{handler}} {{instance}} {{job}} {{method}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 231958851,
+      "type": "timeseries",
+      "title": "Response Size (p50/p95): http_response_size_bytes",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 92
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))",
+          "legendFormat": "p50 {{handler}} {{instance}} {{job}} {{method}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "histogram_quantile(0.95, sum by (handler, instance, job, le, method) (rate(http_response_size_bytes_bucket[5m])))",
+          "legendFormat": "p95 {{handler}} {{instance}} {{job}} {{method}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 1307326866,
+      "type": "timeseries",
+      "title": "TLS cert days to expiry: api_tls_not_after_timestamp",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 92
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "expr": "(api_tls_not_after_timestamp - time()) / 86400",
           "legendFormat": "{{instance}} {{job}}",
           "refId": "A"
         }
@@ -440,8 +887,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "DashGen — service (80dcbe9d)",
-  "uid": "9f8a97e5b4fe462c",
+  "title": "DashGen — service (5087f597)",
+  "uid": "e9ecd4d3aadd400c",
   "version": 1,
   "weekStart": ""
 }

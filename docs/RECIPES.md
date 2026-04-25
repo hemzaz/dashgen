@@ -243,36 +243,36 @@ worked out when the recipe is actually written.
 
 ### 4.1 Service profile
 
-| Recipe | Section | Primary signal |
-|--------|---------|----------------|
-| `service_client_http` | traffic | outbound HTTP counter with `status_code` / `code` and either `url` or `host` label |
-| `service_db_pool` | saturation | `*_sql_pool_*` or `pgxpool_*` gauges (max, idle, in_use) |
-| `service_db_query_latency` | latency | histogram named `*_query_duration_seconds` with no HTTP labels (is **not** matched by `service_http_latency`) |
-| `service_cache_hits` | traffic | counter pair `cache_{hits,misses}_total` or `*_cache_hits_total` |
-| `service_job_success` | errors | counter pair `*_jobs_{success,failure}_total` or `*_jobs_completed_total{status=...}` |
-| `service_tls_expiry` | saturation | gauge `*_tls_not_after_timestamp` / `*_cert_expiry_timestamp_seconds` minus `time()` |
-| `service_request_size` | traffic | histogram `*_request_size_bytes` with HTTP labels |
-| `service_response_size` | traffic | histogram `*_response_size_bytes` with HTTP labels |
+| Recipe | Section | Primary signal | Shipped |
+|--------|---------|----------------|---------|
+| `service_client_http` | traffic | outbound HTTP counter with `status_code` / `code` and either `url` or `host` label | yes |
+| `service_db_pool` | saturation | `*_sql_pool_*` or `pgxpool_*` gauges (max, idle, in_use) | yes |
+| `service_db_query_latency` | latency | histogram named `*_query_duration_seconds` with no HTTP labels (is **not** matched by `service_http_latency`) | yes |
+| `service_cache_hits` | traffic | counter pair `cache_{hits,misses}_total` or `*_cache_hits_total` | yes |
+| `service_job_success` | errors | counter pair `*_jobs_{success,failure}_total` or `*_jobs_completed_total{status=...}` | yes |
+| `service_tls_expiry` | saturation | gauge `*_tls_not_after_timestamp` / `*_cert_expiry_timestamp_seconds` minus `time()` | yes |
+| `service_request_size` | traffic | histogram `*_request_size_bytes` with HTTP labels | yes |
+| `service_response_size` | traffic | histogram `*_response_size_bytes` with HTTP labels | yes |
 
 ### 4.2 Infra profile
 
-| Recipe | Section | Primary signal |
-|--------|---------|----------------|
-| `infra_disk_io_latency` | disk | histogram `node_disk_io_time_seconds_total` + per-device rate |
-| `infra_disk_iops` | disk | counter pair `node_disk_{reads,writes}_completed_total` |
-| `infra_conntrack` | network | `node_nf_conntrack_entries` / `node_nf_conntrack_entries_limit` |
-| `infra_ntp_offset` | overview | gauge `node_timex_offset_seconds` |
-| `infra_interrupts` | cpu | counter `node_interrupts_total` or `node_vmstat_nr_irq_*` |
+| Recipe | Section | Primary signal | Shipped |
+|--------|---------|----------------|---------|
+| `infra_disk_io_latency` | disk | histogram `node_disk_io_time_seconds_total` + per-device rate | yes |
+| `infra_disk_iops` | disk | counter pair `node_disk_{reads,writes}_completed_total` | yes |
+| `infra_conntrack` | network | `node_nf_conntrack_entries` / `node_nf_conntrack_entries_limit` | yes |
+| `infra_ntp_offset` | overview | gauge `node_timex_offset_seconds` | yes |
+| `infra_interrupts` | cpu | counter `node_interrupts_total` or `node_vmstat_nr_irq_*` | yes |
 
 ### 4.3 k8s profile
 
-| Recipe | Section | Primary signal |
-|--------|---------|----------------|
-| `k8s_hpa_scaling` | workloads | `kube_horizontalpodautoscaler_status_*` |
-| `k8s_apiserver_latency` | resources | `apiserver_request_duration_seconds` histogram |
-| `k8s_etcd_commit` | resources | `etcd_disk_backend_commit_duration_seconds` histogram |
-| `k8s_scheduler_latency` | resources | `scheduler_scheduling_attempt_duration_seconds` histogram |
-| `k8s_coredns` | resources | `coredns_dns_request_duration_seconds` histogram |
+| Recipe | Section | Primary signal | Shipped |
+|--------|---------|----------------|---------|
+| `k8s_hpa_scaling` | workloads | `kube_horizontalpodautoscaler_status_*` | yes |
+| `k8s_apiserver_latency` | resources | `apiserver_request_duration_seconds` histogram | yes |
+| `k8s_etcd_commit` | resources | `etcd_disk_backend_commit_duration_seconds` histogram | yes |
+| `k8s_scheduler_latency` | resources | `scheduler_scheduling_attempt_duration_seconds` histogram | yes |
+| `k8s_coredns` | resources | `coredns_dns_request_duration_seconds` histogram | yes |
 
 ---
 

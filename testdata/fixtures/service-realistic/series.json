@@ -1,41 +1,870 @@
 [
-  {"__name__": "api_http_requests_total", "code": "200", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "api_http_requests_total", "code": "200", "handler": "/api/v1/orders", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "api_http_requests_total", "code": "404", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "api_http_requests_total", "code": "500", "handler": "/api/v1/orders", "instance": "api-1:8080", "job": "api"},
-  {"__name__": "api_http_request_duration_seconds_bucket", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api", "le": "0.1"},
-  {"__name__": "api_http_request_duration_seconds_bucket", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api", "le": "0.5"},
-  {"__name__": "api_http_request_duration_seconds_bucket", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api", "le": "+Inf"},
-  {"__name__": "api_http_request_duration_seconds_sum", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "api_http_request_duration_seconds_count", "handler": "/api/v1/users", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "queue_items_received_total", "status": "accepted", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "queue_items_received_total", "status": "rejected", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "queue_items_received_total", "status": "invalid", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "queue_processing_duration_seconds_bucket", "instance": "worker-0:9090", "job": "worker", "le": "0.1"},
-  {"__name__": "queue_processing_duration_seconds_bucket", "instance": "worker-0:9090", "job": "worker", "le": "0.5"},
-  {"__name__": "queue_processing_duration_seconds_bucket", "instance": "worker-0:9090", "job": "worker", "le": "+Inf"},
-  {"__name__": "queue_processing_duration_seconds_sum", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "queue_processing_duration_seconds_count", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "process_cpu_seconds_total", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "process_cpu_seconds_total", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "process_resident_memory_bytes", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "process_resident_memory_bytes", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "grpc_server_handled_total", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_code": "OK", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "grpc_server_handled_total", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_code": "NotFound", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "grpc_server_handled_total", "grpc_service": "users.v1.Users", "grpc_method": "CreateUser", "grpc_code": "OK", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "grpc_server_handling_seconds_bucket", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_type": "unary", "instance": "api-0:8080", "job": "api", "le": "0.01"},
-  {"__name__": "grpc_server_handling_seconds_bucket", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_type": "unary", "instance": "api-0:8080", "job": "api", "le": "0.1"},
-  {"__name__": "grpc_server_handling_seconds_bucket", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_type": "unary", "instance": "api-0:8080", "job": "api", "le": "+Inf"},
-  {"__name__": "grpc_server_handling_seconds_sum", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_type": "unary", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "grpc_server_handling_seconds_count", "grpc_service": "users.v1.Users", "grpc_method": "GetUser", "grpc_type": "unary", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "grpc_client_retries_total", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_goroutines", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_goroutines", "instance": "worker-0:9090", "job": "worker"},
-  {"__name__": "go_gc_duration_seconds", "quantile": "0", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_gc_duration_seconds", "quantile": "0.25", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_gc_duration_seconds", "quantile": "0.5", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_gc_duration_seconds", "quantile": "0.75", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_gc_duration_seconds", "quantile": "1", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_gc_duration_seconds_sum", "instance": "api-0:8080", "job": "api"},
-  {"__name__": "go_gc_duration_seconds_count", "instance": "api-0:8080", "job": "api"}
+  {
+    "__name__": "api_http_request_duration_seconds_bucket",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "api_http_request_duration_seconds_bucket",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.1"
+  },
+  {
+    "__name__": "api_http_request_duration_seconds_bucket",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.5"
+  },
+  {
+    "__name__": "api_http_request_duration_seconds_count",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "api_http_request_duration_seconds_sum",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "api_http_requests_total",
+    "code": "200",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "api_http_requests_total",
+    "code": "200",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "api_http_requests_total",
+    "code": "404",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "api_http_requests_total",
+    "code": "500",
+    "handler": "/api/v1/orders",
+    "instance": "api-1:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "api_tls_not_after_timestamp",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "cache_client_hits_total",
+    "result": "hit",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "cache_client_hits_total",
+    "result": "hit",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "cache_client_hits_total",
+    "result": "miss",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "cache_client_hits_total",
+    "result": "miss",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "cache_items_evicted_total",
+    "instance": "cache-0:6379",
+    "job": "redis"
+  },
+  {
+    "__name__": "consumer_processed_total",
+    "status": "ok",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "consumer_processed_total",
+    "status": "ok",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "db_query_count_total",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_query_count_total",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.005"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.01"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.025"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.05"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.1"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.25"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.5"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "10"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "2.5"
+  },
+  {
+    "__name__": "db_query_duration_seconds_bucket",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "5"
+  },
+  {
+    "__name__": "db_request_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "db_request_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "db_request_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "db_request_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "db_request_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "db_request_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "db_request_size_bytes_count",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_request_size_bytes_count",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_request_size_bytes_sum",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_request_size_bytes_sum",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_response_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "db_response_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "db_response_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "db_response_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "db_response_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "db_response_size_bytes_bucket",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "db_response_size_bytes_count",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_response_size_bytes_count",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_response_size_bytes_sum",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "db_response_size_bytes_sum",
+    "query_type": "select",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds",
+    "quantile": "0",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds",
+    "quantile": "0.25",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds",
+    "quantile": "0.5",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds",
+    "quantile": "0.75",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds",
+    "quantile": "1",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds_count",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_gc_duration_seconds_sum",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_memstats_alloc_bytes",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_goroutines",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_goroutines",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "go_sql_stats_connections_in_use",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_sql_stats_connections_max",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "go_sql_stats_connections_max",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "grpc_client_retries_total",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "grpc_server_handled_total",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_code": "NotFound",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "grpc_server_handled_total",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "CreateUser",
+    "grpc_code": "OK",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "grpc_server_handled_total",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_code": "OK",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "grpc_server_handling_seconds_bucket",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_type": "unary",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "grpc_server_handling_seconds_bucket",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_type": "unary",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.01"
+  },
+  {
+    "__name__": "grpc_server_handling_seconds_bucket",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_type": "unary",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "0.1"
+  },
+  {
+    "__name__": "grpc_server_handling_seconds_count",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_type": "unary",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "grpc_server_handling_seconds_sum",
+    "grpc_service": "users.v1.Users",
+    "grpc_method": "GetUser",
+    "grpc_type": "unary",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_client_requests_total",
+    "status_code": "200",
+    "host": "payments.internal",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_client_requests_total",
+    "status_code": "500",
+    "host": "payments.internal",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "10000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "10000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100000"
+  },
+  {
+    "__name__": "http_request_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000000"
+  },
+  {
+    "__name__": "http_request_size_bytes_count",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_request_size_bytes_count",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_request_size_bytes_sum",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_request_size_bytes_sum",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "10000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "10000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "100000"
+  },
+  {
+    "__name__": "http_response_size_bytes_bucket",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api",
+    "le": "1000000"
+  },
+  {
+    "__name__": "http_response_size_bytes_count",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_response_size_bytes_count",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_response_size_bytes_sum",
+    "method": "POST",
+    "handler": "/api/v1/orders",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "http_response_size_bytes_sum",
+    "method": "GET",
+    "handler": "/api/v1/users",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "kafka_consumergroup_lag",
+    "consumergroup": "audit-writer",
+    "topic": "events",
+    "partition": "0",
+    "instance": "kafka-0:9092",
+    "job": "kafka"
+  },
+  {
+    "__name__": "kafka_consumergroup_lag",
+    "consumergroup": "order-processor",
+    "topic": "orders",
+    "partition": "0",
+    "instance": "kafka-0:9092",
+    "job": "kafka"
+  },
+  {
+    "__name__": "kafka_consumergroup_lag",
+    "consumergroup": "order-processor",
+    "topic": "orders",
+    "partition": "1",
+    "instance": "kafka-0:9092",
+    "job": "kafka"
+  },
+  {
+    "__name__": "kafka_consumergroup_lag_sum",
+    "consumergroup": "audit-writer",
+    "topic": "events",
+    "instance": "kafka-0:9092",
+    "job": "kafka"
+  },
+  {
+    "__name__": "kafka_consumergroup_lag_sum",
+    "consumergroup": "order-processor",
+    "topic": "orders",
+    "instance": "kafka-0:9092",
+    "job": "kafka"
+  },
+  {
+    "__name__": "probe_ssl_earliest_cert_expiry",
+    "instance": "api-0:8080",
+    "job": "blackbox"
+  },
+  {
+    "__name__": "process_cpu_seconds_total",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "process_cpu_seconds_total",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "process_resident_memory_bytes",
+    "instance": "api-0:8080",
+    "job": "api"
+  },
+  {
+    "__name__": "process_resident_memory_bytes",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "queue_items_received_total",
+    "status": "accepted",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "queue_items_received_total",
+    "status": "invalid",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "queue_items_received_total",
+    "status": "rejected",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "queue_processing_duration_seconds_bucket",
+    "instance": "worker-0:9090",
+    "job": "worker",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "queue_processing_duration_seconds_bucket",
+    "instance": "worker-0:9090",
+    "job": "worker",
+    "le": "0.1"
+  },
+  {
+    "__name__": "queue_processing_duration_seconds_bucket",
+    "instance": "worker-0:9090",
+    "job": "worker",
+    "le": "0.5"
+  },
+  {
+    "__name__": "queue_processing_duration_seconds_count",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "queue_processing_duration_seconds_sum",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "redis_cache_hits_total",
+    "instance": "cache-0:6379",
+    "job": "redis"
+  },
+  {
+    "__name__": "redis_cache_misses_total",
+    "instance": "cache-0:6379",
+    "job": "redis"
+  },
+  {
+    "__name__": "worker_jobs_completed_total",
+    "status": "failure",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "worker_jobs_completed_total",
+    "status": "success",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "worker_jobs_failed_total",
+    "queue": "email",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  },
+  {
+    "__name__": "worker_jobs_succeeded_total",
+    "queue": "email",
+    "instance": "worker-0:9090",
+    "job": "worker"
+  }
 ]

@@ -50,7 +50,7 @@ type k8sSchedulerLatencyRecipe struct{}
 func NewK8sSchedulerLatency() Recipe { return &k8sSchedulerLatencyRecipe{} }
 
 func (k8sSchedulerLatencyRecipe) Name() string    { return "k8s_scheduler_latency" }
-func (k8sSchedulerLatencyRecipe) Section() string { return "latency" }
+func (k8sSchedulerLatencyRecipe) Section() string { return "resources" }
 
 // Match requires a histogram whose base name is exactly
 // "scheduler_scheduling_attempt_duration_seconds". Both the bare base name

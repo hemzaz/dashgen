@@ -29,9 +29,20 @@
 //     {method, status_code, route, path}.
 //   - TraitLatencyHistogram is attached to a "_bucket" descriptor whose base
 //     name contains "duration" or "latency" and whose labels include "le".
+//
+// Help-text hints (V0.2-PLAN Phase 1 item 3): after all label/name signals
+// have been considered, helpHints inspects MetricDescriptor.Help with strict
+// deterministic regexes. Hints are LOW-weight: they may ADD a trait that no
+// label/name signal produced, but they MUST NOT override existing label
+// evidence. If a contradicting trait is already present (e.g. the metric
+// already carries TraitServiceGRPC), an HTTP hint from help text is
+// suppressed. The patterns are intentionally narrow ("HTTP request", "gRPC
+// call", etc.) so a help string that merely *mentions* the word in passing
+// (e.g. "no grpc_method labels", "not HTTP status codes") does not trigger.
 package classify
 
 import (
+	"regexp"
 	"strings"
 
 	"dashgen/internal/inventory"
@@ -215,7 +226,72 @@ func classifyOne(m inventory.MetricDescriptor, isHistogramBucket func(string) bo
 		}
 	}
 
+	// Help-text hints (LOW weight). Applied AFTER label/name signals so
+	// help text never overrides label evidence. Hints can ADD a trait
+	// when no signal disagrees, but MUST NOT override an existing
+	// label/name decision. Help text is unreliable across exporters
+	// (V0.2-PLAN §7), which is why this stage is gated by contradictions.
+	for _, hint := range helpHints(m.Help) {
+		applyHelpHint(&cm, hint, m.Labels)
+	}
+
 	return cm
+}
+
+// applyHelpHint adds a help-text-derived trait to cm only when:
+//  1. The trait is not already present (avoid duplicates), and
+//  2. No contradicting trait is present (label evidence wins), and
+//  3. For service_http / service_grpc hints: the metric carries no
+//     non-infrastructure labels. A label outside the {instance, job, le}
+//     set is itself domain evidence — e.g. a `db_query` or `query_type`
+//     label points to a DB-shape metric and must not be overridden by a
+//     help string that merely mentions HTTP. The infrastructure-label
+//     allowlist is intentionally narrow: any unlisted label suppresses
+//     the hint.
+//
+// service_http and service_grpc are mutually exclusive for the purposes of
+// help-text hinting: a metric labelled as gRPC must not be re-tagged HTTP
+// from a help string that merely mentions HTTP, and vice versa.
+func applyHelpHint(cm *ClassifiedMetric, hint Trait, labels []string) {
+	if cm.HasTrait(hint) {
+		return
+	}
+	switch hint {
+	case TraitServiceHTTP:
+		if cm.HasTrait(TraitServiceGRPC) {
+			return
+		}
+		if hasNonInfraLabel(labels) {
+			return
+		}
+	case TraitServiceGRPC:
+		if cm.HasTrait(TraitServiceHTTP) {
+			return
+		}
+		if hasNonInfraLabel(labels) {
+			return
+		}
+	}
+	cm.Traits = append(cm.Traits, hint)
+}
+
+// hasNonInfraLabel reports whether any label is outside the
+// "infrastructure-only" allowlist. Infrastructure labels are the keys
+// every Prometheus series carries regardless of domain shape: instance
+// (the scrape target), job (the scrape config), and le (the histogram
+// bucket bound). Anything else — method, route, status_code, handler,
+// code, db_query, query_type, grpc_*, queue, host, ... — is positive
+// domain evidence and must take precedence over a help-text hint.
+func hasNonInfraLabel(labels []string) bool {
+	for _, l := range labels {
+		switch l {
+		case "instance", "job", "le":
+			continue
+		default:
+			return true
+		}
+	}
+	return false
 }
 
 // familyOf returns the prefix up to (but not including) the first "_". For
@@ -279,4 +355,51 @@ func looksLikeLatencyByName(name string) bool {
 		return true
 	}
 	return false
+}
+
+// helpHelpTextHTTP matches narrow phrasings that strongly imply an HTTP
+// service metric: "HTTP request", "HTTP response", "HTTP server", "HTTP
+// client", "HTTP call". The whitespace requirement is what makes the
+// pattern strict — strings like "no HTTP-shape labels" or "not HTTP
+// status codes" do not match because the next token is not one of the
+// listed nouns. Case-insensitive via the lowercased input.
+var helpHelpTextHTTP = regexp.MustCompile(`\bhttp\s+(request|response|server|client|call)`)
+
+// helpHelpTextGRPC matches narrow phrasings that strongly imply a gRPC
+// service metric: "gRPC call", "gRPC request", "gRPC server", "gRPC
+// client", "gRPC response", "RPC call", "RPC request" (this last pair
+// catches help strings that abbreviate as "RPCs" but only when followed
+// by a service-shape noun). The pattern intentionally requires
+// whitespace so that "no grpc_method labels" — where "grpc" is glued
+// to an underscore — does not trigger.
+var helpHelpTextGRPC = regexp.MustCompile(`\b(grpc|rpc)\s+(call|request|response|server|client)`)
+
+// helpHints returns LOW-weight trait hints derived from the metric
+// descriptor's Help text. The output is order-independent (always
+// emitted in the same canonical order: HTTP, gRPC) and the function
+// performs no I/O, no goroutine creation, and no context usage — it
+// is a pure substring/regex scan over its input.
+//
+// TraitLatencyHistogram is intentionally NOT emitted here. That trait
+// is structural (must be a "_bucket" descriptor with an "le" label);
+// promoting it from help text alone would add the latency trait to
+// the accompanying _count and _sum series of the same histogram,
+// which would cause downstream recipes to emit spurious panels.
+//
+// Help text is unreliable across exporters (V0.2-PLAN §7 risk), so
+// callers must apply these hints only AFTER label/name signals and
+// only when no contradicting signal is present. See applyHelpHint.
+func helpHints(help string) []Trait {
+	if help == "" {
+		return nil
+	}
+	lower := strings.ToLower(help)
+	var hints []Trait
+	if helpHelpTextHTTP.MatchString(lower) {
+		hints = append(hints, TraitServiceHTTP)
+	}
+	if helpHelpTextGRPC.MatchString(lower) {
+		hints = append(hints, TraitServiceGRPC)
+	}
+	return hints
 }

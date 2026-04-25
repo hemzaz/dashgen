@@ -1,48 +1,833 @@
 [
-  {"__name__": "kube_pod_status_phase", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "phase": "Running"},
-  {"__name__": "kube_pod_status_phase", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "phase": "Pending"},
-  {"__name__": "kube_pod_status_phase", "namespace": "production", "pod": "worker-5c8b9d7f6-mn3rt", "phase": "Running"},
-  {"__name__": "kube_pod_status_phase", "namespace": "production", "pod": "worker-5c8b9d7f6-mn3rt", "phase": "Pending"},
-  {"__name__": "kube_pod_status_phase", "namespace": "staging", "pod": "api-6f4d8c9b2-vw5lz", "phase": "Running"},
-  {"__name__": "kube_pod_status_phase", "namespace": "kube-system", "pod": "coredns-74ff55c5b8-q9bzp", "phase": "Running"},
-  {"__name__": "kube_pod_container_status_restarts_total", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "api"},
-  {"__name__": "kube_pod_container_status_restarts_total", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "envoy"},
-  {"__name__": "kube_pod_container_status_restarts_total", "namespace": "production", "pod": "worker-5c8b9d7f6-mn3rt", "container": "worker"},
-  {"__name__": "kube_pod_container_status_restarts_total", "namespace": "staging", "pod": "api-6f4d8c9b2-vw5lz", "container": "api"},
-  {"__name__": "kube_pod_container_status_restarts_total", "namespace": "kube-system", "pod": "coredns-74ff55c5b8-q9bzp", "container": "coredns"},
-  {"__name__": "container_cpu_usage_seconds_total", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "api", "id": "/kubepods/pod-abc/api"},
-  {"__name__": "container_cpu_usage_seconds_total", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "envoy", "id": "/kubepods/pod-abc/envoy"},
-  {"__name__": "container_cpu_usage_seconds_total", "namespace": "production", "pod": "worker-5c8b9d7f6-mn3rt", "container": "worker", "id": "/kubepods/pod-def/worker"},
-  {"__name__": "container_cpu_usage_seconds_total", "namespace": "staging", "pod": "api-6f4d8c9b2-vw5lz", "container": "api", "id": "/kubepods/pod-ghi/api"},
-  {"__name__": "container_cpu_usage_seconds_total", "namespace": "", "pod": "", "container": "", "id": "/"},
-  {"__name__": "container_memory_working_set_bytes", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "api", "id": "/kubepods/pod-abc/api"},
-  {"__name__": "container_memory_working_set_bytes", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "envoy", "id": "/kubepods/pod-abc/envoy"},
-  {"__name__": "container_memory_working_set_bytes", "namespace": "production", "pod": "worker-5c8b9d7f6-mn3rt", "container": "worker", "id": "/kubepods/pod-def/worker"},
-  {"__name__": "container_memory_working_set_bytes", "namespace": "staging", "pod": "api-6f4d8c9b2-vw5lz", "container": "api", "id": "/kubepods/pod-ghi/api"},
-  {"__name__": "container_memory_working_set_bytes", "namespace": "", "pod": "", "container": "", "id": "/"},
-  {"__name__": "kube_deployment_spec_replicas", "namespace": "production", "deployment": "api"},
-  {"__name__": "kube_deployment_spec_replicas", "namespace": "production", "deployment": "worker"},
-  {"__name__": "kube_deployment_spec_replicas", "namespace": "staging", "deployment": "api"},
-  {"__name__": "kube_deployment_status_replicas_available", "namespace": "production", "deployment": "api"},
-  {"__name__": "kube_deployment_status_replicas_available", "namespace": "production", "deployment": "worker"},
-  {"__name__": "kube_deployment_status_replicas_available", "namespace": "staging", "deployment": "api"},
-  {"__name__": "kube_node_status_condition", "node": "node-1", "condition": "Ready", "status": "true"},
-  {"__name__": "kube_node_status_condition", "node": "node-1", "condition": "Ready", "status": "false"},
-  {"__name__": "kube_node_status_condition", "node": "node-1", "condition": "MemoryPressure", "status": "false"},
-  {"__name__": "kube_node_status_condition", "node": "node-1", "condition": "DiskPressure", "status": "false"},
-  {"__name__": "kube_node_status_condition", "node": "node-1", "condition": "PIDPressure", "status": "false"},
-  {"__name__": "kube_node_status_condition", "node": "node-2", "condition": "Ready", "status": "true"},
-  {"__name__": "kube_node_status_condition", "node": "node-2", "condition": "Ready", "status": "false"},
-  {"__name__": "kube_node_status_condition", "node": "node-2", "condition": "MemoryPressure", "status": "true"},
-  {"__name__": "kube_node_status_condition", "node": "node-2", "condition": "DiskPressure", "status": "false"},
-  {"__name__": "kube_node_status_condition", "node": "node-2", "condition": "PIDPressure", "status": "false"},
-  {"__name__": "kubelet_volume_stats_available_bytes", "namespace": "production", "persistentvolumeclaim": "data-api-0"},
-  {"__name__": "kubelet_volume_stats_available_bytes", "namespace": "production", "persistentvolumeclaim": "logs-worker-0"},
-  {"__name__": "kubelet_volume_stats_capacity_bytes", "namespace": "production", "persistentvolumeclaim": "data-api-0"},
-  {"__name__": "kubelet_volume_stats_capacity_bytes", "namespace": "production", "persistentvolumeclaim": "logs-worker-0"},
-  {"__name__": "kube_pod_container_status_terminated_reason", "namespace": "production", "pod": "api-7d9f8b6c4-xk2pq", "container": "api", "reason": "OOMKilled"},
-  {"__name__": "kube_pod_container_status_terminated_reason", "namespace": "production", "pod": "worker-5c8b9d7f6-mn3rt", "container": "worker", "reason": "Completed"},
-  {"__name__": "kube_pod_container_status_terminated_reason", "namespace": "staging", "pod": "api-6f4d8c9b2-vw5lz", "container": "api", "reason": "Error"},
-  {"__name__": "node_cpu_seconds_total", "cpu": "0", "mode": "idle", "instance": "node-1:9100", "job": "node-exporter"},
-  {"__name__": "node_cpu_seconds_total", "cpu": "0", "mode": "user", "instance": "node-1:9100", "job": "node-exporter"}
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "PATCH",
+    "resource": "deployments",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "nodes",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "LIST",
+    "resource": "pods",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "nodes",
+    "le": "0.005"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "0.005"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "PATCH",
+    "resource": "deployments",
+    "le": "0.025"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "0.025"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "LIST",
+    "resource": "pods",
+    "le": "0.025"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "PATCH",
+    "resource": "deployments",
+    "le": "0.1"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "nodes",
+    "le": "0.1"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "0.1"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "LIST",
+    "resource": "pods",
+    "le": "0.1"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "0.5"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "LIST",
+    "resource": "pods",
+    "le": "0.5"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "PATCH",
+    "resource": "deployments",
+    "le": "1"
+  },
+  {
+    "__name__": "apiserver_request_duration_seconds_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "1"
+  },
+  {
+    "__name__": "apiserver_response_size_bytes_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "apiserver_response_size_bytes_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "1024"
+  },
+  {
+    "__name__": "apiserver_response_size_bytes_bucket",
+    "verb": "GET",
+    "resource": "pods",
+    "le": "65536"
+  },
+  {
+    "__name__": "container_cpu_usage_seconds_total",
+    "namespace": "",
+    "pod": "",
+    "container": "",
+    "id": "/"
+  },
+  {
+    "__name__": "container_cpu_usage_seconds_total",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "api",
+    "id": "/kubepods/pod-abc/api"
+  },
+  {
+    "__name__": "container_cpu_usage_seconds_total",
+    "namespace": "staging",
+    "pod": "api-6f4d8c9b2-vw5lz",
+    "container": "api",
+    "id": "/kubepods/pod-ghi/api"
+  },
+  {
+    "__name__": "container_cpu_usage_seconds_total",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "envoy",
+    "id": "/kubepods/pod-abc/envoy"
+  },
+  {
+    "__name__": "container_cpu_usage_seconds_total",
+    "namespace": "production",
+    "pod": "worker-5c8b9d7f6-mn3rt",
+    "container": "worker",
+    "id": "/kubepods/pod-def/worker"
+  },
+  {
+    "__name__": "container_memory_working_set_bytes",
+    "namespace": "",
+    "pod": "",
+    "container": "",
+    "id": "/"
+  },
+  {
+    "__name__": "container_memory_working_set_bytes",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "api",
+    "id": "/kubepods/pod-abc/api"
+  },
+  {
+    "__name__": "container_memory_working_set_bytes",
+    "namespace": "staging",
+    "pod": "api-6f4d8c9b2-vw5lz",
+    "container": "api",
+    "id": "/kubepods/pod-ghi/api"
+  },
+  {
+    "__name__": "container_memory_working_set_bytes",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "envoy",
+    "id": "/kubepods/pod-abc/envoy"
+  },
+  {
+    "__name__": "container_memory_working_set_bytes",
+    "namespace": "production",
+    "pod": "worker-5c8b9d7f6-mn3rt",
+    "container": "worker",
+    "id": "/kubepods/pod-def/worker"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": "cluster.local.",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.00025"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": "cluster.local.",
+    "le": "0.00025"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.0005"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.001"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": "cluster.local.",
+    "le": "0.001"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.002"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.005"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.01"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": "cluster.local.",
+    "le": "0.01"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.025"
+  },
+  {
+    "__name__": "coredns_dns_request_duration_seconds_bucket",
+    "server": "dns://:53",
+    "zone": ".",
+    "le": "0.1"
+  },
+  {
+    "__name__": "coredns_dns_requests_total",
+    "server": "dns://:53",
+    "zone": ".",
+    "proto": "udp",
+    "family": "1",
+    "type": "A"
+  },
+  {
+    "__name__": "coredns_dns_requests_total",
+    "server": "dns://:53",
+    "zone": "cluster.local.",
+    "proto": "udp",
+    "family": "1",
+    "type": "A"
+  },
+  {
+    "__name__": "coredns_dns_requests_total",
+    "server": "dns://:53",
+    "zone": "cluster.local.",
+    "proto": "udp",
+    "family": "1",
+    "type": "AAAA"
+  },
+  {
+    "__name__": "coredns_health_request_duration_seconds_bucket",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "coredns_health_request_duration_seconds_bucket",
+    "le": "0.001"
+  },
+  {
+    "__name__": "coredns_health_request_duration_seconds_bucket",
+    "le": "0.01"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.001"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.002"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.004"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.008"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.016"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.032"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.064"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.128"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.256"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.512"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "1"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.001"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.002"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.004"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.008"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.016"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.032"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.064"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.128"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.256"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "0.512"
+  },
+  {
+    "__name__": "etcd_disk_backend_commit_duration_seconds_bucket",
+    "instance": "etcd-1:2381",
+    "job": "etcd",
+    "le": "1"
+  },
+  {
+    "__name__": "etcd_disk_wal_fsync_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "etcd_disk_wal_fsync_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.001"
+  },
+  {
+    "__name__": "etcd_disk_wal_fsync_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.008"
+  },
+  {
+    "__name__": "etcd_disk_wal_fsync_duration_seconds_bucket",
+    "instance": "etcd-0:2381",
+    "job": "etcd",
+    "le": "0.064"
+  },
+  {
+    "__name__": "kube_deployment_spec_replicas",
+    "namespace": "production",
+    "deployment": "api"
+  },
+  {
+    "__name__": "kube_deployment_spec_replicas",
+    "namespace": "production",
+    "deployment": "api"
+  },
+  {
+    "__name__": "kube_deployment_spec_replicas",
+    "namespace": "staging",
+    "deployment": "api"
+  },
+  {
+    "__name__": "kube_deployment_spec_replicas",
+    "namespace": "production",
+    "deployment": "worker"
+  },
+  {
+    "__name__": "kube_deployment_status_replicas_available",
+    "namespace": "production",
+    "deployment": "api"
+  },
+  {
+    "__name__": "kube_deployment_status_replicas_available",
+    "namespace": "production",
+    "deployment": "api"
+  },
+  {
+    "__name__": "kube_deployment_status_replicas_available",
+    "namespace": "staging",
+    "deployment": "api"
+  },
+  {
+    "__name__": "kube_deployment_status_replicas_available",
+    "namespace": "production",
+    "deployment": "worker"
+  },
+  {
+    "__name__": "kube_horizontalpodautoscaler_status_current_replicas",
+    "namespace": "production",
+    "horizontalpodautoscaler": "api-hpa"
+  },
+  {
+    "__name__": "kube_horizontalpodautoscaler_status_current_replicas",
+    "namespace": "production",
+    "horizontalpodautoscaler": "worker-hpa"
+  },
+  {
+    "__name__": "kube_horizontalpodautoscaler_status_desired_replicas",
+    "namespace": "production",
+    "horizontalpodautoscaler": "api-hpa"
+  },
+  {
+    "__name__": "kube_horizontalpodautoscaler_status_desired_replicas",
+    "namespace": "production",
+    "horizontalpodautoscaler": "worker-hpa"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-1",
+    "condition": "DiskPressure",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-2",
+    "condition": "DiskPressure",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-1",
+    "condition": "MemoryPressure",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-2",
+    "condition": "MemoryPressure",
+    "status": "true"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-1",
+    "condition": "PIDPressure",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-2",
+    "condition": "PIDPressure",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-1",
+    "condition": "Ready",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-1",
+    "condition": "Ready",
+    "status": "true"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-2",
+    "condition": "Ready",
+    "status": "false"
+  },
+  {
+    "__name__": "kube_node_status_condition",
+    "node": "node-2",
+    "condition": "Ready",
+    "status": "true"
+  },
+  {
+    "__name__": "kube_pod_container_status_restarts_total",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "api"
+  },
+  {
+    "__name__": "kube_pod_container_status_restarts_total",
+    "namespace": "staging",
+    "pod": "api-6f4d8c9b2-vw5lz",
+    "container": "api"
+  },
+  {
+    "__name__": "kube_pod_container_status_restarts_total",
+    "namespace": "kube-system",
+    "pod": "coredns-74ff55c5b8-q9bzp",
+    "container": "coredns"
+  },
+  {
+    "__name__": "kube_pod_container_status_restarts_total",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "envoy"
+  },
+  {
+    "__name__": "kube_pod_container_status_restarts_total",
+    "namespace": "production",
+    "pod": "worker-5c8b9d7f6-mn3rt",
+    "container": "worker"
+  },
+  {
+    "__name__": "kube_pod_container_status_terminated_reason",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "container": "api",
+    "reason": "OOMKilled"
+  },
+  {
+    "__name__": "kube_pod_container_status_terminated_reason",
+    "namespace": "staging",
+    "pod": "api-6f4d8c9b2-vw5lz",
+    "container": "api",
+    "reason": "Error"
+  },
+  {
+    "__name__": "kube_pod_container_status_terminated_reason",
+    "namespace": "production",
+    "pod": "worker-5c8b9d7f6-mn3rt",
+    "container": "worker",
+    "reason": "Completed"
+  },
+  {
+    "__name__": "kube_pod_status_phase",
+    "namespace": "kube-system",
+    "pod": "coredns-74ff55c5b8-q9bzp",
+    "phase": "Running"
+  },
+  {
+    "__name__": "kube_pod_status_phase",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "phase": "Pending"
+  },
+  {
+    "__name__": "kube_pod_status_phase",
+    "namespace": "production",
+    "pod": "worker-5c8b9d7f6-mn3rt",
+    "phase": "Pending"
+  },
+  {
+    "__name__": "kube_pod_status_phase",
+    "namespace": "production",
+    "pod": "api-7d9f8b6c4-xk2pq",
+    "phase": "Running"
+  },
+  {
+    "__name__": "kube_pod_status_phase",
+    "namespace": "production",
+    "pod": "worker-5c8b9d7f6-mn3rt",
+    "phase": "Running"
+  },
+  {
+    "__name__": "kube_pod_status_phase",
+    "namespace": "staging",
+    "pod": "api-6f4d8c9b2-vw5lz",
+    "phase": "Running"
+  },
+  {
+    "__name__": "kubelet_volume_stats_available_bytes",
+    "namespace": "production",
+    "persistentvolumeclaim": "data-api-0"
+  },
+  {
+    "__name__": "kubelet_volume_stats_available_bytes",
+    "namespace": "production",
+    "persistentvolumeclaim": "logs-worker-0"
+  },
+  {
+    "__name__": "kubelet_volume_stats_capacity_bytes",
+    "namespace": "production",
+    "persistentvolumeclaim": "data-api-0"
+  },
+  {
+    "__name__": "kubelet_volume_stats_capacity_bytes",
+    "namespace": "production",
+    "persistentvolumeclaim": "logs-worker-0"
+  },
+  {
+    "__name__": "node_cpu_seconds_total",
+    "cpu": "0",
+    "mode": "idle",
+    "instance": "node-1:9100",
+    "job": "node-exporter"
+  },
+  {
+    "__name__": "node_cpu_seconds_total",
+    "cpu": "0",
+    "mode": "user",
+    "instance": "node-1:9100",
+    "job": "node-exporter"
+  },
+  {
+    "__name__": "scheduler_pod_scheduling_attempts",
+    "result": "scheduled"
+  },
+  {
+    "__name__": "scheduler_pod_scheduling_attempts",
+    "result": "unschedulable"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "error",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "+Inf"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "error",
+    "le": "0.001"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.001"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.001"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.005"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.005"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.01"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.01"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "error",
+    "le": "0.025"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.025"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.025"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.05"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.05"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "error",
+    "le": "0.1"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.1"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.1"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "0.5"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "0.5"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "scheduled",
+    "le": "1"
+  },
+  {
+    "__name__": "scheduler_scheduling_attempt_duration_seconds_bucket",
+    "result": "unschedulable",
+    "le": "1"
+  }
 ]

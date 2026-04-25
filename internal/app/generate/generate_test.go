@@ -286,6 +286,15 @@ func TestDiscrimination_ServiceRealistic(t *testing.T) {
 		"grpc_server_handling_seconds_bucket",      // gRPC latency (v0.2, bucket suffix synthesized)
 		"go_goroutines",                            // Go runtime goroutine count (v0.2)
 		"go_gc_duration_seconds",                   // Go GC pause via summary quantile (v0.2)
+		"api_tls_not_after_timestamp",              // service_tls_expiry (v0.2 Tier-2)
+		"db_query_duration_seconds_bucket",         // service_db_query_latency (v0.2 Tier-2)
+		"go_sql_stats_connections_in_use",          // service_db_pool (v0.2 Tier-2)
+		"http_client_requests_total",               // service_client_http (v0.2 Tier-2)
+		"http_request_size_bytes_bucket",           // service_request_size (v0.2 Tier-2)
+		"http_response_size_bytes_bucket",          // service_response_size (v0.2 Tier-2)
+		"kafka_consumergroup_lag",                  // service_kafka_consumer_lag (v0.2 Tier-2)
+		"redis_cache_hits_total",                   // service_cache_hits (v0.2 Tier-2)
+		"worker_jobs_succeeded_total",              // service_job_success (v0.2 Tier-2)
 	}
 	for _, want := range shouldAppear {
 		if !bytes.Contains(dash, []byte(want)) {
@@ -293,6 +302,9 @@ func TestDiscrimination_ServiceRealistic(t *testing.T) {
 		}
 	}
 	mustNotAppear := []string{
+		// go_memstats_alloc_bytes is a Go runtime gauge but its name is not in
+		// memoryMetricNames — service_memory Match() rejects it by closed-set lookup.
+		"go_memstats_alloc_bytes",
 		// A queue counter whose `status` label is NOT an HTTP status
 		// (alertmanager-style false positive). Recipe tightening: bare
 		// `status` is excluded from httpStatusLabels.
@@ -307,6 +319,27 @@ func TestDiscrimination_ServiceRealistic(t *testing.T) {
 		// service_grpc_rate requires the service_grpc trait, which only
 		// fires when at least one grpc_* label is present on the metric.
 		"grpc_client_retries_total",
+		// Contains 'cache' and is a counter but ends in _evicted_total not
+		// _cache_hits_total, so Match() returns false for service_cache_hits.
+		"cache_items_evicted_total",
+		// Shape-B counter using a status label for outcome discrimination;
+		// lacks the _jobs_succeeded_total suffix that Match() requires.
+		"worker_jobs_completed_total",
+		// Gauge carrying a cert-expiry timestamp but ending in _cert_expiry
+		// rather than _cert_expiry_timestamp_seconds; no tlsExpirySuffix matches.
+		"probe_ssl_earliest_cert_expiry",
+		// Name ends in _request_size_bytes but has only query_type label,
+		// no method or handler — HTTP-shape guard rejects service_request_size.
+		"db_request_size_bytes",
+		// Name ends in _response_size_bytes but has only query_type label,
+		// no method or handler — HTTP-shape guard rejects service_response_size.
+		"db_response_size_bytes",
+		// Counter (not gauge) and name absent from kafkaLagNames — fails both
+		// the MetricTypeGauge check and the name map lookup for service_kafka_consumer_lag.
+		"consumer_processed_total",
+		// Name contains 'query' and 'db' but metric type is counter, not
+		// histogram — MetricTypeHistogram guard rejects service_db_query_latency.
+		"db_query_count_total",
 	}
 	for _, nope := range mustNotAppear {
 		if bytes.Contains(dash, []byte(nope)) {
@@ -360,6 +393,11 @@ func TestDiscrimination_InfraRealistic(t *testing.T) {
 		"node_load1",                       // infra_load (v0.2)
 		"process_open_fds",                 // infra_file_descriptors (v0.2)
 		"node_network_receive_errs_total",  // infra_nic_errors (v0.2)
+		"node_disk_io_time_seconds_total",  // infra_disk_io_latency (v0.2 Tier-2)
+		"node_disk_reads_completed_total",  // infra_disk_iops (v0.2 Tier-2)
+		"node_interrupts_total",            // infra_interrupts (v0.2 Tier-2)
+		"node_nf_conntrack_entries",        // infra_conntrack (v0.2 Tier-2)
+		"node_timex_offset_seconds",        // infra_ntp_offset (v0.2 Tier-2)
 	}
 	for _, want := range shouldAppear {
 		if !bytes.Contains(dash, []byte(want)) {
@@ -367,11 +405,36 @@ func TestDiscrimination_InfraRealistic(t *testing.T) {
 		}
 	}
 	mustNotAppear := []string{
+		// process_cpu_seconds_total is a process-level counter; infra_cpu
+		// Match() requires name == "node_cpu_seconds_total" exactly.
+		"process_cpu_seconds_total",
+		// container_memory_usage_bytes is cAdvisor turf; infra_memory
+		// Match() requires node_memory_MemAvailable_bytes or node_memory_MemTotal_bytes.
+		"container_memory_usage_bytes",
+		// container_fs_usage_bytes is cAdvisor turf; infra_disk Match()
+		// requires node_filesystem_avail_bytes or node_filesystem_size_bytes.
+		"container_fs_usage_bytes",
+		// container_network_receive_bytes_total is cAdvisor turf; infra_network
+		// Match() requires node_network_receive_bytes_total or node_network_transmit_bytes_total.
+		"container_network_receive_bytes_total",
 		// cAdvisor container metrics have the same "cpu_usage_seconds" /
 		// "memory_working_set" naming shape as node_* but belong in the
 		// k8s profile. Any infra_* recipe that picks these up is a bug.
 		"container_cpu_usage_seconds_total",
 		"container_memory_working_set_bytes",
+		// Same counter type and node_exporter source as node_interrupts_total
+		// but name differs — Match() exact-name check returns false for the
+		// software IRQ counter; infra_interrupts must not fire on it.
+		"node_softirqs_total",
+		// cAdvisor filesystem counter structurally similar to IOPS counters
+		// but name is not in diskIOPSNames — Match() must return false.
+		"container_fs_reads_total",
+		// Same node_exporter disk-family counter with device label but tracks
+		// byte throughput not IO time — name not in diskIOLatencyNames.
+		"node_disk_read_bytes_total",
+		// Gauge with 'seconds' suffix like node_timex_offset_seconds but wrong
+		// domain (process start timestamp) — name equality check rejects it.
+		"process_start_time_seconds",
 	}
 	for _, nope := range mustNotAppear {
 		if bytes.Contains(dash, []byte(nope)) {
@@ -398,13 +461,18 @@ func TestDiscrimination_K8sRealistic(t *testing.T) {
 	out := runOnceWith(t, k8sRealisticFixtureDir, "k8s")
 	dash := out["dashboard.json"]
 	shouldAppear := []string{
-		"kube_pod_status_phase",                       // k8s_pod_health (v0.1)
-		"kube_pod_container_status_restarts_total",    // k8s_restarts (v0.1)
-		"container_cpu_usage_seconds_total",           // k8s_container_resources (v0.1)
-		"kube_deployment_status_replicas_available",   // k8s_deployment_availability (v0.2)
-		"kube_node_status_condition",                  // k8s_node_conditions (v0.2)
-		"kubelet_volume_stats_available_bytes",        // k8s_pvc_usage (v0.2)
-		"kube_pod_container_status_terminated_reason", // k8s_oom_kills (v0.2)
+		"kube_pod_status_phase",                                // k8s_pod_health (v0.1)
+		"kube_pod_container_status_restarts_total",             // k8s_restarts (v0.1)
+		"container_cpu_usage_seconds_total",                    // k8s_container_resources (v0.1)
+		"kube_deployment_status_replicas_available",            // k8s_deployment_availability (v0.2)
+		"kube_node_status_condition",                           // k8s_node_conditions (v0.2)
+		"kubelet_volume_stats_available_bytes",                 // k8s_pvc_usage (v0.2)
+		"kube_pod_container_status_terminated_reason",          // k8s_oom_kills (v0.2)
+		"apiserver_request_duration_seconds_bucket",            // k8s_apiserver_latency (v0.2 Tier-2)
+		"etcd_disk_backend_commit_duration_seconds_bucket",     // k8s_etcd_commit (v0.2 Tier-2)
+		"kube_horizontalpodautoscaler_status_current_replicas", // k8s_hpa_scaling (v0.2 Tier-2)
+		"scheduler_scheduling_attempt_duration_seconds_bucket", // k8s_scheduler_latency (v0.2 Tier-2)
+		"coredns_dns_request_duration_seconds_bucket",          // k8s_coredns (v0.2 Tier-2)
 	}
 	for _, want := range shouldAppear {
 		if !bytes.Contains(dash, []byte(want)) {
@@ -415,6 +483,17 @@ func TestDiscrimination_K8sRealistic(t *testing.T) {
 		// node_exporter metric in the fixture — must NOT be picked up
 		// by any k8s recipe (profile-bleed guard).
 		"node_cpu_seconds_total",
+		// Same 'scheduler_' prefix and 'result' label as scheduler latency
+		// metrics, but MetricType is counter — histogram type guard rejects it.
+		"scheduler_pod_scheduling_attempts",
+		// Has 'coredns_' prefix and histogram type, but base name is
+		// coredns_health_request_duration_seconds not coredns_dns_request_duration_seconds
+		// — Match() name equality check excludes it.
+		"coredns_health_request_duration_seconds",
+		// Shares 'apiserver_' prefix, histogram type, and verb/resource labels,
+		// but base name is apiserver_response_size_bytes not
+		// apiserver_request_duration_seconds — name equality check excludes it.
+		"apiserver_response_size_bytes",
 	}
 	for _, nope := range mustNotAppear {
 		if bytes.Contains(dash, []byte(nope)) {
