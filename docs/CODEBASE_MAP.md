@@ -1,7 +1,7 @@
 ---
-last_mapped: 2026-04-25T07:56:45Z
-total_files: 250
-total_tokens: 221994
+last_mapped: 2026-04-25T14:22:26Z
+total_files: 254
+total_tokens: 259700
 ---
 
 # Codebase Map
@@ -129,7 +129,7 @@ dashgen/
 | `internal/prometheus` | HTTP client for Prometheus `/api/v1/*` endpoints | `Client` iface, `HTTPClient`, `MetricMetadata`, `QueryResult` | net/http |
 | `internal/discover` | Metadata + label discovery (live + fixture); normalizes into `RawInventory` | `Source` iface, `PrometheusSource`, `FixtureSource`, `RawInventory`, `Selector` | prometheus |
 | `internal/inventory` | Canonical `MetricInventory` with sorted metric names + labels; hash-stable | `MetricInventory`, `MetricDescriptor`, `MetricType`, `InventoryHash` | sort, sha256 |
-| `internal/classify` | Deterministic trait classifier; attaches `service_http`, `service_grpc`, `latency_histogram` by labels + name patterns | `Classify`, `ClassifiedInventory`, `Trait` constants | inventory |
+| `internal/classify` | Deterministic trait classifier; attaches `service_http`, `service_grpc`, `latency_histogram` by labels + name patterns + LOW-weight help-text hints (regex-gated, label-suppressed) | `Classify`, `ClassifiedInventory`, `Trait` constants | inventory, regexp |
 | `internal/profiles` | Profile enum (`service`/`infra`/`k8s`) + section order + `PanelCap` | `Profile`, `Sections`, `PanelCap`, `IsKnown` | (none) |
 | `internal/recipes` | 44 recipes + `Recipe` interface + helpers + 3 registries | `Recipe`, `Registry`, `NewServiceRegistry`, `NewInfraRegistry`, `NewK8sRegistry`, `safeGroupLabels`, `legendFor`, `DefaultRateWindow` | classify, inventory, ir, profiles |
 | `internal/synth` | Recipe-driven panel synthesis; applies panel cap by `(Confidence desc, UID asc)` | `Synthesize`, `SynthesizeWithCap`, `snapshotOf` | classify, ids, inventory, ir, profiles, recipes |
@@ -139,7 +139,7 @@ dashgen/
 | `internal/render/grafana` | Grafana schema v39 JSON renderer | `Render` | ir |
 | `internal/render/rationale` | Human-readable rationale Markdown | `Render` | ir |
 | `internal/render/warnings` | Machine-readable warnings.json (sorted, deduplicated) | `Render` | ir |
-| `internal/enrich` | **v0.2 seam, wired into `generate.Run` (commit `fa2f8f9`).** `Enricher` iface + `NoopEnricher` (default) + disk cache | `Enricher`, `NoopEnricher`, `Cache`, `CacheKey`, `Entry`, `MetricBrief` (label-names only) | context, encoding/json |
+| `internal/enrich` | **v0.2 seam, wired into `generate.Run` (commit `fa2f8f9`).** `Enricher` iface + `NoopEnricher` (default) + disk cache + provider registry (`factory.go`, the single extension point — adding a provider is one new file plus a `Register` call). Phase 3+ providers: anthropic, openai (both hosted, registered as `ErrNotImplementedYet` placeholders today). Local provider deferred to v0.3 backlog (registered placeholder `ollama` returns `ErrNotImplementedYet` so the boundary is shaped). | `Enricher`, `NoopEnricher`, `Spec`, `New`, `Register`, `Providers`, `Constructor`, `ErrUnknownProvider`, `ErrNotImplementedYet`, `Cache`, `CacheKey`, `Entry`, `MetricBrief` (label-names only) | context, encoding/json, sort |
 
 ### Application layer
 
@@ -153,7 +153,7 @@ dashgen/
 
 - **`inventory.MetricInventory`** — sorted-by-name view of Prometheus metrics; deterministic input to classification.
 - **`inventory.MetricDescriptor`** — one metric family: name, type, help, labels, inferred unit/family.
-- **`classify.Trait`** — enum: `TraitServiceHTTP`, `TraitServiceGRPC`, `TraitLatencyHistogram`.
+- **`classify.Trait`** — enum: `TraitServiceHTTP`, `TraitServiceGRPC`, `TraitLatencyHistogram`. Set by labels (`{method,status_code,route,path,handler,code}` for HTTP; `grpc_*` for gRPC; `_bucket+le` + latency-shaped name for histograms) **and** narrow help-text regex hints (V0.2-PLAN Phase 1 item 3) gated so they only ADD a trait when no contradicting label or trait exists.
 - **`classify.ClassifiedMetric`** — descriptor + inferred type, family, unit, traits.
 - **`ir.Dashboard`** — finalized IR: UID, title, profile, variables, rows, dashboard-level warnings.
 - **`ir.Row`** — section name + panels.
@@ -359,9 +359,11 @@ Plus per-recipe unit tests (`Test<Recipe>_Match` + `Test<Recipe>_BuildPanels`), 
 
 **Wiring point:** `internal/app/generate/generate.go:111` — `Run` calls `applyEnrichment(ctx, dashboard, cfg)` after `validateAndFinalize`. Returns the dashboard (potentially mutated by future providers; unchanged in the noop path).
 
+**Extension contract:** `internal/enrich/factory.go` is the single extension point. Adding a provider requires one new file in `internal/enrich/` (e.g. `anthropic.go`) containing a `Constructor` of type `func(Spec) (Enricher, error)` plus a one-line `enrich.Register("name", ctor)` in its `init()`. Nothing else changes — `applyEnrichment` already calls `enrich.New(Spec{Provider: cfg.Provider, ...})` and dispatches by `Describe()`. CLI surface accepts any name registered. See V0.2-PLAN §2.7.
+
 **Config knobs (`internal/config/config.go`):**
 
-- `Provider string` — zero-value `""`, `"off"`, or `"noop"` selects `NoopEnricher`. Unknown values reject as `ErrBackend`. Phase 3+ adds `"ollama"`, `"anthropic"`.
+- `Provider string` — zero-value `""`, `"off"`, or `"noop"` selects `NoopEnricher`. Resolved via `enrich.New(Spec{Provider:...})` in `applyEnrichment`. `"anthropic"`, `"openai"`, `"ollama"` are registered placeholders that return `enrich.ErrNotImplementedYet`; any other name returns `enrich.ErrUnknownProvider`. Both error sentinels are wrapped as `ErrBackend` by `Run`. Local AI (ollama) was dropped from v0.2 scope in commit `3591d41`; the placeholder remains so the registry shape continues to advertise the extension point for v0.3.
 - `EnrichModes []string` — subset of `{titles, rationale, classify, unknown-grouping, all, none}`. Empty/nil ⇒ no enrichment even if a provider is configured.
 - `CacheDir string` — overrides default `~/.cache/dashgen/enrich`; empty ⇒ default.
 - `NoEnrichCache bool` — forces re-fetch (defaults false).
@@ -415,6 +417,7 @@ Plus per-recipe unit tests (`Test<Recipe>_Match` + `Test<Recipe>_BuildPanels`), 
 - **Histogram bare-base `_bucket` append** — Prometheus metadata returns the base name (without `_bucket`), but the queryable series IS `_bucket`. Both `discover.PrometheusSource` / `FixtureSource` fall back to `<name>_bucket` for label discovery when `type == "histogram"` and name lacks partial suffix. Recipes append `_bucket` to the metric name when synthesizing queries for bare-base histograms (see `service_grpc_latency.go`).
 - **`le` exemption from cardinality** — `le` is a structural bucket boundary, mandatory for `histogram_quantile`, always bounded. `safety.Policy.CardinalityRisk` explicitly skips it when counting grouping dimensions.
 - **Trait vs name matching** — some recipes fire on traits (broad); others require exact metric names (narrow). This is intentional — recipes with look-alike risk on real backends use name equality or name-substring guards to tighten.
+- **Help-text hint suppression** — `classify.applyHelpHint` only fires AFTER label/name signals and only when the metric's labels are entirely within the infrastructure-only allowlist `{instance, job, le}`. Any other label (e.g. `db_query`, `query_type`, `queue`) is treated as positive domain evidence and suppresses the hint. Mutual exclusivity is enforced: an HTTP hint never overrides an existing gRPC trait, and vice versa. `TraitLatencyHistogram` is intentionally never emitted from help text — it must be structural (`_bucket` + `le`).
 - **Strict mode outside the pipeline** — `validate.Pipeline` runs with `Strict: false` inside synth+validate; strict enforcement happens at `app/generate` layer AFTER finalization, in `firstStrictWarning`. This lets one query warning NOT cascade into dashboard-wide refusal that can't be introspected.
 - **`empty_result` is a warning, not an omission** — a query returning zero series still emits a panel with warning; the panel only DROPS if every candidate on it refuses (SPECS Rule 5).
 - **Renderer separation** — grafana/rationale/warnings renderers read the same IR independently; rendering cannot change verdicts or emit new queries. Synthesis is recipe-driven; rendering is schema-shaped.
@@ -425,16 +428,16 @@ Plus per-recipe unit tests (`Test<Recipe>_Match` + `Test<Recipe>_BuildPanels`), 
 | To do… | Touch |
 |--------|-------|
 | **Add a new recipe** | Create `internal/recipes/<name>.go` + `<name>_test.go` following the authoring contract (§1 of `RECIPES.md`); register in `registry.go`; update `service_memory_test.go`'s registry-count list; extend the relevant `*-realistic` fixture with a positive case AND at least one look-alike; regenerate goldens with `UPDATE_GOLDENS=1`. |
-| **Add a new classifier trait** | Edit `internal/classify/classify.go` (new `Trait` const + detection in `classifyOne`); add table cases in `classify_test.go`; document the trait in `RECIPES.md §6`. |
+| **Add a new classifier trait** | Edit `internal/classify/classify.go` (new `Trait` const + detection in `classifyOne`); if the trait should accept LOW-weight help-text hints, extend `helpHints` with a strict regex AND `applyHelpHint`'s switch (mind the infra-label suppression rule); add table cases in `classify_test.go` covering positive label evidence, help-only positive, and contradicting-label suppression; document the trait in `RECIPES.md §6`. |
 | **Change a safety rule** | Edit `internal/safety/policy.go`; add test cases in `policy_test.go` covering both the positive and regression case; check `safety.CardinalityRisk` handling of `le`. |
 | **Add a validate stage** | Edit `internal/validate/validate.go` (insert a new case in `Pipeline.Validate`'s stage switch) and one of the stage files (`execute.go` / `selector.go` / `safety_stage.go`); extend `ValidationResult` if new reasons apply; add `TestRun/<stage>_case` in `app/validate/validate_test.go`. |
 | **Add a new output format** | Create `internal/render/<format>/render.go` implementing `Render(*ir.Dashboard) ([]byte, error)`; wire into `app/generate.Run`; do NOT branch inside existing renderers. |
 | **Add a new profile** | Extend `profiles.Profile` + `profiles.Sections` + `profiles.PanelCap`; create `NewXxxRegistry()` in `internal/recipes/registry.go`; add `xxx-basic` + `xxx-realistic` fixtures + goldens; add `TestGolden_XxxBasic` + discrimination test. |
 | **Support a new backend** | Add an implementation of `discover.Source` + `prometheus.Client` in a new subpackage; wire into `app/generate.buildBackend` behind a new CLI flag; update mutual-exclusion check. |
-| **Wire in an AI provider** | Implement `enrich.Enricher` in `internal/enrich/<provider>.go`; add `--provider <name>` + `--provider-model` + `--enrich` flags on generate/inspect; cache through existing `enrich.Cache`; run validation pipeline on AI output (never bypass). |
+| **Wire in an AI provider** | Implement `enrich.Enricher` in `internal/enrich/<provider>.go` (hosted: anthropic / openai planned for v0.2 Phase 3; local: ollama / llama.cpp / lm-studio targeted for v0.3 backlog); call `enrich.Register("<provider>", ctor)` in that file's `init()` — no edit to `applyEnrichment` is needed because the factory dispatches by registry. Read API keys from env (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). Add a `desc.Provider == "<provider>"` branch in `applyEnrichment` only when the provider has its own mutation logic (titles / rationale / classify). Cache through existing `enrich.Cache`; never generate PromQL or upgrade verdicts (V0.2-PLAN §2.2 + §2.7). |
 | **Regenerate goldens after an intentional change** | `UPDATE_GOLDENS=1 go test ./internal/app/generate/...` |
 | **Snapshot a live Prometheus into a fixture** | `scripts/capture-prometheus.sh <prom-url> <fixture-dir>` |
 
 ---
 
-**Recipe count:** 44 recipes (12 v0.1 + 32 v0.2). **Test count:** 417 pass. **Lines of Go:** ~72k in `internal/recipes/`, ~37k in runtime pipeline, ~16k in app/ wiring. **Lint:** golangci-lint v2.11.4 (config v2 schema; CI workflow uses `golangci-lint-action@v9`).
+**Recipe count:** 44 recipes (12 v0.1 + 32 v0.2). **Tests:** all 14 packages pass under `-race`. **Lines of Go:** ~9.8k in `internal/recipes/`, ~5.6k in runtime pipeline (`internal/{classify,config,discover,enrich,ids,inventory,ir,profiles,prometheus,recipes-helpers,render,safety,synth,validate}` minus recipes), ~2.1k in `internal/app/` wiring. **Lint:** golangci-lint v2.11.4 (config v2 schema; CI workflow uses `golangci-lint-action@v9`).

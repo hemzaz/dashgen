@@ -296,8 +296,8 @@ Scope
 In scope
 
 * Optional AI enrichment behind feature flags
-* One hosted provider
-* One local provider
+* Two hosted providers (anthropic primary, openai alternate; both opt-in via API key)
+* Provider registry (`internal/enrich/factory.go`) shaped for a local provider drop-in (deferred to v0.3 backlog)
 * Inventory-hash-based caching for enrichment
 * Better handling of unknown custom metrics
 * lint command
@@ -352,10 +352,15 @@ Rules
 
 2. Provider support
 
-Initial providers
+Initial providers (v0.2 ships)
 
-* One hosted provider
-* One local provider
+* Anthropic — primary hosted provider; opt-in via `ANTHROPIC_API_KEY`.
+* OpenAI — alternate hosted provider; opt-in via `OPENAI_API_KEY`.
+
+Local provider — deferred to v0.3 backlog. The `internal/enrich/factory.go`
+registry stays shaped for a one-file drop-in (a registered placeholder
+returns `ErrNotImplementedYet` so operators see the boundary clearly).
+See `V0.2-PLAN.md` §2.7 for the extension contract.
 
 Requirements
 
@@ -408,7 +413,7 @@ Example
 dashgen generate \
   --prom-url http://prometheus:9090 \
   --profile service \
-  --provider ollama \
+  --provider anthropic \
   --out ./dashboards
 
 Acceptance criteria
@@ -438,7 +443,7 @@ v0.2 ships only if:
 * Enrichment is feature-gated and non-destructive
 * Lint and coverage are useful on real dashboards
 * Cache and provider behavior are clearly documented
-* Local provider mode works without cloud dependency
+* Provider registry (`internal/enrich/factory.go`) is shaped for a future local provider drop-in (the local-provider implementation itself is v0.3 work)
 
 Success metrics
 

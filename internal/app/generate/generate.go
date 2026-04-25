@@ -286,25 +286,45 @@ func firstStrictWarning(d *ir.Dashboard) string {
 	return ""
 }
 
-// applyEnrichment is the v0.2 enrichment seam. With cfg.Provider == "" or
-// "off" it returns the dashboard unchanged using NoopEnricher — proving the
-// byte-identical-to-v0.1 contract. Phase 3+ adds real providers (anthropic,
-// openai) which will populate Panel.MechanicalTitle and Panel.RationaleExtra
-// without ever generating PromQL or upgrading verdicts (V0.2-PLAN §2.2).
+// applyEnrichment is the v0.2 enrichment seam. It delegates provider
+// selection to the enrich.New factory (the single extension point for new
+// providers — see internal/enrich/factory.go) and then dispatches by the
+// returned enricher's Describe() to keep mutation paths in one place.
 //
-// Unknown provider strings return a wrapped error so the caller emits ErrBackend.
+// Today the only enricher that ever returns from the factory is
+// NoopEnricher (the {"", "off", "noop"} aliases). Anthropic, OpenAI, and
+// any future local provider register their own Constructors in the
+// enrich package; when they exist this glue does not need to change —
+// only the per-enricher mutation branch below grows.
+//
+// Provider lookup errors flow up unchanged: ErrUnknownProvider for names
+// the registry has never heard of, ErrNotImplementedYet for placeholders
+// awaiting Phase 3+ work. Run() wraps the result as ErrBackend.
 func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) (*ir.Dashboard, error) {
-	switch cfg.Provider {
-	case "", "off", "noop":
-		// Noop path: build the enricher to honor the contract (Describe()
-		// returns "noop" so any future audit-trail consumer sees the
-		// provider in use), but return the dashboard untouched. No
-		// allocation, no mutation.
-		_ = enrich.NewNoopEnricher()
-		return d, nil
-	default:
-		return d, fmt.Errorf("unknown provider %q (Phase 3+ adds anthropic/openai)", cfg.Provider)
+	enricher, err := enrich.New(enrich.Spec{
+		Provider: cfg.Provider,
+		CacheDir: cfg.CacheDir,
+		NoCache:  cfg.NoEnrichCache,
+	})
+	if err != nil {
+		return d, err
 	}
+
+	desc := enricher.Describe()
+	if desc.Provider == "noop" {
+		// Noop path: provider built (audit-trail consumers see Describe()
+		// = "noop") and the dashboard is returned untouched. No
+		// allocation, no mutation. This is the load-bearing AI-off-parity
+		// contract from V0.2-PLAN §6.
+		return d, nil
+	}
+
+	// No active enricher applies its own mutation logic yet. When the
+	// first real provider lands, branch here on desc.Provider and call
+	// EnrichTitles / EnrichRationale / ClassifyUnknown per cfg.EnrichModes.
+	// All such mutations must respect the V0.2-PLAN §2.2 boundary: never
+	// produce PromQL, never upgrade verdicts.
+	return d, nil
 }
 
 // rawToInventory is a thin adapter from RawInventory to MetricInventory.
