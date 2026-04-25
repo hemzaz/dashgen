@@ -58,6 +58,12 @@ type RunConfig struct {
 	// NoEnrichCache forces re-fetch instead of returning a cache hit. Used
 	// for authoring/debugging. Default false (cache enabled).
 	NoEnrichCache bool
+	// InPlace enables idempotent regeneration: when true, output files
+	// are only rewritten when their bytes differ from what's on disk.
+	// Default false preserves v0.1 behavior (always rewrite). Cross-
+	// section preservation across inventory changes is OUT of scope —
+	// see .omc/plans/v0.2-remainder.md §7.2.
+	InPlace bool
 }
 
 // FileConfig is the on-disk YAML schema. Fields are optional; unset fields

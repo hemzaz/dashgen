@@ -28,6 +28,7 @@ import (
 	"dashgen/internal/profiles"
 	"dashgen/internal/prometheus"
 	"dashgen/internal/recipes"
+	"dashgen/internal/regenerate"
 	grafana "dashgen/internal/render/grafana"
 	rationale "dashgen/internal/render/rationale"
 	warnings "dashgen/internal/render/warnings"
@@ -143,7 +144,7 @@ func Run(ctx context.Context, cfg *config.RunConfig) error {
 		fmt.Fprintln(os.Stdout)
 		return nil
 	}
-	if err := writeOutputs(cfg.OutDir, dashJSON, rationaleMD, warningsJSON); err != nil {
+	if err := writeOutputs(cfg.OutDir, dashJSON, rationaleMD, warningsJSON, cfg.InPlace); err != nil {
 		return fmt.Errorf("write outputs: %w", err)
 	}
 	return nil
@@ -344,7 +345,12 @@ func rawToInventory(raw *discover.RawInventory) *inventory.MetricInventory {
 	return inv
 }
 
-func writeOutputs(dir string, dash, rat, warn []byte) error {
+// writeOutputs writes the three output files. With inPlace=true, each
+// file is only rewritten when its bytes differ from what's already on
+// disk (see internal/regenerate.WriteIfChanged) — preserving mtime on
+// no-op runs. With inPlace=false (the v0.1 default), every file is
+// written unconditionally.
+func writeOutputs(dir string, dash, rat, warn []byte, inPlace bool) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
@@ -357,7 +363,14 @@ func writeOutputs(dir string, dash, rat, warn []byte) error {
 		{"warnings.json", warn},
 	}
 	for _, w := range writes {
-		if err := os.WriteFile(filepath.Join(dir, w.name), w.data, 0o644); err != nil {
+		path := filepath.Join(dir, w.name)
+		if inPlace {
+			if _, err := regenerate.WriteIfChanged(path, w.data); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := os.WriteFile(path, w.data, 0o644); err != nil {
 			return err
 		}
 	}

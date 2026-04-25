@@ -19,6 +19,7 @@ func newGenerateCmd() *cobra.Command {
 		configPath  string
 		dryRun      bool
 		strict      bool
+		inPlace     bool
 		job         string
 		namespace   string
 		metricMatch string
@@ -55,6 +56,7 @@ func newGenerateCmd() *cobra.Command {
 			}
 			cfg.DryRun = dryRun
 			cfg.Strict = strict
+			cfg.InPlace = inPlace
 			cfg.Job = job
 			cfg.Namespace = namespace
 			cfg.MetricMatch = metricMatch
@@ -72,6 +74,7 @@ func newGenerateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&configPath, "config", "", "config file path")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do not write output files")
 	cmd.Flags().BoolVar(&strict, "strict", false, "treat warnings as failure")
+	cmd.Flags().BoolVar(&inPlace, "in-place", false, "skip rewriting unchanged output files (idempotent re-runs)")
 	cmd.Flags().StringVar(&job, "job", "", "restrict discovery to job label")
 	cmd.Flags().StringVar(&namespace, "namespace", "", "restrict discovery to namespace label")
 	cmd.Flags().StringVar(&metricMatch, "metric-match", "", "metric-name substring filter")
