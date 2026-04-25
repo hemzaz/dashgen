@@ -22,6 +22,7 @@ import (
 	"dashgen/internal/classify"
 	"dashgen/internal/config"
 	"dashgen/internal/discover"
+	"dashgen/internal/enrich"
 	"dashgen/internal/inventory"
 	"dashgen/internal/ir"
 	"dashgen/internal/profiles"
@@ -103,6 +104,14 @@ func Run(ctx context.Context, cfg *config.RunConfig) error {
 	})
 
 	dashboard = validateAndFinalize(ctx, pipeline, dashboard)
+
+	// v0.2 enrichment seam (V0.2-PLAN.md §2). With cfg.Provider == "" or
+	// "off" (the default), this is a no-op pass-through using NoopEnricher
+	// and the dashboard is returned unchanged. Phase 3+ adds real providers.
+	dashboard, err = applyEnrichment(ctx, dashboard, cfg)
+	if err != nil {
+		return fmt.Errorf("%w: enrichment: %w", ErrBackend, err)
+	}
 
 	// Strict mode: any surviving warning short-circuits before rendering.
 	if cfg.Strict {
@@ -275,6 +284,27 @@ func firstStrictWarning(d *ir.Dashboard) string {
 		}
 	}
 	return ""
+}
+
+// applyEnrichment is the v0.2 enrichment seam. With cfg.Provider == "" or
+// "off" it returns the dashboard unchanged using NoopEnricher — proving the
+// byte-identical-to-v0.1 contract. Phase 3+ adds real providers (ollama,
+// anthropic) which will populate Panel.MechanicalTitle and Panel.RationaleExtra
+// without ever generating PromQL or upgrading verdicts (V0.2-PLAN §2.2).
+//
+// Unknown provider strings return a wrapped error so the caller emits ErrBackend.
+func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) (*ir.Dashboard, error) {
+	switch cfg.Provider {
+	case "", "off", "noop":
+		// Noop path: build the enricher to honor the contract (Describe()
+		// returns "noop" so any future audit-trail consumer sees the
+		// provider in use), but return the dashboard untouched. No
+		// allocation, no mutation.
+		_ = enrich.NewNoopEnricher()
+		return d, nil
+	default:
+		return d, fmt.Errorf("unknown provider %q (Phase 3+ adds ollama/anthropic)", cfg.Provider)
+	}
 }
 
 // rawToInventory is a thin adapter from RawInventory to MetricInventory.

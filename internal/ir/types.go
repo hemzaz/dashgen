@@ -51,16 +51,25 @@ type Row struct {
 //
 // Determinism: Queries are ordered as the slice is ordered. Synthesis is
 // responsible for choosing a stable primary-query position.
+//
+// MechanicalTitle and RationaleExtra are the v0.2 enrichment seam. Synthesis
+// always leaves them empty; an Enricher provider may populate them — but
+// the v0.1 deterministic path uses Title/Rationale exclusively, so when no
+// enrichment runs (default; --provider=off / NoopEnricher), both stay zero
+// and renderers produce byte-identical output to v0.1. Renderers MUST NOT
+// branch on "enriched vs not"; they consume these fields as data.
 type Panel struct {
-	UID        string
-	Title      string
-	Kind       PanelKind
-	Queries    []QueryCandidate
-	Unit       string
-	Confidence float64
-	Warnings   []string
-	Verdict    Verdict
-	Rationale  string
+	UID             string
+	Title           string
+	Kind            PanelKind
+	Queries         []QueryCandidate
+	Unit            string
+	Confidence      float64
+	Warnings        []string
+	Verdict         Verdict
+	Rationale       string
+	MechanicalTitle string
+	RationaleExtra  string
 }
 
 // QueryCandidate is a single PromQL expression proposed for a panel, along

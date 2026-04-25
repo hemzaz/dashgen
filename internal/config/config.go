@@ -41,6 +41,23 @@ type RunConfig struct {
 	// ExprFile points to a file containing one PromQL expression per
 	// non-empty, non-`#`-prefixed line. Consumed by `validate` only.
 	ExprFile string
+	// Provider selects the v0.2 enrichment provider. Zero-value (or "off")
+	// uses internal/enrich.NoopEnricher and produces output byte-identical
+	// to v0.1. Phase 3+ adds "ollama" and "anthropic". Unknown values are
+	// rejected by app/generate as ErrBackend.
+	Provider string
+	// EnrichModes is a subset of {titles, rationale, classify,
+	// unknown-grouping, all, none}. Empty (nil) means "none" — no
+	// enrichment is invoked even if a provider is configured. Consumed by
+	// app/generate's applyEnrichment glue once it gates per-mode calls.
+	EnrichModes []string
+	// CacheDir overrides the on-disk cache directory used by
+	// internal/enrich.Cache. Empty means use the default
+	// ~/.cache/dashgen/enrich.
+	CacheDir string
+	// NoEnrichCache forces re-fetch instead of returning a cache hit. Used
+	// for authoring/debugging. Default false (cache enabled).
+	NoEnrichCache bool
 }
 
 // FileConfig is the on-disk YAML schema. Fields are optional; unset fields
