@@ -67,10 +67,14 @@ type Target struct {
 
 // Panel is the subset of `dashboard.json["panels"][i]` that lint reads.
 // Row separators (`type == "row"`) are kept so checks can correlate.
+//
+// Unit is flattened from `fieldConfig.defaults.unit` by the orchestrator
+// so the lint package never has to know about Grafana's nested schema.
 type Panel struct {
 	ID      int64    `json:"id"`
 	Type    string   `json:"type"`
 	Title   string   `json:"title"`
+	Unit    string   `json:"unit"`
 	Targets []Target `json:"targets"`
 }
 
@@ -82,6 +86,11 @@ func (p Panel) IsRow() bool { return p.Type == "row" }
 type Input struct {
 	// Panels is the full panel list from dashboard.json in source order.
 	Panels []Panel
+
+	// Rationale is the verbatim text of rationale.md, or empty if the
+	// orchestrator could not read it (the file is optional from lint's
+	// perspective — checks that need it MUST handle empty defensively).
+	Rationale string
 }
 
 // Check is the contract every lint rule satisfies. Implementations are
@@ -393,9 +402,256 @@ func isLabelBoundary(s string, i int) bool {
 	return true
 }
 
+// checkMissingRationaleRow warns when a non-row panel has no
+// corresponding `**<title>**` line in rationale.md. The mechanical
+// rationale is the audit trail every panel ships with (V0.2-PLAN
+// §2.1); a panel lacking one means rendering and synthesis disagree
+// on what the dashboard contains, which is a documentation drift
+// rather than a safety issue. Severity: warn (per Step 3.0 plan).
+//
+// The check is permissive: empty rationale text disables the check
+// entirely so a bundle without rationale.md (e.g. a dry-run capture)
+// does not flood the report.
+type checkMissingRationaleRow struct{}
+
+func (checkMissingRationaleRow) Code() string { return "missing-rationale-row" }
+
+func (checkMissingRationaleRow) Run(in *Input) []Issue {
+	if in.Rationale == "" {
+		return nil
+	}
+	var out []Issue
+	for _, p := range in.Panels {
+		if p.IsRow() || p.Title == "" {
+			continue
+		}
+		marker := "**" + p.Title + "**"
+		if strings.Contains(in.Rationale, marker) {
+			continue
+		}
+		out = append(out, Issue{
+			Code:       "missing-rationale-row",
+			Severity:   SeverityWarn,
+			PanelID:    p.ID,
+			PanelTitle: p.Title,
+			Message:    "panel title not present in rationale.md as `**" + p.Title + "**`; rationale must describe every panel",
+		})
+	}
+	return out
+}
+
+// checkRateOnGauge refuses any `rate(` or `irate(` wrapping a metric
+// whose name does not look like a counter. PromQL's rate semantics
+// require monotonically-increasing input; applying rate to a gauge
+// produces meaningless numbers (often negative) and is the single
+// most common Grafana authoring mistake.
+//
+// Counter detection is suffix-only — `_total`, `_count`, `_sum`,
+// `_bucket`. The full classifier is unavailable here because lint
+// runs against an already-rendered dashboard, but the suffix
+// heuristic is what dashgen's own classifier uses (`internal/classify`)
+// and it covers >99% of real-world counters.
+type checkRateOnGauge struct{}
+
+func (checkRateOnGauge) Code() string { return "rate-on-gauge" }
+
+func (checkRateOnGauge) Run(in *Input) []Issue {
+	var out []Issue
+	for _, p := range in.Panels {
+		if p.IsRow() {
+			continue
+		}
+		for _, t := range p.Targets {
+			for _, metric := range metricsInsideRate(t.Expr) {
+				if isCounterName(metric) {
+					continue
+				}
+				out = append(out, Issue{
+					Code:       "rate-on-gauge",
+					Severity:   SeverityRefuse,
+					PanelID:    p.ID,
+					PanelTitle: p.Title,
+					Message:    "rate(" + metric + "[…]) wraps a metric whose name does not look like a counter (no _total/_count/_sum/_bucket suffix); rate() requires a monotonically-increasing series",
+				})
+			}
+		}
+	}
+	return out
+}
+
+// checkSuspiciousUnits warns on a narrow, high-confidence anti-pattern:
+// histogram_quantile() over a histogram whose name strongly indicates
+// time (`_duration_seconds_bucket`, `_seconds_bucket`, etc.) but whose
+// panel unit is not in the time family. That combination is almost
+// always a missed-unit-config drift — the panel renders as a raw
+// number when it should read as latency.
+//
+// We deliberately do NOT flag bytes-name + non-bytes-unit because
+// dashgen recipes routinely divide a bytes-counter by a bytes-total
+// to produce a `percentunit` ratio, and that idiom would false-
+// positive constantly. We deliberately do NOT flag histogram_quantile
+// on non-time histograms (e.g. bytes histograms) because those are a
+// legitimate recipe emission with a bytes unit.
+//
+// Severity: warn — heuristic, narrow.
+type checkSuspiciousUnits struct{}
+
+func (checkSuspiciousUnits) Code() string { return "suspicious-units" }
+
+func (checkSuspiciousUnits) Run(in *Input) []Issue {
+	var out []Issue
+	for _, p := range in.Panels {
+		if p.IsRow() || len(p.Targets) == 0 {
+			continue
+		}
+		expr := p.Targets[0].Expr
+		if !strings.Contains(expr, "histogram_quantile(") {
+			continue
+		}
+		bucketMetric := histogramBucketMetric(expr)
+		if bucketMetric == "" {
+			continue
+		}
+		base := strings.TrimSuffix(bucketMetric, "_bucket")
+		if !looksLikeTimeHistogram(base) {
+			continue
+		}
+		if isTimeUnit(p.Unit) {
+			continue
+		}
+		out = append(out, Issue{
+			Code:       "suspicious-units",
+			Severity:   SeverityWarn,
+			PanelID:    p.ID,
+			PanelTitle: p.Title,
+			Message:    "histogram_quantile over `" + bucketMetric + "` (latency-shaped) uses unit " + quoteUnit(p.Unit) + "; set unit to 's' (or 'ms' / 'ns')",
+		})
+	}
+	return out
+}
+
+// histogramBucketMetric returns the metric name passed to a
+// histogram_quantile() call's inner aggregation. The pattern
+// dashgen emits is:
+//   histogram_quantile(0.95, sum by (le, ...) (rate(<name>_bucket[5m])))
+// We grep for `rate(` inside an expression containing
+// `histogram_quantile(` and return the first metric name found.
+// Returns "" if no metric can be extracted.
+func histogramBucketMetric(expr string) string {
+	for _, m := range metricsInsideRate(expr) {
+		if strings.HasSuffix(m, "_bucket") {
+			return m
+		}
+	}
+	return ""
+}
+
+// looksLikeTimeHistogram reports whether the given base name (no
+// `_bucket` suffix) suggests a latency / duration histogram.
+func looksLikeTimeHistogram(base string) bool {
+	lower := strings.ToLower(base)
+	if strings.Contains(lower, "duration") || strings.Contains(lower, "latency") {
+		return true
+	}
+	if strings.HasSuffix(lower, "_seconds") || strings.HasSuffix(lower, "_milliseconds") {
+		return true
+	}
+	return false
+}
+
+// metricsInsideRate returns every metric name that appears as the
+// inner argument of a rate(...) or irate(...) call. The PromQL
+// grammar nests, but we only handle the simple case `rate(<name>...)`
+// where `<name>` is the leading identifier — this is what every
+// dashgen recipe emits and >99% of real-world dashboards use.
+func metricsInsideRate(expr string) []string {
+	var out []string
+	for _, fn := range []string{"rate(", "irate("} {
+		idx := 0
+		for {
+			hit := strings.Index(expr[idx:], fn)
+			if hit < 0 {
+				break
+			}
+			start := idx + hit
+			end := start + len(fn)
+			idx = end
+			if !isLabelBoundary(expr, start-1) {
+				continue
+			}
+			name := readIdentifier(expr, end)
+			if name == "" {
+				continue
+			}
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
+// readIdentifier returns the contiguous identifier characters at
+// position i, or "" if i does not start an identifier.
+func readIdentifier(s string, i int) string {
+	if i >= len(s) {
+		return ""
+	}
+	start := i
+	for i < len(s) && isIdentChar(s[i], i == start) {
+		i++
+	}
+	return s[start:i]
+}
+
+func isIdentChar(c byte, first bool) bool {
+	switch {
+	case c >= 'a' && c <= 'z':
+		return true
+	case c >= 'A' && c <= 'Z':
+		return true
+	case c == '_':
+		return true
+	case !first && c >= '0' && c <= '9':
+		return true
+	}
+	return false
+}
+
+// isCounterName reports whether name has a counter-like suffix per the
+// classifier convention (_total, _count, _sum, _bucket).
+func isCounterName(name string) bool {
+	for _, suffix := range []string{"_total", "_count", "_sum", "_bucket"} {
+		if strings.HasSuffix(name, suffix) {
+			return true
+		}
+	}
+	return false
+}
+
+// isTimeUnit reports whether u is a Grafana time-family unit code.
+func isTimeUnit(u string) bool {
+	switch u {
+	case "s", "ms", "ns", "us", "µs", "m", "h", "d", "dthms", "dtdhms":
+		return true
+	}
+	return false
+}
+
+// quoteUnit returns a human-readable rendering of a Grafana unit code,
+// substituting "<unset>" for the empty string so the message reads
+// naturally.
+func quoteUnit(u string) string {
+	if u == "" {
+		return "<unset>"
+	}
+	return "\"" + u + "\""
+}
+
 func init() {
 	Register(checkBannedLabel{})
 	Register(checkEmptyPanel{})
 	Register(checkDuplicatePanel{})
 	Register(checkWithoutGrouping{})
+	Register(checkMissingRationaleRow{})
+	Register(checkRateOnGauge{})
+	Register(checkSuspiciousUnits{})
 }

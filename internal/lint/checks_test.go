@@ -168,7 +168,10 @@ func TestCheckList_BuiltinsRegistered(t *testing.T) {
 	for _, c := range got {
 		codes[c.Code()] = true
 	}
-	for _, want := range []string{"banned-label", "empty-panel", "duplicate-panel", "without-grouping"} {
+	for _, want := range []string{
+		"banned-label", "empty-panel", "duplicate-panel", "without-grouping",
+		"missing-rationale-row", "rate-on-gauge", "suspicious-units",
+	} {
 		if !codes[want] {
 			t.Errorf("seed check %q not registered; got codes %v", want, codes)
 		}
@@ -354,6 +357,231 @@ func TestRegister_PanicsOnEmptyCode(t *testing.T) {
 		}
 	}()
 	Register(emptyCodeCheck{})
+}
+
+// TestCheckMissingRationaleRow covers the warn-severity check for
+// panels whose titles are absent from rationale.md.
+func TestCheckMissingRationaleRow(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name      string
+		input     Input
+		wantCount int
+	}{
+		{
+			name: "empty_rationale_disables_check",
+			input: Input{
+				Panels:    []Panel{{ID: 1, Type: "timeseries", Title: "anything"}},
+				Rationale: "",
+			},
+			wantCount: 0,
+		},
+		{
+			name: "title_present_in_rationale_clean",
+			input: Input{
+				Panels:    []Panel{{ID: 1, Type: "timeseries", Title: "Request rate: foo"}},
+				Rationale: "### traffic\n\n- **Request rate: foo** — counter rate.\n",
+			},
+			wantCount: 0,
+		},
+		{
+			name: "title_missing_warns",
+			input: Input{
+				Panels: []Panel{
+					{ID: 1, Type: "timeseries", Title: "Request rate: foo"},
+					{ID: 2, Type: "timeseries", Title: "Stranger"},
+				},
+				Rationale: "### traffic\n\n- **Request rate: foo** — counter rate.\n",
+			},
+			wantCount: 1,
+		},
+		{
+			name: "row_panels_skipped_even_when_missing",
+			input: Input{
+				Panels: []Panel{
+					{ID: 1, Type: "row", Title: "traffic"},
+					{ID: 2, Type: "timeseries", Title: "Stranger"},
+				},
+				Rationale: "no panels mentioned at all",
+			},
+			wantCount: 1, // only the timeseries panel triggers
+		},
+		{
+			name: "empty_title_skipped",
+			input: Input{
+				Panels:    []Panel{{ID: 1, Type: "timeseries", Title: ""}},
+				Rationale: "no titles",
+			},
+			wantCount: 0,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := checkMissingRationaleRow{}.Run(&tc.input)
+			if len(got) != tc.wantCount {
+				t.Fatalf("got %d issues; want %d\n%+v", len(got), tc.wantCount, got)
+			}
+			for _, iss := range got {
+				if iss.Code != "missing-rationale-row" {
+					t.Errorf("Code = %q; want missing-rationale-row", iss.Code)
+				}
+				if iss.Severity != SeverityWarn {
+					t.Errorf("Severity = %q; want warn", iss.Severity)
+				}
+			}
+		})
+	}
+}
+
+// TestCheckRateOnGauge covers the rate-on-gauge refusal.
+func TestCheckRateOnGauge(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		input   Input
+		wantHit bool
+	}{
+		{
+			name: "rate_on_total_clean",
+			input: Input{Panels: []Panel{{
+				ID: 1, Type: "timeseries", Title: "rps",
+				Targets: []Target{{Expr: `sum by (job) (rate(http_requests_total[5m]))`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "rate_on_count_clean",
+			input: Input{Panels: []Panel{{
+				ID: 2, Type: "timeseries", Title: "rps",
+				Targets: []Target{{Expr: `rate(go_gc_duration_seconds_count[1m])`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "rate_on_gauge_refuses",
+			input: Input{Panels: []Panel{{
+				ID: 3, Type: "timeseries", Title: "memory rate",
+				Targets: []Target{{Expr: `rate(memory_usage_bytes[5m])`}},
+			}}},
+			wantHit: true,
+		},
+		{
+			name: "irate_on_gauge_refuses",
+			input: Input{Panels: []Panel{{
+				ID: 4, Type: "timeseries", Title: "load rate",
+				Targets: []Target{{Expr: `irate(node_load1[1m])`}},
+			}}},
+			wantHit: true,
+		},
+		{
+			name: "no_rate_clean",
+			input: Input{Panels: []Panel{{
+				ID: 5, Type: "timeseries", Title: "raw",
+				Targets: []Target{{Expr: `node_load1`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "row_skipped",
+			input: Input{Panels: []Panel{{
+				ID: 6, Type: "row", Title: "header",
+				Targets: []Target{{Expr: `rate(memory_usage_bytes[5m])`}},
+			}}},
+			wantHit: false,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := checkRateOnGauge{}.Run(&tc.input)
+			if tc.wantHit {
+				if len(got) == 0 {
+					t.Fatalf("expected at least one rate-on-gauge issue; got none")
+				}
+				if got[0].Code != "rate-on-gauge" || got[0].Severity != SeverityRefuse {
+					t.Errorf("unexpected issue: %+v", got[0])
+				}
+				return
+			}
+			if len(got) != 0 {
+				t.Fatalf("got %d issues; want 0\n%+v", len(got), got)
+			}
+		})
+	}
+}
+
+// TestCheckSuspiciousUnits covers the narrow histogram-quantile-of-
+// time-shaped-histogram-with-non-time-unit warning.
+func TestCheckSuspiciousUnits(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		input   Input
+		wantHit bool
+	}{
+		{
+			name: "histogram_quantile_seconds_with_seconds_unit_clean",
+			input: Input{Panels: []Panel{{
+				ID: 1, Type: "timeseries", Title: "p95 latency", Unit: "s",
+				Targets: []Target{{Expr: `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "histogram_quantile_seconds_with_short_unit_warns",
+			input: Input{Panels: []Panel{{
+				ID: 2, Type: "timeseries", Title: "p95 latency", Unit: "short",
+				Targets: []Target{{Expr: `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`}},
+			}}},
+			wantHit: true,
+		},
+		{
+			name: "histogram_quantile_bytes_with_bytes_unit_clean",
+			input: Input{Panels: []Panel{{
+				ID: 3, Type: "timeseries", Title: "p95 size", Unit: "bytes",
+				Targets: []Target{{Expr: `histogram_quantile(0.95, sum by (le) (rate(http_request_size_bytes_bucket[5m])))`}},
+			}}},
+			wantHit: false, // bytes histogram is not time-shaped — out of scope
+		},
+		{
+			name: "no_histogram_quantile_clean",
+			input: Input{Panels: []Panel{{
+				ID: 4, Type: "timeseries", Title: "rps", Unit: "reqps",
+				Targets: []Target{{Expr: `sum by (job) (rate(http_requests_total[5m]))`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "row_skipped",
+			input: Input{Panels: []Panel{{
+				ID: 5, Type: "row", Title: "latency", Unit: "short",
+				Targets: []Target{{Expr: `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`}},
+			}}},
+			wantHit: false,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := checkSuspiciousUnits{}.Run(&tc.input)
+			if tc.wantHit {
+				if len(got) != 1 {
+					t.Fatalf("got %d issues; want 1\n%+v", len(got), got)
+				}
+				if got[0].Code != "suspicious-units" || got[0].Severity != SeverityWarn {
+					t.Errorf("unexpected issue: %+v", got[0])
+				}
+				return
+			}
+			if len(got) != 0 {
+				t.Fatalf("got %d issues; want 0\n%+v", len(got), got)
+			}
+		})
+	}
 }
 
 // contains is a tiny helper used in checks_test only; avoids pulling in

@@ -58,11 +58,17 @@ func Run(cfg *Config) error {
 		return fmt.Errorf("%w: --in is required", ErrInput)
 	}
 	dashPath := filepath.Join(cfg.In, "dashboard.json")
-	in, err := loadDashboard(dashPath)
+	panels, err := loadDashboard(dashPath)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrInput, err)
+	}
+	rationalePath := filepath.Join(cfg.In, "rationale.md")
+	rationale, err := loadRationale(rationalePath)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrInput, err)
 	}
 
+	in := &lint.Input{Panels: panels, Rationale: rationale}
 	issues := lint.RunAll(in)
 	report := Report{Source: dashPath, Issues: issues}
 
@@ -75,21 +81,62 @@ func Run(cfg *Config) error {
 	return nil
 }
 
+// rawPanel mirrors the on-disk Grafana schema we care about. We
+// decode into this shape and flatten to lint.Panel so the lint
+// package never has to know about Grafana's nested fieldConfig.
+type rawPanel struct {
+	ID          int64         `json:"id"`
+	Type        string        `json:"type"`
+	Title       string        `json:"title"`
+	Targets     []lint.Target `json:"targets"`
+	FieldConfig struct {
+		Defaults struct {
+			Unit string `json:"unit"`
+		} `json:"defaults"`
+	} `json:"fieldConfig"`
+}
+
 // loadDashboard reads dashboard.json and decodes the subset of fields
 // lint cares about. Absent/extra fields in the file are tolerated; only
 // the panel array shape matters.
-func loadDashboard(path string) (*lint.Input, error) {
+func loadDashboard(path string) ([]lint.Panel, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 	var raw struct {
-		Panels []lint.Panel `json:"panels"`
+		Panels []rawPanel `json:"panels"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
-	return &lint.Input{Panels: raw.Panels}, nil
+	flat := make([]lint.Panel, 0, len(raw.Panels))
+	for _, p := range raw.Panels {
+		flat = append(flat, lint.Panel{
+			ID:      p.ID,
+			Type:    p.Type,
+			Title:   p.Title,
+			Unit:    p.FieldConfig.Defaults.Unit,
+			Targets: p.Targets,
+		})
+	}
+	return flat, nil
+}
+
+// loadRationale reads rationale.md from the bundle directory if
+// present. The file is optional from lint's perspective: a missing
+// file simply disables checks that need it (Input.Rationale stays
+// "") rather than failing the run with ErrInput. Other read errors
+// (permission denied, malformed bytes) are surfaced.
+func loadRationale(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("read %s: %w", path, err)
+	}
+	return string(data), nil
 }
 
 // writeReport emits the report as JSON to either out (a file path) or
