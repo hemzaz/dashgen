@@ -1,7 +1,7 @@
 ---
-last_mapped: 2026-04-25T14:22:26Z
-total_files: 254
-total_tokens: 259700
+last_mapped: 2026-04-25T17:36:21Z
+total_files: 265
+total_tokens: 280035
 ---
 
 # Codebase Map
@@ -140,6 +140,9 @@ dashgen/
 | `internal/render/rationale` | Human-readable rationale Markdown | `Render` | ir |
 | `internal/render/warnings` | Machine-readable warnings.json (sorted, deduplicated) | `Render` | ir |
 | `internal/enrich` | **v0.2 seam, wired into `generate.Run` (commit `fa2f8f9`).** `Enricher` iface + `NoopEnricher` (default) + disk cache + provider registry (`factory.go`, the single extension point — adding a provider is one new file plus a `Register` call). Phase 3+ providers: anthropic, openai (both hosted, registered as `ErrNotImplementedYet` placeholders today). Local provider deferred to v0.3 backlog (registered placeholder `ollama` returns `ErrNotImplementedYet` so the boundary is shaped). | `Enricher`, `NoopEnricher`, `Spec`, `New`, `Register`, `Providers`, `Constructor`, `ErrUnknownProvider`, `ErrNotImplementedYet`, `Cache`, `CacheKey`, `Entry`, `MetricBrief` (label-names only) | context, encoding/json, sort |
+| `internal/lint` | **v0.2 Phase 6 Step 3.0.** `Check` interface + 7 seed checks (banned-label, empty-panel, duplicate-panel, without-grouping, missing-rationale-row, rate-on-gauge, suspicious-units). Registry pattern mirrors `internal/enrich/factory.go` — adding a check is one new file plus one `Register` call. Output sorted by `(Code, PanelID, Message)` for byte-identical re-runs. | `Check`, `Issue`, `Severity`, `Input`, `Panel`, `Target`, `Register`, `RunAll`, `HasRefusal`, `CheckList` | sort, strings, fmt |
+| `internal/coverage` | **v0.2 Phase 6 Step 3.1.** Pure-deterministic coverage report: given an inventory + dashboard refs, partitions into covered / uncovered / unknown-family clusters (string-prefix grouping; AI version is Phase 5 opt-in). | `Report`, `Summary`, `Family`, `Compute`, `FamilyOf`, `ExtractReferencedMetrics` | sort, strings |
+| `internal/regenerate` | **v0.2 Phase 6 Step 3.2.** `WriteIfChanged(path, data)` — write only when bytes differ from on-disk content. Used by `generate --in-place` for idempotent re-runs (mtime preserved when output is unchanged). | `WriteIfChanged` | bytes, errors, os, path/filepath |
 
 ### Application layer
 
@@ -148,6 +151,8 @@ dashgen/
 | `internal/app/generate` | End-to-end `generate` pipeline; `validateAndFinalize` applies SPECS Rule 5 (drop all-refused panels + empty sections); strict-mode enforcement after synthesis | discover, classify, synth, validate, render/{grafana,rationale,warnings}, safety |
 | `internal/app/validate` | `validate` CLI: parse `--expr`/`--from`, run each through validate pipeline, emit JSON verdicts | discover, validate, prometheus |
 | `internal/app/inspect` | `inspect` CLI: run pipeline up through synth + validate, emit human-readable tabwriter report (Inventory / Classification / Recipes / Candidates / Summary) | discover, classify, synth, validate, safety |
+| `internal/app/lint` | `lint` CLI: read existing dashboard.json + (optional) rationale.md, run every registered check, emit deterministic JSON report. ErrInput / ErrRender / ErrLintFailure error categories | lint |
+| `internal/app/coverage` | `coverage` CLI: read fixture metadata.json + (optional) dashboard.json, run coverage.Compute, emit deterministic JSON report. ErrInput / ErrRender error categories | coverage |
 
 ## Key Types
 
@@ -349,9 +354,11 @@ Plus per-recipe unit tests (`Test<Recipe>_Match` + `Test<Recipe>_BuildPanels`), 
 
 | Command | Pipeline | Output |
 |---------|----------|--------|
-| `dashgen generate --prom-url <url> --profile {service,infra,k8s} [--out ./out] [--strict] [--dry-run] [--max-panels N] [--job X] [--namespace Y] [--metric-match Z]` | discover → classify → synth → validate × budget → finalize → render | 3 files (or stdout with --dry-run) |
+| `dashgen generate --prom-url <url> --profile {service,infra,k8s} [--out ./out] [--strict] [--in-place] [--dry-run] [--max-panels N] [--job X] [--namespace Y] [--metric-match Z]` | discover → classify → synth → validate × budget → finalize → render | 3 files (or stdout with --dry-run); `--in-place` skips rewrites when bytes are unchanged |
 | `dashgen validate --prom-url <url> [--expr <e>]... [--from <file>] [--strict]` | parse → 5-stage validate | JSON array of verdicts |
 | `dashgen inspect --prom-url <url> --profile X [--max-panels N]` | same as generate up to validate | tabwriter report: Inventory / Classification / Recipes / Candidates / Summary |
+| `dashgen lint --in <bundle-dir> [--out <file>]` | parse dashboard.json + rationale.md → run all registered checks → sort issues | deterministic JSON report; exit 7 on any refusal |
+| `dashgen coverage --fixture-dir <dir> [--in <bundle-dir>] [--out <file>]` | parse metadata.json + (optional) dashboard.json → coverage.Compute | deterministic JSON report (covered, uncovered, unknown_families) |
 
 ## v0.2 enrichment seam
 
@@ -440,4 +447,4 @@ Plus per-recipe unit tests (`Test<Recipe>_Match` + `Test<Recipe>_BuildPanels`), 
 
 ---
 
-**Recipe count:** 44 recipes (12 v0.1 + 32 v0.2). **Tests:** all 14 packages pass under `-race`. **Lines of Go:** ~9.8k in `internal/recipes/`, ~5.6k in runtime pipeline (`internal/{classify,config,discover,enrich,ids,inventory,ir,profiles,prometheus,recipes-helpers,render,safety,synth,validate}` minus recipes), ~2.1k in `internal/app/` wiring. **Lint:** golangci-lint v2.11.4 (config v2 schema; CI workflow uses `golangci-lint-action@v9`).
+**Recipe count:** 44 recipes (12 v0.1 + 32 v0.2). **Tests:** 526 pass across 25 packages under `-race`. **Lines of Go:** ~9.8k in `internal/recipes/`, ~7.7k in runtime pipeline (`internal/{classify,config,coverage,discover,enrich,ids,inventory,ir,lint,profiles,prometheus,regenerate,render,safety,synth,validate}` minus recipes), ~2.95k in `internal/app/` wiring. **CLI subcommands:** generate, validate, inspect, lint, coverage. **Lint (toolchain):** golangci-lint v2.11.4 (config v2 schema; CI workflow uses `golangci-lint-action@v9`).

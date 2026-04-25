@@ -56,6 +56,7 @@ must be provided.
 | `--config` | YAML config file path (optional). |
 | `--dry-run` | Render to stdout instead of writing files. |
 | `--strict` | Treat any surviving warning as a failure (exit 4). |
+| `--in-place` | Skip rewriting unchanged output files (idempotent re-runs preserve mtime). |
 | `--job` | Restrict discovery to a job label. |
 | `--namespace` | Restrict discovery to a namespace label. |
 | `--metric-match` | Metric-name substring filter. |
@@ -67,6 +68,33 @@ Each run emits three files into `--out`:
 - `dashboard.json` — Grafana dashboard schema v39, datasource variable `$datasource`, stable UIDs.
 - `rationale.md` — Reviewer-facing explanation of every included panel and every omission.
 - `warnings.json` — Machine-readable summary of warnings and refusals, one entry per panel or query candidate, sorted by (section, panel_uid, code).
+
+## Other commands
+
+Beyond `generate`, the CLI ships four supporting subcommands:
+
+```
+dashgen validate ...   # validate one or more PromQL expressions against a backend
+dashgen inspect ...    # diagnostic report: inventory + classification + recipe matches
+dashgen lint ...       # audit an existing dashboard bundle for quality regressions
+dashgen coverage ...   # report metrics covered vs uncovered by a dashboard bundle
+```
+
+`lint` and `coverage` are deterministic, offline, and run against an
+existing bundle — useful in CI to catch drift after manual edits or
+to surface unmapped metrics. See [`docs/lint.md`](docs/lint.md) for
+the seven shipped check classes and [`docs/coverage.md`](docs/coverage.md)
+for the report schema.
+
+```
+# Lint a generated dashboard
+dashgen lint --in ./dashboards
+
+# Coverage report against a fixture inventory + dashboard
+dashgen coverage \
+  --fixture-dir testdata/fixtures/service-realistic \
+  --in testdata/goldens/service-realistic
+```
 
 ## Validation contract
 

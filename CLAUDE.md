@@ -89,6 +89,8 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Staged timeline + cross-stage rules. |
 | [`docs/RECIPES.md`](docs/RECIPES.md) | Recipe catalog + authoring contract + test matrix. |
 | [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md) | v0.2 enrichment contract + AI boundary + phased delivery. |
+| [`docs/lint.md`](docs/lint.md) | `dashgen lint` check catalog + JSON output schema (Phase 6). |
+| [`docs/coverage.md`](docs/coverage.md) | `dashgen coverage` report schema + family-grouping behavior (Phase 6). |
 | [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
 | [`docs/PRD.md`](docs/PRD.md) | Historical PRD; superseded by `PRODUCT_DOC.md`. |
 
