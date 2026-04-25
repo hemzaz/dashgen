@@ -26,6 +26,7 @@
 package lint
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -224,6 +225,122 @@ func (checkEmptyPanel) Run(in *Input) []Issue {
 	return out
 }
 
+// checkDuplicatePanel refuses any non-row panel that shares both its
+// title and its primary target expression with another panel. This is
+// the operator-visible "this panel ships twice" mistake — almost always
+// a hand-edit that copied a panel and forgot to change anything.
+//
+// We deliberately do NOT key on `panel.id`: dashgen's renderer reduces
+// the IR's SHA-256[:16] PanelUID to a 32-bit Grafana int via modulo,
+// and incidental modulo collisions across distinct UIDs are a separate
+// concern from semantic duplication. Catching modulo collisions belongs
+// in a renderer-level test, not a dashboard-quality check.
+//
+// Row-type panels are skipped: section repetition is intentional.
+type checkDuplicatePanel struct{}
+
+func (checkDuplicatePanel) Code() string { return "duplicate-panel" }
+
+func (checkDuplicatePanel) Run(in *Input) []Issue {
+	type fingerprint struct {
+		title string
+		expr  string
+	}
+	seen := map[fingerprint][]int{}
+	for i, p := range in.Panels {
+		if p.IsRow() {
+			continue
+		}
+		expr := ""
+		if len(p.Targets) > 0 {
+			expr = p.Targets[0].Expr
+		}
+		fp := fingerprint{title: p.Title, expr: expr}
+		seen[fp] = append(seen[fp], i)
+	}
+	var out []Issue
+	for fp, idxs := range seen {
+		if len(idxs) < 2 {
+			continue
+		}
+		for _, i := range idxs {
+			p := in.Panels[i]
+			out = append(out, Issue{
+				Code:       "duplicate-panel",
+				Severity:   SeverityRefuse,
+				PanelID:    p.ID,
+				PanelTitle: p.Title,
+				Message:    fmt.Sprintf("panel %q with the same primary expression appears %d times; remove the duplicates", fp.title, len(idxs)),
+			})
+		}
+	}
+	return out
+}
+
+// checkWithoutGrouping refuses any non-row panel whose PromQL contains
+// a `without (...)` aggregation. The without operator inverts the
+// cardinality calculus from "what we keep" to "what we drop", which
+// routinely blows past the safety policy's grouping-cardinality
+// threshold once the underlying series count grows. Recipes never emit
+// `without()` (they all use `by (...)` against an explicit allowlist),
+// so any occurrence here is either drift from a hand-edit or a custom
+// recipe that bypasses safety.
+type checkWithoutGrouping struct{}
+
+func (checkWithoutGrouping) Code() string { return "without-grouping" }
+
+func (checkWithoutGrouping) Run(in *Input) []Issue {
+	var out []Issue
+	for _, p := range in.Panels {
+		if p.IsRow() {
+			continue
+		}
+		for _, t := range p.Targets {
+			if !containsWithoutKeyword(t.Expr) {
+				continue
+			}
+			out = append(out, Issue{
+				Code:       "without-grouping",
+				Severity:   SeverityRefuse,
+				PanelID:    p.ID,
+				PanelTitle: p.Title,
+				Message:    "panel uses `without(...)` aggregation; recipes use explicit `by (...)` allowlists so safety policy can bound cardinality",
+			})
+			break // one issue per panel is enough; reviewer fixes all targets together
+		}
+	}
+	return out
+}
+
+// containsWithoutKeyword reports whether expr contains a PromQL
+// `without` aggregation modifier. PromQL grammar requires the keyword
+// to be followed by `(` with optional whitespace; identifier-boundary
+// checking on the leading edge avoids false positives on labels like
+// `request_without_user`.
+func containsWithoutKeyword(expr string) bool {
+	const kw = "without"
+	idx := 0
+	for {
+		hit := strings.Index(expr[idx:], kw)
+		if hit < 0 {
+			return false
+		}
+		start := idx + hit
+		end := start + len(kw)
+		idx = end
+		if !isLabelBoundary(expr, start-1) {
+			continue
+		}
+		j := end
+		for j < len(expr) && (expr[j] == ' ' || expr[j] == '\t') {
+			j++
+		}
+		if j < len(expr) && expr[j] == '(' {
+			return true
+		}
+	}
+}
+
 // mentionsLabel reports whether a PromQL string references the named
 // label as a matcher key or grouping key. The check is intentionally
 // loose: any token-boundary occurrence of the label name in expr is
@@ -279,4 +396,6 @@ func isLabelBoundary(s string, i int) bool {
 func init() {
 	Register(checkBannedLabel{})
 	Register(checkEmptyPanel{})
+	Register(checkDuplicatePanel{})
+	Register(checkWithoutGrouping{})
 }

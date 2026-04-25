@@ -168,10 +168,164 @@ func TestCheckList_BuiltinsRegistered(t *testing.T) {
 	for _, c := range got {
 		codes[c.Code()] = true
 	}
-	for _, want := range []string{"banned-label", "empty-panel"} {
+	for _, want := range []string{"banned-label", "empty-panel", "duplicate-panel", "without-grouping"} {
 		if !codes[want] {
 			t.Errorf("seed check %q not registered; got codes %v", want, codes)
 		}
+	}
+}
+
+// TestCheckDuplicatePanel covers the duplicate-panel check. The check
+// keys on (title, primary-target.expr) so it catches the operator-
+// visible "panel shipped twice" mistake without false-positiving on
+// renderer modulo-collisions across distinct UIDs.
+func TestCheckDuplicatePanel(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name      string
+		input     Input
+		wantCount int // expected issues
+	}{
+		{
+			name: "different_titles_same_expr_clean",
+			input: Input{Panels: []Panel{
+				{ID: 1, Type: "timeseries", Title: "Request rate: a", Targets: []Target{{Expr: `sum by (job) (rate(http_requests_total[5m]))`}}},
+				{ID: 2, Type: "timeseries", Title: "Request rate: b", Targets: []Target{{Expr: `sum by (job) (rate(http_requests_total[5m]))`}}},
+			}},
+			wantCount: 0,
+		},
+		{
+			name: "same_title_different_expr_clean",
+			input: Input{Panels: []Panel{
+				{ID: 3, Type: "timeseries", Title: "shared", Targets: []Target{{Expr: "up"}}},
+				{ID: 4, Type: "timeseries", Title: "shared", Targets: []Target{{Expr: "down"}}},
+			}},
+			wantCount: 0,
+		},
+		{
+			name: "same_title_and_expr_both_flagged",
+			input: Input{Panels: []Panel{
+				{ID: 10, Type: "timeseries", Title: "duped", Targets: []Target{{Expr: "rate(foo[5m])"}}},
+				{ID: 11, Type: "timeseries", Title: "different", Targets: []Target{{Expr: "rate(foo[5m])"}}},
+				{ID: 12, Type: "timeseries", Title: "duped", Targets: []Target{{Expr: "rate(foo[5m])"}}},
+			}},
+			wantCount: 2,
+		},
+		{
+			name: "row_with_same_title_skipped",
+			input: Input{Panels: []Panel{
+				{ID: 1, Type: "row", Title: "traffic"},
+				{ID: 2, Type: "row", Title: "traffic"},
+				{ID: 3, Type: "timeseries", Title: "ok", Targets: []Target{{Expr: "up"}}},
+			}},
+			wantCount: 0,
+		},
+		{
+			name: "two_empty_panels_same_title_flagged",
+			input: Input{Panels: []Panel{
+				{ID: 100, Type: "timeseries", Title: "empty"},
+				{ID: 101, Type: "timeseries", Title: "empty"},
+			}},
+			wantCount: 2, // primary expr "" matches; both flagged
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := checkDuplicatePanel{}.Run(&tc.input)
+			if len(got) != tc.wantCount {
+				t.Fatalf("got %d issues; want %d\n%+v", len(got), tc.wantCount, got)
+			}
+			for _, iss := range got {
+				if iss.Code != "duplicate-panel" {
+					t.Errorf("Code = %q; want duplicate-panel", iss.Code)
+				}
+				if iss.Severity != SeverityRefuse {
+					t.Errorf("Severity = %q; want refuse", iss.Severity)
+				}
+			}
+		})
+	}
+}
+
+// TestCheckWithoutGrouping covers the without-grouping check, including
+// identifier-boundary handling so a label name containing the substring
+// "without" does not trip it.
+func TestCheckWithoutGrouping(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		input   Input
+		wantHit bool
+	}{
+		{
+			name: "without_paren_refuses",
+			input: Input{Panels: []Panel{{
+				ID: 1, Type: "timeseries", Title: "x",
+				Targets: []Target{{Expr: `sum without (instance) (rate(http_requests_total[5m]))`}},
+			}}},
+			wantHit: true,
+		},
+		{
+			name: "without_paren_no_space_refuses",
+			input: Input{Panels: []Panel{{
+				ID: 2, Type: "timeseries", Title: "y",
+				Targets: []Target{{Expr: `sum without(instance) (foo)`}},
+			}}},
+			wantHit: true,
+		},
+		{
+			name: "by_grouping_is_clean",
+			input: Input{Panels: []Panel{{
+				ID: 3, Type: "timeseries", Title: "z",
+				Targets: []Target{{Expr: `sum by (instance, job) (rate(http_requests_total[5m]))`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "label_named_without_user_does_not_match",
+			input: Input{Panels: []Panel{{
+				ID: 4, Type: "timeseries", Title: "edge",
+				Targets: []Target{{Expr: `sum by (job) (rate(some_metric{request_without_user="foo"}[5m]))`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "row_skipped",
+			input: Input{Panels: []Panel{{
+				ID: 5, Type: "row", Title: "traffic",
+				Targets: []Target{{Expr: `sum without (job) (foo)`}},
+			}}},
+			wantHit: false,
+		},
+		{
+			name: "without_followed_by_non_paren_does_not_match",
+			input: Input{Panels: []Panel{{
+				ID: 6, Type: "timeseries", Title: "nope",
+				Targets: []Target{{Expr: `something_without_paren_after`}},
+			}}},
+			wantHit: false,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := checkWithoutGrouping{}.Run(&tc.input)
+			if tc.wantHit {
+				if len(got) != 1 {
+					t.Fatalf("got %d issues; want 1\n%+v", len(got), got)
+				}
+				if got[0].Code != "without-grouping" || got[0].Severity != SeverityRefuse {
+					t.Errorf("unexpected issue: %+v", got[0])
+				}
+				return
+			}
+			if len(got) != 0 {
+				t.Fatalf("got %d issues; want 0\n%+v", len(got), got)
+			}
+		})
 	}
 }
 
