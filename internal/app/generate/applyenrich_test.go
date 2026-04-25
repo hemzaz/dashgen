@@ -72,11 +72,11 @@ func TestApplyEnrichment_NoopPassthrough_Smoke(t *testing.T) {
 
 // TestApplyEnrichment_UnknownProviderRejected confirms that any provider
 // string outside the {"", "off", "noop"} set fails fast with an error the
-// caller wraps as ErrBackend. Phase 3+ adds "ollama" and "anthropic"; until
+// caller wraps as ErrBackend. Phase 3+ adds "anthropic" and "openai"; until
 // they ship, those names also fail here.
 func TestApplyEnrichment_UnknownProviderRejected(t *testing.T) {
 	t.Parallel()
-	cfg := &config.RunConfig{Provider: "ollama"}
+	cfg := &config.RunConfig{Provider: "unknown"}
 	in := &ir.Dashboard{UID: "x", Title: "x", Profile: "service"}
 	if _, err := applyEnrichment(context.Background(), in, cfg); err == nil {
 		t.Fatal("applyEnrichment with unknown provider returned nil error; expected ErrBackend wrap")

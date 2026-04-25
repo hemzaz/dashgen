@@ -288,8 +288,8 @@ func firstStrictWarning(d *ir.Dashboard) string {
 
 // applyEnrichment is the v0.2 enrichment seam. With cfg.Provider == "" or
 // "off" it returns the dashboard unchanged using NoopEnricher — proving the
-// byte-identical-to-v0.1 contract. Phase 3+ adds real providers (ollama,
-// anthropic) which will populate Panel.MechanicalTitle and Panel.RationaleExtra
+// byte-identical-to-v0.1 contract. Phase 3+ adds real providers (anthropic,
+// openai) which will populate Panel.MechanicalTitle and Panel.RationaleExtra
 // without ever generating PromQL or upgrading verdicts (V0.2-PLAN §2.2).
 //
 // Unknown provider strings return a wrapped error so the caller emits ErrBackend.
@@ -303,7 +303,7 @@ func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) 
 		_ = enrich.NewNoopEnricher()
 		return d, nil
 	default:
-		return d, fmt.Errorf("unknown provider %q (Phase 3+ adds ollama/anthropic)", cfg.Provider)
+		return d, fmt.Errorf("unknown provider %q (Phase 3+ adds anthropic/openai)", cfg.Provider)
 	}
 }
 

@@ -43,7 +43,7 @@ type RunConfig struct {
 	ExprFile string
 	// Provider selects the v0.2 enrichment provider. Zero-value (or "off")
 	// uses internal/enrich.NoopEnricher and produces output byte-identical
-	// to v0.1. Phase 3+ adds "ollama" and "anthropic". Unknown values are
+	// to v0.1. Phase 3+ adds "anthropic" and "openai". Unknown values are
 	// rejected by app/generate as ErrBackend.
 	Provider string
 	// EnrichModes is a subset of {titles, rationale, classify,

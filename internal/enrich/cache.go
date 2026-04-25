@@ -22,7 +22,7 @@ func NewCache(baseDir string) *Cache {
 type CacheKey struct {
 	InventoryHash  string // required; caller computes it
 	Function       string // "classify_unknown" | "enrich_titles" | "enrich_rationale"
-	ProviderID     string // "noop" | "ollama:qwen2.5-coder:7b" | "anthropic:claude-opus-4-7"
+	ProviderID     string // "noop" | "anthropic:claude-opus-4-7" | "openai:gpt-4o"
 	PromptHash     string // sha256[:16] of the prompt template the caller used
 	DashgenVersion string // dashgen binary version; "dev" is fine for now
 }

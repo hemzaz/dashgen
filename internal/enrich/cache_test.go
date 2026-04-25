@@ -11,7 +11,7 @@ func testKey() CacheKey {
 	return CacheKey{
 		InventoryHash:  "abc123",
 		Function:       "enrich_titles",
-		ProviderID:     "ollama:qwen2.5-coder:7b",
+		ProviderID:     "anthropic:claude-opus-4-7",
 		PromptHash:     "deadbeef01234567",
 		DashgenVersion: "dev",
 	}
@@ -106,7 +106,7 @@ func TestCache_DifferentKeysDifferentPaths(t *testing.T) {
 	variants := []CacheKey{
 		func() CacheKey { k := base; k.InventoryHash = "different-hash"; return k }(),
 		func() CacheKey { k := base; k.Function = "classify_unknown"; return k }(),
-		func() CacheKey { k := base; k.ProviderID = "anthropic:claude-opus-4-7"; return k }(),
+		func() CacheKey { k := base; k.ProviderID = "openai:gpt-4o"; return k }(),
 		func() CacheKey { k := base; k.PromptHash = "ffffffffffffffff"; return k }(),
 		func() CacheKey { k := base; k.DashgenVersion = "v0.2.0"; return k }(),
 	}

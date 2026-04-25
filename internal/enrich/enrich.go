@@ -16,7 +16,7 @@
 //
 // NoopEnricher is the default implementation. It is used when the caller
 // passes --provider=off or when a real provider errors out. Providers such as
-// ollama and anthropic are registered in sibling files added in a later phase.
+// anthropic and openai are registered in sibling files added in a later phase.
 package enrich
 
 import "context"
@@ -50,9 +50,9 @@ type Enricher interface {
 
 // Description identifies the provider for rationale documents and cache keys.
 type Description struct {
-	Provider string // "noop" | "ollama" | "anthropic"
+	Provider string // "noop" | "anthropic" | "openai"
 	Model    string // informational; "" for noop
-	Offline  bool   // true for noop and local providers (e.g. ollama)
+	Offline  bool   // true only for noop; hosted providers (anthropic, openai) are network-bound
 }
 
 // MetricBrief is a redacted summary of one Prometheus metric suitable for
