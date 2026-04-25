@@ -1,6 +1,6 @@
 # Contributing to dashgen
 
-Thanks for your interest. Before opening a PR, read [SPECS.md](SPECS.md) — it
+Thanks for your interest. Before opening a PR, read [docs/SPECS.md](docs/SPECS.md) — it
 defines what's in and out of v0.1 scope and the non-negotiables (determinism,
 safety, separation of synthesis from rendering).
 

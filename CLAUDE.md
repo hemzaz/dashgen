@@ -62,4 +62,38 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
+## Codebase Overview
+
+DashGen is a deterministic Prometheus → Grafana dashboard generator (Go,
+`module dashgen`, Go 1.25). The v0.1 core ships end-to-end: discover →
+classify → recipe-driven synth → 5-stage validate → 3-file render. v0.2
+adds a larger recipe catalog (39 recipes total across service/infra/k8s
+profiles) and plumbs an optional AI-enrichment seam (`internal/enrich`)
+that is explicitly walled off from PromQL generation and verdicts.
+
+**Stack:** Go + cobra (CLI) + yaml.v3 (config) + prometheus/promql parser (validation).
+**Structure:** `cmd/dashgen` (CLI) → `internal/app/*` (orchestration) → `internal/{discover,classify,synth,validate,safety,render,recipes,ids,profiles,inventory,ir,config,prometheus,enrich}` (core).
+**Tests:** 417+ passing, including per-recipe Match/BuildPanels tables, per-fixture golden + determinism + discrimination regression guards.
+
+### Documentation Index
+
+All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTING.md`, `CLAUDE.md`, `LICENSE`).
+
+| Doc | Purpose |
+|---|---|
+| [`docs/CODEBASE_MAP.md`](docs/CODEBASE_MAP.md) | **Start here.** Architecture, recipe catalog, fixture layout, navigation cheatsheet. |
+| [`docs/PRODUCT_DOC.md`](docs/PRODUCT_DOC.md) | Product scope + release gates (owns what ships in each stage). |
+| [`docs/SPECS.md`](docs/SPECS.md) | v0.1 execution contract — non-negotiables, validation pipeline, Rule 5. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design + package responsibilities. |
+| [`docs/STRUCTURE.md`](docs/STRUCTURE.md) | Repo layout + dependency direction. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Staged timeline + cross-stage rules. |
+| [`docs/RECIPES.md`](docs/RECIPES.md) | Recipe catalog + authoring contract + test matrix. |
+| [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md) | v0.2 enrichment contract + AI boundary + phased delivery. |
+| [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
+| [`docs/PRD.md`](docs/PRD.md) | Historical PRD; superseded by `PRODUCT_DOC.md`. |
+
+In-flight v0.2 plan: [`.omc/plans/v0.2-remainder.md`](.omc/plans/v0.2-remainder.md).
+
+---
+
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.

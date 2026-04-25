@@ -153,9 +153,9 @@ the same lookup the `--fixture-dir` backend uses at replay time.
 - **v0.2** (planned): optional AI enrichment (titles, rationale,
   unknown-metric grouping) behind a `--provider` flag, plus a broader
   recipe catalog. Detailed plan in
-  [`V0.2-PLAN.md`](V0.2-PLAN.md); recipe catalog in
-  [`RECIPES.md`](RECIPES.md). Stage definitions in
-  [`ROADMAP.md`](ROADMAP.md).
+  [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md); recipe catalog in
+  [`docs/RECIPES.md`](docs/RECIPES.md). Stage definitions in
+  [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 AI enrichment in v0.2 is strictly non-overriding: it cannot generate
 PromQL, cannot upgrade a refused verdict, and cannot bypass the
