@@ -1,4 +1,6 @@
-# golangci-lint configuration for dashgen
+version: "2"
+
+# golangci-lint v2 configuration for dashgen
 # Scope: deterministic CLI tool — favor correctness and idiom checks
 # over churn-heavy style/complexity enforcement.
 
@@ -7,60 +9,61 @@ run:
   tests: true
   go: '1.25'
 
-output:
-  formats:
-    - format: colored-line-number
-      path: stdout
-  print-issued-lines: true
-  print-linter-name: true
-  uniq-by-line: true
-  sort-results: true
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    # Correctness
+    # Correctness (typecheck is always on in v2)
     - errcheck
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
     - unused
     # Error handling
     - errorlint
     - bodyclose
-    # Idiom and clarity
-    - gosimple
+    # Idiom and clarity (gosimple + stylecheck merged into staticcheck in v2)
     - revive
-    - stylecheck
     - misspell
     - unconvert
     - unparam
-    # Formatting
+  exclusions:
+    paths:
+      - testdata
+      - vendor
+    rules:
+      # Tests can be more permissive about error checks for setup/cleanup.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - unparam
+  settings:
+    errcheck:
+      exclude-functions:
+        # Stdout/stderr writes — error paths not actionable for a CLI tool.
+        - fmt.Fprintln
+        - fmt.Fprintf
+        - (*os.File).Write
+        - (io.Writer).Write
+        # Close/Remove in deferred cleanup or error paths — best-effort.
+        - (io.Closer).Close
+        - (*os.File).Close
+        - os.Remove
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    revive:
+      rules:
+        - name: var-naming
+        - name: package-comments
+        - name: exported
+          disabled: true
+
+formatters:
+  enable:
     - gofmt
     - goimports
 
 issues:
   max-issues-per-linter: 50
   max-same-issues: 10
-  exclude-dirs:
-    - testdata
-    - vendor
-  exclude-rules:
-    # Tests can be more permissive about error checks for setup/cleanup.
-    - path: _test\.go
-      linters:
-        - errcheck
-        - unparam
-
-linters-settings:
-  errorlint:
-    errorf: true
-    asserts: true
-    comparison: true
-  revive:
-    rules:
-      - name: var-naming
-      - name: package-comments
-      - name: exported
-        disabled: true

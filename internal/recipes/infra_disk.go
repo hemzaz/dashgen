@@ -1,8 +1,6 @@
 package recipes
 
 import (
-	"fmt"
-
 	"dashgen/internal/inventory"
 	"dashgen/internal/ir"
 	"dashgen/internal/profiles"
@@ -56,8 +54,6 @@ func (r infraDiskRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p profiles
 			Unit:         "percentunit",
 		}},
 		Confidence: 0.8,
-		Rationale: fmt.Sprintf(
-			"node_exporter filesystem gauges: 1 - (avail / size) yields used ratio grouped by instance+mountpoint.",
-		),
+		Rationale:  "node_exporter filesystem gauges: 1 - (avail / size) yields used ratio grouped by instance+mountpoint.",
 	}}
 }

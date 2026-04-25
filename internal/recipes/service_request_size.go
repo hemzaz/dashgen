@@ -31,9 +31,7 @@ func (r serviceRequestSizeRecipe) Match(m ClassifiedMetricView) bool {
 	}
 	name := m.Descriptor.Name
 	// Accept both the base name and the _bucket scrape-form.
-	if strings.HasSuffix(name, "_bucket") {
-		name = strings.TrimSuffix(name, "_bucket")
-	}
+	name = strings.TrimSuffix(name, "_bucket")
 	if !strings.HasSuffix(name, "_request_size_bytes") {
 		return false
 	}

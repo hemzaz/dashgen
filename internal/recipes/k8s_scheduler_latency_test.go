@@ -6,6 +6,7 @@ import (
 
 	"dashgen/internal/inventory"
 	"dashgen/internal/profiles"
+
 	"github.com/prometheus/prometheus/promql/parser"
 )
 

@@ -29,8 +29,6 @@ package recipes
 //	Any counter with "conntrack" in the name but not this exact pair.
 
 import (
-	"fmt"
-
 	"dashgen/internal/inventory"
 	"dashgen/internal/ir"
 	"dashgen/internal/profiles"
@@ -81,8 +79,6 @@ func (r infraConntrackRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p pro
 			Unit:         "percentunit",
 		}},
 		Confidence: 0.90,
-		Rationale: fmt.Sprintf(
-			"node_exporter conntrack gauges: entries / entries_limit yields table fill ratio per instance.",
-		),
+		Rationale:  "node_exporter conntrack gauges: entries / entries_limit yields table fill ratio per instance.",
 	}}
 }

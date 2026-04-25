@@ -1,8 +1,6 @@
 package recipes
 
 import (
-	"fmt"
-
 	"dashgen/internal/inventory"
 	"dashgen/internal/ir"
 	"dashgen/internal/profiles"
@@ -60,8 +58,6 @@ func (r infraMemoryRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p profil
 			Unit:         "percentunit",
 		}},
 		Confidence: 0.8,
-		Rationale: fmt.Sprintf(
-			"node_exporter memory gauges: 1 - (MemAvailable / MemTotal) yields used ratio per instance.",
-		),
+		Rationale:  "node_exporter memory gauges: 1 - (MemAvailable / MemTotal) yields used ratio per instance.",
 	}}
 }
