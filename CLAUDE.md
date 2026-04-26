@@ -93,6 +93,7 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/coverage.md`](docs/coverage.md) | `dashgen coverage` report schema + family-grouping behavior (Phase 6). |
 | [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
 | [`docs/PRD.md`](docs/PRD.md) | Historical PRD; superseded by `PRODUCT_DOC.md`. |
+| [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) | AI provider setup, redaction contract, extension contract. |
 
 In-flight v0.2 plan: [`.omc/plans/v0.2-remainder.md`](.omc/plans/v0.2-remainder.md).
 

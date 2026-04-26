@@ -336,3 +336,96 @@ Constraints:
 
 Deliver a real vertical slice, not scaffolding.
 ```
+
+---
+
+## Appendix A: v0.2 Additions
+
+This appendix extends the v0.1 execution contract above. It does not modify any v0.1
+non-negotiable. All rules in §2 still govern v0.2 — the additions below are additive.
+
+### A.1 `enrich.Enricher` interface contract
+
+`internal/enrich` defines the seam through which optional AI enrichment flows. The
+interface has exactly four methods:
+
+```go
+type Enricher interface {
+    // Describe returns provider identity (name, model) for audit trails and
+    // cache keys. Must be cheap and side-effect-free.
+    Describe() Description
+
+    // ClassifyUnknown proposes trait candidates for metrics the deterministic
+    // classifier left as MetricTypeUnknown. Returning an empty output is always
+    // valid — the metric stays unclassified and no panel is emitted (Rule 5).
+    ClassifyUnknown(ctx context.Context, in ClassifyInput) (ClassifyOutput, error)
+
+    // EnrichTitles proposes human-scannable panel titles. If it returns an
+    // error, the caller falls back to the deterministic mechanical title.
+    EnrichTitles(ctx context.Context, in TitleInput) (TitleOutput, error)
+
+    // EnrichRationale proposes supplementary rationale paragraphs per panel.
+    // Same fallback contract as EnrichTitles.
+    EnrichRationale(ctx context.Context, in RationaleInput) (RationaleOutput, error)
+}
+```
+
+The zero-value provider is `NoopEnricher`, which implements the interface and returns
+empty output for every method. `--provider off` (the default) and the empty string
+both resolve to `NoopEnricher`.
+
+### A.2 Redaction guarantee
+
+Every outbound enrichment request contains only:
+
+- Metric names, label names, and metric help text.
+- Panel UIDs and section names (the stable, deterministic identifiers).
+
+Label **values**, PromQL expressions, instance endpoints, and any actual series data
+are **never included**. The `ValidateBriefs` guard in `internal/enrich/anthropic.go`
+enforces this at the call site; `TestAnthropicEnricher_RedactionAtProxyBoundary`
+pins it as a regression canary.
+
+### A.3 Validation-pipeline invariant
+
+AI enrichment is applied **after** the five-stage validation pipeline, not before.
+Every candidate query is validated deterministically regardless of whether a provider
+is configured. AI cannot generate a query, cannot upgrade a `refuse` verdict, and
+cannot suppress a safety warning. This invariant is covered by the existing golden
+tests, which continue to pass unmodified with `--provider off`.
+
+### A.4 AI-off determinism contract
+
+`--provider off` (or no `--provider` flag) produces output byte-identical to v0.1
+output for the same inventory. No enrichment call is issued; the validate pipeline,
+safety guards, and renderer run unchanged. This is the load-bearing parity contract
+verified by `TestApplyEnrichment_NoopDefault_ByteIdenticalOutput` in
+`internal/app/generate/applyenrich_test.go`.
+
+With a provider enabled and a populated cache, two consecutive runs over the same
+inventory also produce byte-identical output — no network calls are issued on the
+second run.
+
+### A.5 Provider registry (extension point)
+
+`internal/enrich/factory.go` is the single extension point. Adding a provider
+requires exactly:
+
+1. A new file `internal/enrich/<name>.go` with a `func(Spec) (Enricher, error)`
+   constructor.
+2. A single `enrich.Register("<name>", ctor)` call from that file's `init()`.
+
+Nothing outside `internal/enrich/` needs to change. The CLI accepts any registered
+name; unknown names return `ErrUnknownProvider`. See
+[`docs/AI-PROVIDERS.md`](AI-PROVIDERS.md) for the full walkthrough and
+[`docs/V0.2-PLAN.md §2.7`](V0.2-PLAN.md) for the contract rationale.
+
+### A.6 Load-bearing tests
+
+| Test | Package | What it guards |
+|------|---------|----------------|
+| `TestApplyEnrichment_NoopDefault_ByteIdenticalOutput` | `internal/app/generate` | AI-off output is byte-identical to v0.1 |
+| `TestAnthropicEnricher_RedactionAtProxyBoundary` | `internal/enrich` | No label values cross the outbound boundary |
+| `TestPromptHash_Stable` | `internal/enrich` | Prompt templates hash stably (cache invalidation) |
+
+Regressions in any of these tests indicate a violation of an A.2–A.4 contract above.
