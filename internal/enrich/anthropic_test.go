@@ -161,6 +161,51 @@ func TestAnthropicEnricher_RedactionAtProxyBoundary(t *testing.T) {
 	}
 }
 
+// TestAnthropicEnricher_RegistersOverridesPlaceholder pins the
+// last-init-wins override: after anthropic.go's init() runs, calling the
+// factory with Provider="anthropic" must return the real *AnthropicEnricher
+// (not the placeholder ErrNotImplementedYet stub from factory.go). With
+// no API key set the override surfaces ErrAnthropicNoAPIKey — distinct
+// from ErrNotImplementedYet — proving the registration is live.
+func TestAnthropicEnricher_RegistersOverridesPlaceholder(t *testing.T) {
+	t.Run("with_api_key", func(t *testing.T) {
+		t.Setenv("ANTHROPIC_API_KEY", "test-key")
+		got, err := New(Spec{Provider: "anthropic"})
+		if err != nil {
+			t.Fatalf("New(anthropic) with API key: %v", err)
+		}
+		if errors.Is(err, ErrNotImplementedYet) {
+			t.Errorf("placeholder still wired; expected real constructor")
+		}
+		if _, ok := got.(*AnthropicEnricher); !ok {
+			t.Errorf("got %T; want *AnthropicEnricher", got)
+		}
+		desc := got.Describe()
+		if desc.Provider != "anthropic" {
+			t.Errorf("Describe().Provider = %q; want %q", desc.Provider, "anthropic")
+		}
+		if desc.Offline {
+			t.Errorf("Describe().Offline = true; anthropic is network-bound")
+		}
+	})
+	t.Run("without_api_key", func(t *testing.T) {
+		t.Setenv("ANTHROPIC_API_KEY", "")
+		got, err := New(Spec{Provider: "anthropic"})
+		if got != nil {
+			t.Errorf("New(anthropic) without API key returned non-nil enricher; want nil")
+		}
+		if err == nil {
+			t.Fatal("New(anthropic) without API key returned nil error")
+		}
+		if !errors.Is(err, ErrAnthropicNoAPIKey) {
+			t.Errorf("error chain missing ErrAnthropicNoAPIKey: %v", err)
+		}
+		if errors.Is(err, ErrNotImplementedYet) {
+			t.Errorf("real constructor leaked ErrNotImplementedYet; placeholder still wins")
+		}
+	})
+}
+
 // TestAnthropicEnricher_RequiresAPIKey asserts the constructor refuses to
 // build an enricher when ANTHROPIC_API_KEY is unset, returning the typed
 // sentinel ErrAnthropicNoAPIKey so callers can distinguish "missing creds"

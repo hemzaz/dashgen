@@ -38,9 +38,14 @@ func TestNew_NoopAliases(t *testing.T) {
 // return an error wrapping ErrNotImplementedYet so callers can
 // errors.Is-distinguish "we recognised this name" from "we have never
 // heard of this name".
+//
+// "anthropic" is intentionally absent from this list: anthropic.go's init()
+// overrides the placeholder with the real constructor (last-init-wins).
+// The override itself is pinned by TestAnthropicEnricher_RegistersOverridesPlaceholder
+// in anthropic_test.go.
 func TestNew_PlaceholderProviders(t *testing.T) {
 	t.Parallel()
-	for _, provider := range []string{"anthropic", "openai", "ollama"} {
+	for _, provider := range []string{"openai", "ollama"} {
 		provider := provider
 		t.Run("provider="+provider, func(t *testing.T) {
 			t.Parallel()

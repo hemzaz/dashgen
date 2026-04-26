@@ -392,6 +392,14 @@ type rationaleEnvelopeWire struct {
 	Proposals []rationaleProposalWire `json:"proposals"`
 }
 
+// init replaces the placeholder anthropic constructor (registered in
+// factory.go's init) with the real one. Last-init-wins is the documented
+// substitution contract — see TestRegister_LastInitWinsForTestSubstitution
+// in factory_test.go.
+func init() {
+	Register("anthropic", newAnthropicEnricher)
+}
+
 // EnrichRationale requests supplementary rationale paragraphs for the
 // supplied panels and returns them in REQUEST order.
 func (e *AnthropicEnricher) EnrichRationale(ctx context.Context, in RationaleInput) (RationaleOutput, error) {

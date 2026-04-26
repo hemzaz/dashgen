@@ -116,9 +116,15 @@ func New(spec Spec) (Enricher, error) {
 }
 
 // Built-in registrations. The "off" and "noop" entries return the always-
-// safe NoopEnricher. The "anthropic" and "openai" entries are placeholder
-// stubs that return ErrNotImplementedYet so adding the real provider is a
-// one-file change in this package.
+// safe NoopEnricher. The "openai" entry is a placeholder stub that returns
+// ErrNotImplementedYet so adding the real provider is a one-file change in
+// this package.
+//
+// The "anthropic" name is registered by anthropic.go's init() — not here —
+// because Go runs package init() functions in filename order and the real
+// constructor must not be overwritten by a placeholder later in the
+// alphabet. Keeping anthropic out of this init body is what makes that
+// override deterministic.
 //
 // The "ollama" placeholder is intentionally retained even though local
 // AI is deferred to the v0.3 backlog (see ROADMAP.md). Keeping the
@@ -129,9 +135,6 @@ func init() {
 	noop := func(Spec) (Enricher, error) { return NewNoopEnricher(), nil }
 	Register("off", noop)
 	Register("noop", noop)
-	Register("anthropic", func(Spec) (Enricher, error) {
-		return nil, fmt.Errorf("%w: anthropic (lands in v0.2 Phase 3)", ErrNotImplementedYet)
-	})
 	Register("openai", func(Spec) (Enricher, error) {
 		return nil, fmt.Errorf("%w: openai (lands in v0.2 Phase 3)", ErrNotImplementedYet)
 	})
