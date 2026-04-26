@@ -14,6 +14,8 @@ package enrich
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,6 +55,7 @@ type AnthropicEnricher struct {
 	model      string
 	endpoint   string
 	httpClient *http.Client
+	cache      *Cache // nil ⇒ caching disabled (Spec.NoCache or empty CacheDir)
 }
 
 // newAnthropicEnricher constructs an Enricher from a Spec. Registered at
@@ -67,12 +70,16 @@ func newAnthropicEnricher(spec Spec) (Enricher, error) {
 	if model == "" {
 		model = anthropicDefaultModel
 	}
-	return &AnthropicEnricher{
+	e := &AnthropicEnricher{
 		apiKey:     apiKey,
 		model:      model,
 		endpoint:   anthropicDefaultEndpoint,
 		httpClient: &http.Client{Timeout: anthropicHTTPTimeout},
-	}, nil
+	}
+	if !spec.NoCache && spec.CacheDir != "" {
+		e.cache = NewCache(spec.CacheDir)
+	}
+	return e, nil
 }
 
 // Describe identifies the provider for audit trails and cache keys.
@@ -200,6 +207,42 @@ func renderUser(tplStr, key, value string) string {
 	return strings.Replace(tplStr, "{{."+key+"}}", value, 1)
 }
 
+// cachedCall wraps callAnthropic with optional disk-backed caching. The
+// cache key incorporates PromptHash() so any byte change to the canonical
+// prompt templates invalidates every prior entry, plus the JSON hash of
+// the function-specific input so semantically-identical calls collapse to
+// a single roundtrip. When e.cache is nil the call is a straight passthrough.
+func (e *AnthropicEnricher) cachedCall(ctx context.Context, function, system, user string, inputForHash any) (string, error) {
+	if e.cache == nil {
+		return e.callAnthropic(ctx, system, user)
+	}
+	raw, err := json.Marshal(inputForHash)
+	if err != nil {
+		// Hash failure shouldn't kill the call; fall through to the network.
+		return e.callAnthropic(ctx, system, user)
+	}
+	sum := sha256.Sum256(raw)
+	key := CacheKey{
+		InventoryHash:  hex.EncodeToString(sum[:])[:16],
+		Function:       function,
+		ProviderID:     "anthropic:" + e.model,
+		PromptHash:     PromptHash(),
+		DashgenVersion: "dev",
+	}
+	if entry, ok, err := e.cache.Get(key); err == nil && ok {
+		var cached string
+		if jerr := json.Unmarshal(entry.Value, &cached); jerr == nil {
+			return cached, nil
+		}
+		// Malformed cache value ⇒ fall through and overwrite on success.
+	}
+	text, err := e.callAnthropic(ctx, system, user)
+	if err == nil {
+		_ = e.cache.Put(key, text) // best-effort; cache write failures must not break the call
+	}
+	return text, err
+}
+
 // warnIfPromQL inspects raw response text for any "query" field the model
 // might have included against the prompt instructions. The presence of such
 // a field is logged at warn level and the field is dropped by the strict
@@ -245,7 +288,7 @@ func (e *AnthropicEnricher) ClassifyUnknown(ctx context.Context, in ClassifyInpu
 	}
 	user := renderUser(ClassifyUserTemplate, "Metrics", string(payload))
 
-	text, err := e.callAnthropic(ctx, ClassifySystemPrompt, user)
+	text, err := e.cachedCall(ctx, "classify_unknown", ClassifySystemPrompt, user, in.Metrics)
 	if err != nil {
 		return ClassifyOutput{}, err
 	}
@@ -308,7 +351,7 @@ func (e *AnthropicEnricher) EnrichTitles(ctx context.Context, in TitleInput) (Ti
 	}
 	user := renderUser(TitleUserTemplate, "Panels", string(payload))
 
-	text, err := e.callAnthropic(ctx, TitleSystemPrompt, user)
+	text, err := e.cachedCall(ctx, "enrich_titles", TitleSystemPrompt, user, in.Requests)
 	if err != nil {
 		return TitleOutput{}, err
 	}
@@ -361,7 +404,7 @@ func (e *AnthropicEnricher) EnrichRationale(ctx context.Context, in RationaleInp
 	}
 	user := renderUser(RationaleUserTemplate, "Panels", string(payload))
 
-	text, err := e.callAnthropic(ctx, RationaleSystemPrompt, user)
+	text, err := e.cachedCall(ctx, "enrich_rationale", RationaleSystemPrompt, user, in.Requests)
 	if err != nil {
 		return RationaleOutput{}, err
 	}

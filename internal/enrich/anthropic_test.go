@@ -340,6 +340,53 @@ func TestAnthropicEnricher_ClassifyUnknown_OnlyFiresForUnknownMetrics(t *testing
 	}
 }
 
+// TestAnthropicEnricher_ClassifyUnknown_CacheHit pins the V0.2-PLAN §2.4
+// caching contract: a second call with semantically identical input must
+// be served from disk cache without issuing a second HTTP request. The
+// cache key includes PromptHash() so any prompt-template byte change
+// invalidates every prior entry — the prompts_test.go suite covers that
+// half of the contract; this test covers the hit path itself.
+func TestAnthropicEnricher_ClassifyUnknown_CacheHit(t *testing.T) {
+	t.Setenv("ANTHROPIC_API_KEY", "test-key")
+
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"content":[{"type":"text","text":"{\"proposals\":[{\"PanelUID\":\"weird_metric\",\"Hints\":[{\"Traits\":[\"service_http\"],\"Confidence\":0.7}]}]}"}]}`)
+	}))
+	defer srv.Close()
+
+	e := newAnthropicEnricherForTest(t, srv.URL)
+	e.cache = NewCache(t.TempDir())
+
+	in := ClassifyInput{Metrics: []MetricBrief{{Name: "weird_metric", Type: "counter"}}}
+
+	// First call: cold cache ⇒ HTTP roundtrip happens.
+	first, err := e.ClassifyUnknown(context.Background(), in)
+	if err != nil {
+		t.Fatalf("first call: %v", err)
+	}
+	if got := atomic.LoadInt32(&calls); got != 1 {
+		t.Fatalf("first call issued %d HTTP calls; want 1", got)
+	}
+	if len(first.Hints) != 1 || first.Hints[0].Metric != "weird_metric" {
+		t.Fatalf("first call returned unexpected output: %+v", first)
+	}
+
+	// Second call with identical input: must hit cache, not network.
+	second, err := e.ClassifyUnknown(context.Background(), in)
+	if err != nil {
+		t.Fatalf("second call: %v", err)
+	}
+	if got := atomic.LoadInt32(&calls); got != 1 {
+		t.Errorf("second call issued total %d HTTP calls; cache should have absorbed it (want 1)", got)
+	}
+	if len(second.Hints) != 1 || second.Hints[0].Metric != "weird_metric" {
+		t.Errorf("cached output diverged from first: %+v vs %+v", second, first)
+	}
+}
+
 // TestAnthropicEnricher_ContextCancel asserts the enricher honors the
 // caller's context. A pre-cancelled context surfaces an error wrapping
 // context.Canceled so callers can errors.Is-distinguish it from a true
