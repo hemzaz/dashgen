@@ -250,18 +250,17 @@ func openaiWarnIfPromQL(method, text string) {
 
 // ----- ClassifyUnknown ----------------------------------------------------
 
-// ClassifyUnknown issues the request to OpenAI. An empty input is a no-op —
-// the "OnlyFiresForUnknownMetrics" contract: the enricher never writes a
+// ClassifyUnknown runs ValidateBriefs first (V0.2-PLAN §2.5 redaction
+// contract), then issues the request. An empty input is a no-op — the
+// "OnlyFiresForUnknownMetrics" contract: the enricher never writes a
 // request when there are no metrics to classify.
-//
-// PHASE 4 RED CANARY: this method DELIBERATELY OMITS the ValidateBriefs
-// guard. The redaction guard is added in the next commit; the canary test
-// in openai_test.go proves the guard's necessity by failing without it.
 func (e *OpenAIEnricher) ClassifyUnknown(ctx context.Context, in ClassifyInput) (ClassifyOutput, error) {
 	if len(in.Metrics) == 0 {
 		return ClassifyOutput{}, nil
 	}
-	// NOTE: ValidateBriefs(in.Metrics) intentionally absent in this commit.
+	if err := ValidateBriefs(in.Metrics); err != nil {
+		return ClassifyOutput{}, err
+	}
 
 	payload, err := json.Marshal(in.Metrics)
 	if err != nil {
