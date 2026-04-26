@@ -289,19 +289,24 @@ func firstStrictWarning(d *ir.Dashboard) string {
 
 // applyEnrichment is the v0.2 enrichment seam. It delegates provider
 // selection to the enrich.New factory (the single extension point for new
-// providers — see internal/enrich/factory.go) and then dispatches by the
-// returned enricher's Describe() to keep mutation paths in one place.
+// providers — see internal/enrich/factory.go) and then dispatches per
+// cfg.EnrichModes to the enricher's EnrichTitles / EnrichRationale methods.
 //
-// Today the only enricher that ever returns from the factory is
-// NoopEnricher (the {"", "off", "noop"} aliases). Anthropic, OpenAI, and
-// any future local provider register their own Constructors in the
-// enrich package; when they exist this glue does not need to change —
-// only the per-enricher mutation branch below grows.
+// Mutation contract (V0.2-PLAN §2.2):
+//   - AI never produces PromQL.
+//   - AI never upgrades verdicts.
+//   - The only fields a successful enrichment may write are
+//     Panel.MechanicalTitle and Panel.RationaleExtra. Both are zero when
+//     the deterministic synth path produces a Panel; an already-non-empty
+//     value is never overwritten.
 //
-// Provider lookup errors flow up unchanged: ErrUnknownProvider for names
-// the registry has never heard of, ErrNotImplementedYet for placeholders
-// awaiting Phase 3+ work. Run() wraps the result as ErrBackend.
-func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) (*ir.Dashboard, error) {
+// Failure contract: provider construction errors (unknown provider, missing
+// API key) flow up to Run() as ErrBackend. Per-call enricher errors after
+// construction soft-fail: the dispatch logs a single line to stderr and
+// degrades to a noop, leaving the dashboard unchanged. ErrBackend wrapping
+// at this layer would crash the run, which violates the V0.2-PLAN §2.5
+// "graceful degradation" rule.
+func applyEnrichment(ctx context.Context, d *ir.Dashboard, cfg *config.RunConfig) (*ir.Dashboard, error) {
 	enricher, err := enrich.New(enrich.Spec{
 		Provider: cfg.Provider,
 		Model:    cfg.Model,
@@ -338,12 +343,134 @@ func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) 
 		}
 	}
 
-	// No active enricher applies its own mutation logic yet. When the
-	// first real provider lands, branch here on desc.Provider and call
-	// EnrichTitles / EnrichRationale / ClassifyUnknown per cfg.EnrichModes.
-	// All such mutations must respect the V0.2-PLAN §2.2 boundary: never
-	// produce PromQL, never upgrade verdicts.
+	if containsMode(cfg.EnrichModes, "titles") {
+		applyTitleEnrichment(ctx, enricher, d)
+	}
+	if containsMode(cfg.EnrichModes, "rationale") {
+		applyRationaleEnrichment(ctx, enricher, d)
+	}
+	if containsMode(cfg.EnrichModes, "classify") {
+		// TODO(phase-5): wire ClassifyUnknown when unknown-grouping coverage lands
+	}
+
 	return d, nil
+}
+
+// containsMode reports whether `modes` enables `want`. The `none` token is a
+// short-circuit that disables every mode regardless of position; `all`
+// enables every mode. Empty modes (the v0.2 default) returns false.
+func containsMode(modes []string, want string) bool {
+	for _, m := range modes {
+		if m == "none" {
+			return false
+		}
+	}
+	for _, m := range modes {
+		if m == want || m == "all" {
+			return true
+		}
+	}
+	return false
+}
+
+// applyTitleEnrichment dispatches EnrichTitles and writes Panel.MechanicalTitle
+// for every panel UID the provider returned a non-empty proposal for. The
+// dashboard is mutated only after a successful response, so a provider error
+// leaves every panel untouched. Refused panels are excluded from the request.
+func applyTitleEnrichment(ctx context.Context, enricher enrich.Enricher, d *ir.Dashboard) {
+	var reqs []enrich.PanelTitleRequest
+	for _, row := range d.Rows {
+		for _, p := range row.Panels {
+			if p.Verdict == ir.VerdictRefuse {
+				continue
+			}
+			reqs = append(reqs, enrich.PanelTitleRequest{
+				PanelUID:        p.UID,
+				MechanicalTitle: p.Title,
+				Section:         row.Title,
+				Rationale:       p.Rationale,
+			})
+		}
+	}
+	if len(reqs) == 0 {
+		return
+	}
+	out, err := enricher.EnrichTitles(ctx, enrich.TitleInput{Requests: reqs})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "enrich titles: %v\n", err)
+		return
+	}
+	byUID := make(map[string]string, len(out.Proposals))
+	for _, prop := range out.Proposals {
+		if prop.Title == "" {
+			continue
+		}
+		byUID[prop.PanelUID] = prop.Title
+	}
+	for ri := range d.Rows {
+		for pi := range d.Rows[ri].Panels {
+			p := &d.Rows[ri].Panels[pi]
+			if p.MechanicalTitle != "" {
+				// Never overwrite an already-non-empty value.
+				continue
+			}
+			if t, ok := byUID[p.UID]; ok {
+				p.MechanicalTitle = t
+			}
+		}
+	}
+}
+
+// applyRationaleEnrichment dispatches EnrichRationale and writes
+// Panel.RationaleExtra following the same all-or-nothing soft-fail contract
+// as applyTitleEnrichment.
+func applyRationaleEnrichment(ctx context.Context, enricher enrich.Enricher, d *ir.Dashboard) {
+	var reqs []enrich.PanelRationaleRequest
+	for _, row := range d.Rows {
+		for _, p := range row.Panels {
+			if p.Verdict == ir.VerdictRefuse {
+				continue
+			}
+			exprs := make([]string, 0, len(p.Queries))
+			for _, q := range p.Queries {
+				exprs = append(exprs, q.Expr)
+			}
+			reqs = append(reqs, enrich.PanelRationaleRequest{
+				PanelUID:        p.UID,
+				MechanicalTitle: p.Title,
+				Section:         row.Title,
+				Rationale:       p.Rationale,
+				QueryExprs:      exprs,
+			})
+		}
+	}
+	if len(reqs) == 0 {
+		return
+	}
+	out, err := enricher.EnrichRationale(ctx, enrich.RationaleInput{Requests: reqs})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "enrich rationale: %v\n", err)
+		return
+	}
+	byUID := make(map[string]string, len(out.Proposals))
+	for _, prop := range out.Proposals {
+		if prop.Paragraph == "" {
+			continue
+		}
+		byUID[prop.PanelUID] = prop.Paragraph
+	}
+	for ri := range d.Rows {
+		for pi := range d.Rows[ri].Panels {
+			p := &d.Rows[ri].Panels[pi]
+			if p.RationaleExtra != "" {
+				// Never overwrite an already-non-empty value.
+				continue
+			}
+			if para, ok := byUID[p.UID]; ok {
+				p.RationaleExtra = para
+			}
+		}
+	}
 }
 
 // rawToInventory is a thin adapter from RawInventory to MetricInventory.
