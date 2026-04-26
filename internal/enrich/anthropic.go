@@ -55,7 +55,18 @@ type AnthropicEnricher struct {
 	model      string
 	endpoint   string
 	httpClient *http.Client
-	cache      *Cache // nil ⇒ caching disabled (Spec.NoCache or empty CacheDir)
+	cache      *Cache        // nil ⇒ caching disabled (Spec.NoCache or empty CacheDir)
+	logger     PayloadLogger // nil ⇒ pre-send logging disabled (the default; zero overhead)
+}
+
+// SetPayloadLogger installs an optional pre-send PayloadLogger. Pass nil
+// to disable. The callback fires once per outbound HTTP call AFTER
+// ValidateBriefs has already accepted the request, with the wire bytes
+// already computed — so the preview can never contain anything redaction
+// would have caught (V0.2-PLAN §2.5). Used only when the operator passes
+// the hidden --log-enrichment-payloads flag.
+func (e *AnthropicEnricher) SetPayloadLogger(l PayloadLogger) {
+	e.logger = l
 }
 
 // newAnthropicEnricher constructs an Enricher from a Spec. Registered at
@@ -120,7 +131,7 @@ type anthropicBlock struct {
 //     so the caller surfaces the failure.
 //   - 429 / 5xx → one short retry; if the retry also fails, returns the
 //     last transient error so the caller surfaces it.
-func (e *AnthropicEnricher) callAnthropic(ctx context.Context, system, user string) (string, error) {
+func (e *AnthropicEnricher) callAnthropic(ctx context.Context, function, system, user string) (string, error) {
 	body := anthropicReq{
 		Model:     e.model,
 		MaxTokens: anthropicMaxTokens,
@@ -130,6 +141,15 @@ func (e *AnthropicEnricher) callAnthropic(ctx context.Context, system, user stri
 	raw, err := json.Marshal(body)
 	if err != nil {
 		return "", fmt.Errorf("anthropic: marshal request: %w", err)
+	}
+
+	// Pre-send logger fires AFTER ValidateBriefs (in the per-method caller)
+	// has accepted the request and AFTER the wire bytes are computed, so the
+	// preview cannot contain anything the redaction guard would have caught
+	// (V0.2-PLAN §2.5). When e.logger is nil the call is a single nil-check
+	// and pays zero overhead.
+	if e.logger != nil {
+		e.logger(function, len(raw), payloadPreview(raw))
 	}
 
 	var lastErr error
@@ -214,12 +234,12 @@ func renderUser(tplStr, key, value string) string {
 // a single roundtrip. When e.cache is nil the call is a straight passthrough.
 func (e *AnthropicEnricher) cachedCall(ctx context.Context, function, system, user string, inputForHash any) (string, error) {
 	if e.cache == nil {
-		return e.callAnthropic(ctx, system, user)
+		return e.callAnthropic(ctx, function, system, user)
 	}
 	raw, err := json.Marshal(inputForHash)
 	if err != nil {
 		// Hash failure shouldn't kill the call; fall through to the network.
-		return e.callAnthropic(ctx, system, user)
+		return e.callAnthropic(ctx, function, system, user)
 	}
 	sum := sha256.Sum256(raw)
 	key := CacheKey{
@@ -236,7 +256,7 @@ func (e *AnthropicEnricher) cachedCall(ctx context.Context, function, system, us
 		}
 		// Malformed cache value ⇒ fall through and overwrite on success.
 	}
-	text, err := e.callAnthropic(ctx, system, user)
+	text, err := e.callAnthropic(ctx, function, system, user)
 	if err == nil {
 		_ = e.cache.Put(key, text) // best-effort; cache write failures must not break the call
 	}

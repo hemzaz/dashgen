@@ -57,7 +57,18 @@ type OpenAIEnricher struct {
 	model      string
 	endpoint   string
 	httpClient *http.Client
-	cache      *Cache // nil ⇒ caching disabled (Spec.NoCache or empty CacheDir)
+	cache      *Cache        // nil ⇒ caching disabled (Spec.NoCache or empty CacheDir)
+	logger     PayloadLogger // nil ⇒ pre-send logging disabled (the default; zero overhead)
+}
+
+// SetPayloadLogger installs an optional pre-send PayloadLogger. Pass nil
+// to disable. The callback fires once per outbound HTTP call AFTER
+// ValidateBriefs has already accepted the request, with the wire bytes
+// already computed — so the preview can never contain anything redaction
+// would have caught (V0.2-PLAN §2.5). Mirrors AnthropicEnricher.SetPayloadLogger.
+// Used only when the operator passes the hidden --log-enrichment-payloads flag.
+func (e *OpenAIEnricher) SetPayloadLogger(l PayloadLogger) {
+	e.logger = l
 }
 
 // newOpenAIEnricher constructs an Enricher from a Spec. Registered at
@@ -121,7 +132,7 @@ type openaiChoice struct {
 //     the caller surfaces the failure.
 //   - 429 / 5xx → one short retry; if the retry also fails, returns the last
 //     transient error so the caller surfaces it.
-func (e *OpenAIEnricher) callOpenAI(ctx context.Context, system, user string) (string, error) {
+func (e *OpenAIEnricher) callOpenAI(ctx context.Context, function, system, user string) (string, error) {
 	body := openaiReq{
 		Model:               e.model,
 		MaxCompletionTokens: openaiMaxTokens,
@@ -133,6 +144,15 @@ func (e *OpenAIEnricher) callOpenAI(ctx context.Context, system, user string) (s
 	raw, err := json.Marshal(body)
 	if err != nil {
 		return "", fmt.Errorf("openai: marshal request: %w", err)
+	}
+
+	// Pre-send logger fires AFTER ValidateBriefs (in the per-method caller)
+	// has accepted the request and AFTER the wire bytes are computed, so the
+	// preview cannot contain anything the redaction guard would have caught
+	// (V0.2-PLAN §2.5). Mirrors anthropic.go's logger callsite. When e.logger
+	// is nil the call is a single nil-check and pays zero overhead.
+	if e.logger != nil {
+		e.logger(function, len(raw), payloadPreview(raw))
 	}
 
 	var lastErr error
@@ -205,12 +225,12 @@ func (e *OpenAIEnricher) doOneOpenAI(ctx context.Context, raw []byte) (string, b
 // single roundtrip. When e.cache is nil the call is a straight passthrough.
 func (e *OpenAIEnricher) cachedCallOpenAI(ctx context.Context, function, system, user string, inputForHash any) (string, error) {
 	if e.cache == nil {
-		return e.callOpenAI(ctx, system, user)
+		return e.callOpenAI(ctx, function, system, user)
 	}
 	raw, err := json.Marshal(inputForHash)
 	if err != nil {
 		// Hash failure shouldn't kill the call; fall through to the network.
-		return e.callOpenAI(ctx, system, user)
+		return e.callOpenAI(ctx, function, system, user)
 	}
 	sum := sha256.Sum256(raw)
 	key := CacheKey{
@@ -227,7 +247,7 @@ func (e *OpenAIEnricher) cachedCallOpenAI(ctx context.Context, function, system,
 		}
 		// Malformed cache value ⇒ fall through and overwrite on success.
 	}
-	text, err := e.callOpenAI(ctx, system, user)
+	text, err := e.callOpenAI(ctx, function, system, user)
 	if err == nil {
 		_ = e.cache.Put(key, text) // best-effort; cache write failures must not break the call
 	}
