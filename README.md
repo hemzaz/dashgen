@@ -61,6 +61,16 @@ must be provided.
 | `--namespace` | Restrict discovery to a namespace label. |
 | `--metric-match` | Metric-name substring filter. |
 
+Enrichment flags (`--provider`, `--provider-model`, `--enrich`, `--cache-dir`,
+`--no-enrich-cache`) are described in [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md).
+Quick example:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+dashgen generate --prom-url http://localhost:9090 --profile service \
+    --provider anthropic --enrich titles,rationale
+```
+
 ## Output
 
 Each run emits three files into `--out`:

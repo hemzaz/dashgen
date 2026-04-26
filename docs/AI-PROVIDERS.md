@@ -9,6 +9,20 @@ in [V0.2-PLAN.md §2.2](V0.2-PLAN.md).
 `--provider off` (the default) produces output byte-identical to v0.1. No API call is
 issued unless you explicitly pass `--provider <name>`.
 
+## Quickstart
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+dashgen generate --prom-url http://localhost:9090 --profile service \
+    --provider anthropic --enrich titles,rationale
+```
+
+With enrichment enabled, each panel in `dashboard.json` gains two additional IR
+fields: `MechanicalTitle` (the original deterministic title, always preserved) and
+`RationaleExtra` (AI-authored supplementary prose). The PromQL expressions, recipe
+selections, validation verdicts, panel UIDs, and section ordering are identical to a
+`--provider off` run — only the human-facing text changes.
+
 ## Provider matrix
 
 | Provider | Status | Auth env-var | Model default | Network boundary |
