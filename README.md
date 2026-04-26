@@ -102,18 +102,30 @@ Default `--provider off` is byte-identical to v0.1; AI is opt-in only and cannot
 generate PromQL, upgrade a refused verdict, or bypass the validation pipeline.
 
 ```bash
+# Anthropic (set ANTHROPIC_API_KEY first)
 dashgen generate \
   --prom-url http://prometheus:9090 \
   --profile service \
   --provider anthropic \
   --enrich titles,rationale \
   --out ./dashboards
+
+# OpenAI (set OPENAI_API_KEY first)
+dashgen generate \
+  --prom-url http://prometheus:9090 \
+  --profile service \
+  --provider openai \
+  --enrich titles,rationale \
+  --out ./dashboards
 ```
 
-Set `ANTHROPIC_API_KEY` before running. The first run contacts the Anthropic API;
-subsequent runs over the same inventory are served from the on-disk cache with zero
-outbound traffic. See [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) for the full
-provider surface, redaction contract, and extension guide.
+The first run contacts the provider's API; subsequent runs over the same inventory
+are served from the on-disk cache with zero outbound traffic. Both providers
+implement the same contract over the same prompt templates — switching between
+`--provider anthropic` and `--provider openai` only changes title/rationale prose,
+never query, verdict, or panel UID material. See
+[`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) for the full provider surface,
+redaction contract, and extension guide.
 
 ## Validation contract
 
@@ -197,10 +209,12 @@ the same lookup the `--fixture-dir` backend uses at replay time.
 - **v0.1** (current): deterministic core, three profiles, three CLI
   commands, three-file output. Validated end-to-end against the public
   Prometheus demo + Grafana.
-- **v0.2** (in progress — Phase 3: Anthropic enricher shipped): optional AI
-  enrichment (titles, rationale, unknown-metric grouping) behind a `--provider`
-  flag, plus a broader recipe catalog. Phase 3 (`--provider anthropic`) is live;
-  Phases 4–6 (OpenAI, unknown-grouping, lint/coverage) are in progress. Detailed
+- **v0.2** (in progress — Phase 3 Anthropic and Phase 4 OpenAI enrichers
+  shipped): optional AI enrichment (titles, rationale, unknown-metric grouping)
+  behind a `--provider` flag, plus a broader recipe catalog. Both
+  `--provider anthropic` and `--provider openai` are live and share the same
+  redaction contract and on-disk cache; remaining work is Phase 5
+  (unknown-family grouping) and Phase 6 (lint/coverage hardening). Detailed
   plan in [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md); recipe catalog in
   [`docs/RECIPES.md`](docs/RECIPES.md). Stage definitions in
   [`docs/ROADMAP.md`](docs/ROADMAP.md).

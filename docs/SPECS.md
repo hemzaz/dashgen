@@ -382,9 +382,14 @@ Every outbound enrichment request contains only:
 - Panel UIDs and section names (the stable, deterministic identifiers).
 
 Label **values**, PromQL expressions, instance endpoints, and any actual series data
-are **never included**. The `ValidateBriefs` guard in `internal/enrich/anthropic.go`
-enforces this at the call site; `TestAnthropicEnricher_RedactionAtProxyBoundary`
-pins it as a regression canary.
+are **never included**. The `ValidateBriefs` guard runs at the call site of every
+hosted provider (`internal/enrich/anthropic.go`, `internal/enrich/openai.go`) before
+any wire-byte computation. The contract is pinned by per-provider regression
+canaries: `TestAnthropicEnricher_RedactionAtProxyBoundary` and
+`TestOpenAIEnricher_RedactionAtProxyBoundary`. The optional debug-only payload-
+preview logger inherits the same guarantee — its preview is computed from wire
+bytes only — and is pinned by `TestLogEnrichmentPayloads_NeverLogsLabelValues`
+(anthropic + openai subtests).
 
 ### A.3 Validation-pipeline invariant
 
@@ -416,8 +421,20 @@ requires exactly:
 2. A single `enrich.Register("<name>", ctor)` call from that file's `init()`.
 
 Nothing outside `internal/enrich/` needs to change. The CLI accepts any registered
-name; unknown names return `ErrUnknownProvider`. See
-[`docs/AI-PROVIDERS.md`](AI-PROVIDERS.md) for the full walkthrough and
+name; unknown names return `ErrUnknownProvider`.
+
+**Phase 4 validates this contract empirically.** The OpenAI provider shipped in
+v0.2 Phase 4 was a one-file addition (`internal/enrich/openai.go` plus its
+sibling `_test.go`) — no edits to `internal/app/generate`, `cmd/dashgen`, or
+`internal/config`, no new top-level interface, no changes to the existing
+Anthropic implementation. Two independent hosted providers
+(`anthropic`, `openai`) now coexist over the same prompt templates, the same
+on-disk cache schema, and the same `ValidateBriefs` redaction guard. The
+override-vs-placeholder behavior is pinned by
+`TestAnthropicEnricher_RegistersOverridesPlaceholder` and
+`TestOpenAIEnricher_RegistersOverridesPlaceholder`.
+
+See [`docs/AI-PROVIDERS.md`](AI-PROVIDERS.md) for the full walkthrough and
 [`docs/V0.2-PLAN.md §2.7`](V0.2-PLAN.md) for the contract rationale.
 
 ### A.6 Load-bearing tests
@@ -425,7 +442,10 @@ name; unknown names return `ErrUnknownProvider`. See
 | Test | Package | What it guards |
 |------|---------|----------------|
 | `TestApplyEnrichment_NoopDefault_ByteIdenticalOutput` | `internal/app/generate` | AI-off output is byte-identical to v0.1 |
-| `TestAnthropicEnricher_RedactionAtProxyBoundary` | `internal/enrich` | No label values cross the outbound boundary |
+| `TestAnthropicEnricher_RedactionAtProxyBoundary` | `internal/enrich` | No label values cross the Anthropic outbound boundary |
+| `TestOpenAIEnricher_RedactionAtProxyBoundary` | `internal/enrich` | No label values cross the OpenAI outbound boundary |
+| `TestOpenAIEnricher_RegistersOverridesPlaceholder` | `internal/enrich` | Phase 4 OpenAI constructor overrides factory.go's placeholder via last-init-wins |
+| `TestLogEnrichmentPayloads_NeverLogsLabelValues` | `internal/enrich` | Debug-only payload-preview logger inherits the redaction guarantee |
 | `TestPromptHash_Stable` | `internal/enrich` | Prompt templates hash stably (cache invalidation) |
 
-Regressions in any of these tests indicate a violation of an A.2–A.4 contract above.
+Regressions in any of these tests indicate a violation of an A.2–A.5 contract above.

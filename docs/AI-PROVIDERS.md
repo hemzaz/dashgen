@@ -14,7 +14,7 @@ issued unless you explicitly pass `--provider <name>`.
 | Provider | Status | Auth env-var | Model default | Network boundary |
 |----------|--------|--------------|---------------|------------------|
 | `anthropic` | Shipped (v0.2 Phase 3) | `ANTHROPIC_API_KEY` | `claude-opus-4-7` | `https://api.anthropic.com` |
-| `openai` | Placeholder (Phase 4) | `OPENAI_API_KEY` | TBD | `https://api.openai.com` |
+| `openai` | Shipped (v0.2 Phase 4) | `OPENAI_API_KEY` | `gpt-5` | `https://api.openai.com` |
 | `ollama` | Placeholder (v0.3 backlog) | n/a | TBD | localhost only when shipped |
 
 ## Anthropic setup
@@ -57,12 +57,58 @@ on-disk cache — **zero outbound traffic is issued**. The cache-hit path is ver
 | Malformed JSON response | Logged, discarded; deterministic title and rationale are preserved unchanged. |
 | AI response contains a `query` field | Field is dropped, warning logged; PromQL is always owned by the deterministic pipeline ([V0.2-PLAN.md §2.2](V0.2-PLAN.md)). |
 
+## OpenAI setup
+
+### Prerequisites
+
+Export your API key before running:
+
+```bash
+export OPENAI_API_KEY=sk-...
+```
+
+The constructor fails fast with `ErrOpenAINoAPIKey` when the variable is unset.
+No partial output is produced.
+
+### Invocation
+
+```bash
+dashgen generate \
+  --prom-url http://prometheus:9090 \
+  --profile service \
+  --provider openai \
+  --enrich titles,rationale \
+  --out ./dashboards
+```
+
+Default model is `gpt-5`; override with `--provider-model <id>`. The first run
+contacts the OpenAI Chat Completions API for each requested enrichment function;
+subsequent runs over the same inventory are served entirely from the on-disk
+cache — **zero outbound traffic is issued**. The cache-hit path is verified by
+`TestOpenAIEnricher_ClassifyUnknown_CacheHit` in
+[`internal/enrich/openai_test.go`](../internal/enrich/openai_test.go).
+
+`anthropic` and `openai` implement the same `enrich.Enricher` contract over the
+same prompt templates. Switching `--provider anthropic` ↔ `--provider openai`
+over the same inventory only changes title and rationale prose — never query,
+verdict, or panel UID material.
+
+### Failure modes
+
+| Condition | Behavior |
+|-----------|----------|
+| `OPENAI_API_KEY` unset | Constructor fails fast; run aborts before any file is written. |
+| Provider unreachable / network error | Logged at `warn`; run continues with deterministic-only output. |
+| 429 or 5xx from the API | One short retry; if the retry also fails, falls back to deterministic output. Non-fatal. |
+| Malformed JSON response | Logged, discarded; deterministic title and rationale are preserved unchanged. |
+| AI response contains a `query` field | Field is dropped, warning logged; PromQL is always owned by the deterministic pipeline ([V0.2-PLAN.md §2.2](V0.2-PLAN.md)). |
+
 ## Enrichment flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--provider` | `off` | Provider name. `off` and the empty string are identical; both use the deterministic-only (noop) path. Unknown names fail fast with `ErrUnknownProvider`. |
-| `--provider-model` | _(provider default)_ | Override the model ID. Empty means "use the provider default" (`claude-opus-4-7` for Anthropic). |
+| `--provider-model` | _(provider default)_ | Override the model ID. Empty means "use the provider default" (`claude-opus-4-7` for Anthropic, `gpt-5` for OpenAI). |
 | `--enrich` | `none` when provider is `off`; `titles,rationale` when a provider is set | Comma-separated enrichment operations: `titles`, `rationale`, `classify`, `all`, `none`. |
 | `--no-enrich-cache` | `false` | Bypass the on-disk cache and force a fresh API request. Intended for authoring and debugging only. |
 | `--cache-dir` | `~/.cache/dashgen/enrich` | Override the cache directory (`$XDG_CACHE_HOME/dashgen/enrich` when `$XDG_CACHE_HOME` is set). |
@@ -87,13 +133,25 @@ The contract is stated in [V0.2-PLAN.md §2.2](V0.2-PLAN.md) and enforced at
 - Instance, pod, namespace, or any other actual series label values
 - The Prometheus endpoint URL or any backend address
 
-This contract is pinned by two regression guards:
+This contract is pinned by per-provider regression guards plus an end-to-end
+smoke harness:
 
 - `TestAnthropicEnricher_RedactionAtProxyBoundary` in
   [`internal/enrich/anthropic_test.go`](../internal/enrich/anthropic_test.go) — a
-  proxy-capture canary that asserts no label values cross the outbound boundary.
+  proxy-capture canary that asserts no label values cross the outbound boundary
+  for the Anthropic provider.
+- `TestOpenAIEnricher_RedactionAtProxyBoundary` in
+  [`internal/enrich/openai_test.go`](../internal/enrich/openai_test.go) — the
+  same canary applied to the OpenAI provider's wire surface, proving the
+  redaction contract holds for both shipped providers identically.
+- `TestLogEnrichmentPayloads_NeverLogsLabelValues` in
+  [`internal/enrich/payload_logger_test.go`](../internal/enrich/payload_logger_test.go)
+  — extends the canary to the optional debug-only payload-logger callback
+  (see ["Debug: payload preview logging"](#debug-payload-preview-logging) below)
+  with anthropic and openai subtests.
 - [`scripts/smoke-anthropic.sh`](../scripts/smoke-anthropic.sh) — an end-to-end smoke
-  test against a live backend that confirms the overall request shape.
+  test against a live Anthropic backend that confirms the overall request shape.
+  [`scripts/smoke-openai.sh`](../scripts/smoke-openai.sh) is the OpenAI mirror.
 
 ## What gets cached
 
@@ -133,10 +191,50 @@ for each unique inventory.
 `--provider off` (the default) is byte-identical to v0.1 output. AI enrichment never
 silently affects operators who have not opted in.
 
+## Debug: payload preview logging
+
+`--log-enrichment-payloads` is a **debug-only** flag that emits one line per
+outbound enrichment HTTP call to stderr in the form:
+
+```
+dashgen[enrich]: provider=openai fn=enrich_titles bytes=1234 preview="…"
+```
+
+The `preview` field is computed from the bytes the enricher is about to send
+to the provider — never from pre-redaction caller input. Anything
+`ValidateBriefs` would have rejected (label values, value-shaped label
+matchers) cannot reach the preview by construction. This invariant is pinned
+by `TestLogEnrichmentPayloads_NeverLogsLabelValues` for both Anthropic and
+OpenAI.
+
+The flag is **hidden from `--help`** unless `DASHGEN_DEBUG=1` is set in the
+environment at command construction. This guards against the "debug paths
+become product paths" drift pattern — operators must not start wiring
+`--log-enrichment-payloads` into CI flows.
+
+To surface and use the flag during local debugging:
+
+```bash
+DASHGEN_DEBUG=1 dashgen generate \
+  --prom-url http://prometheus:9090 \
+  --profile service \
+  --provider openai \
+  --enrich titles,rationale \
+  --log-enrichment-payloads \
+  --out ./dashboards 2>./enrich-trace.log
+```
+
+Do **not** ship CI scripts that pass `--log-enrichment-payloads`. The flag
+exists for ad-hoc local diagnostics only.
+
 ## Adding a custom provider
 
 `internal/enrich/factory.go` is the single extension point. Adding a provider —
-hosted or local — requires exactly two changes inside the `enrich` package:
+hosted or local — requires exactly two changes inside the `enrich` package.
+**Phase 4's OpenAI provider was a one-file addition** (`internal/enrich/openai.go`,
+plus its sibling `_test.go`) — concrete proof that the registry contract holds:
+the second hosted provider needed no changes outside the package, no edits to
+`internal/app/generate`, no edits to `cmd/dashgen`, no new top-level interface.
 
 1. Create `internal/enrich/<name>.go` with a constructor of type
    `func(Spec) (Enricher, error)` that builds the concrete enricher and calls
