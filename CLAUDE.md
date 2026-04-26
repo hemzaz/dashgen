@@ -94,6 +94,7 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
 | [`docs/PRD.md`](docs/PRD.md) | Historical PRD; superseded by `PRODUCT_DOC.md`. |
 | [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) | AI provider setup, redaction contract, extension contract. |
+| [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) | Strategic-revisit doc on recipe authoring & user extensibility (revisit when forcing functions in §9 fire). |
 
 In-flight v0.2 plan: [`.omc/plans/v0.2-remainder.md`](.omc/plans/v0.2-remainder.md).
 
