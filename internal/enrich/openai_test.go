@@ -166,6 +166,56 @@ func TestOpenAIEnricher_RedactionAtProxyBoundary(t *testing.T) {
 	}
 }
 
+// TestOpenAIEnricher_RegistersOverridesPlaceholder pins the
+// last-init-wins override: after openai.go's init() runs, calling the
+// factory with Provider="openai" must return the real *OpenAIEnricher
+// (not the placeholder ErrNotImplementedYet stub from factory.go). With
+// no API key set the override surfaces ErrOpenAINoAPIKey — distinct
+// from ErrNotImplementedYet — proving the registration is live.
+//
+// Mirrors TestAnthropicEnricher_RegistersOverridesPlaceholder. The
+// alphabetic init-order assumption (openai.go > factory.go) is the
+// load-bearing invariant; this test is what catches a future rename or
+// re-ordering that would silently restore the placeholder.
+func TestOpenAIEnricher_RegistersOverridesPlaceholder(t *testing.T) {
+	t.Run("with_api_key", func(t *testing.T) {
+		t.Setenv("OPENAI_API_KEY", "test-key")
+		got, err := New(Spec{Provider: "openai"})
+		if err != nil {
+			t.Fatalf("New(openai) with API key: %v", err)
+		}
+		if errors.Is(err, ErrNotImplementedYet) {
+			t.Errorf("placeholder still wired; expected real constructor")
+		}
+		if _, ok := got.(*OpenAIEnricher); !ok {
+			t.Errorf("got %T; want *OpenAIEnricher", got)
+		}
+		desc := got.Describe()
+		if desc.Provider != "openai" {
+			t.Errorf("Describe().Provider = %q; want %q", desc.Provider, "openai")
+		}
+		if desc.Offline {
+			t.Errorf("Describe().Offline = true; openai is network-bound")
+		}
+	})
+	t.Run("without_api_key", func(t *testing.T) {
+		t.Setenv("OPENAI_API_KEY", "")
+		got, err := New(Spec{Provider: "openai"})
+		if got != nil {
+			t.Errorf("New(openai) without API key returned non-nil enricher; want nil")
+		}
+		if err == nil {
+			t.Fatal("New(openai) without API key returned nil error")
+		}
+		if !errors.Is(err, ErrOpenAINoAPIKey) {
+			t.Errorf("error chain missing ErrOpenAINoAPIKey: %v", err)
+		}
+		if errors.Is(err, ErrNotImplementedYet) {
+			t.Errorf("real constructor leaked ErrNotImplementedYet; placeholder still wins")
+		}
+	})
+}
+
 // TestOpenAIEnricher_RequiresAPIKey asserts the constructor refuses to
 // build an enricher when OPENAI_API_KEY is unset, returning the typed
 // sentinel ErrOpenAINoAPIKey so callers can distinguish "missing creds"

@@ -248,6 +248,15 @@ func openaiWarnIfPromQL(method, text string) {
 	}
 }
 
+// init replaces the placeholder openai constructor (registered in
+// factory.go's init) with the real one. Last-init-wins: openai.go's
+// filename sorts AFTER factory.go alphabetically, so Go's package-init
+// order guarantees this Register call overrides the placeholder. Pinned
+// by TestOpenAIEnricher_RegistersOverridesPlaceholder.
+func init() {
+	Register("openai", newOpenAIEnricher)
+}
+
 // ----- ClassifyUnknown ----------------------------------------------------
 
 // ClassifyUnknown runs ValidateBriefs first (V0.2-PLAN §2.5 redaction
