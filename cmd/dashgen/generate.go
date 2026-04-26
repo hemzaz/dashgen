@@ -3,27 +3,42 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"dashgen/internal/app/generate"
 	"dashgen/internal/config"
+	"dashgen/internal/enrich"
 )
 
 func newGenerateCmd() *cobra.Command {
+	return newGenerateCmdWithRunner(generate.Run)
+}
+
+// newGenerateCmdWithRunner builds the generate sub-command. runFn is the
+// function called with the resolved RunConfig; production code passes
+// generate.Run; tests pass a capturing stub.
+func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) error) *cobra.Command {
 	var (
-		promURL     string
-		fixtureDir  string
-		profile     string
-		outDir      string
-		configPath  string
-		dryRun      bool
-		strict      bool
-		inPlace     bool
-		job         string
-		namespace   string
-		metricMatch string
-		maxPanels   int
+		promURL      string
+		fixtureDir   string
+		profile      string
+		outDir       string
+		configPath   string
+		dryRun       bool
+		strict       bool
+		inPlace      bool
+		job          string
+		namespace    string
+		metricMatch  string
+		maxPanels    int
+		// v0.2 enrichment flags
+		provider      string
+		providerModel string
+		enrichModes   string
+		noEnrichCache bool
+		cacheDir      string
 	)
 
 	cmd := &cobra.Command{
@@ -63,7 +78,30 @@ func newGenerateCmd() *cobra.Command {
 			if maxPanels > 0 {
 				cfg.MaxPanels = maxPanels
 			}
-			return generate.Run(cmd.Context(), cfg)
+			// v0.2 enrichment flags
+			if provider != "" {
+				cfg.Provider = provider
+			}
+			if providerModel != "" {
+				cfg.Model = providerModel
+			}
+			if enrichModes != "" {
+				parts := strings.Split(enrichModes, ",")
+				modes := make([]string, 0, len(parts))
+				for _, p := range parts {
+					if t := strings.TrimSpace(p); t != "" {
+						modes = append(modes, t)
+					}
+				}
+				cfg.EnrichModes = modes
+			}
+			if noEnrichCache {
+				cfg.NoEnrichCache = true
+			}
+			if cacheDir != "" {
+				cfg.CacheDir = cacheDir
+			}
+			return runFn(cmd.Context(), cfg)
 		},
 	}
 
@@ -79,6 +117,12 @@ func newGenerateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&namespace, "namespace", "", "restrict discovery to namespace label")
 	cmd.Flags().StringVar(&metricMatch, "metric-match", "", "metric-name substring filter")
 	cmd.Flags().IntVar(&maxPanels, "max-panels", 0, "override the profile's panel cap (0 = profile default)")
+	// v0.2 enrichment flags
+	cmd.Flags().StringVar(&provider, "provider", "", "enrichment provider: off|"+strings.Join(enrich.Providers(), "|")+" (default: off/noop)")
+	cmd.Flags().StringVar(&providerModel, "provider-model", "", "override the provider's default model id")
+	cmd.Flags().StringVar(&enrichModes, "enrich", "", "comma-separated enrichment modes: titles,rationale,classify,all,none")
+	cmd.Flags().BoolVar(&noEnrichCache, "no-enrich-cache", false, "bypass the enrichment disk cache (force fresh request)")
+	cmd.Flags().StringVar(&cacheDir, "cache-dir", "", "override enrichment cache directory (default: ~/.cache/dashgen/enrich)")
 
 	cmd.SetContext(context.Background())
 	return cmd

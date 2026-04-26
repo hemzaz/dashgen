@@ -46,6 +46,9 @@ type RunConfig struct {
 	// to v0.1. Phase 3+ adds "anthropic" and "openai". Unknown values are
 	// rejected by app/generate as ErrBackend.
 	Provider string
+	// Model overrides the provider's default model id. Empty means "use the
+	// provider default". Ignored when Provider is "" or "off".
+	Model string
 	// EnrichModes is a subset of {titles, rationale, classify,
 	// unknown-grouping, all, none}. Empty (nil) means "none" — no
 	// enrichment is invoked even if a provider is configured. Consumed by

@@ -304,6 +304,7 @@ func firstStrictWarning(d *ir.Dashboard) string {
 func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) (*ir.Dashboard, error) {
 	enricher, err := enrich.New(enrich.Spec{
 		Provider: cfg.Provider,
+		Model:    cfg.Model,
 		CacheDir: cfg.CacheDir,
 		NoCache:  cfg.NoEnrichCache,
 	})
