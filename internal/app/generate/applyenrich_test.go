@@ -3,6 +3,7 @@ package generate
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -139,4 +140,46 @@ func labelFor(s string) string {
 		return "empty"
 	}
 	return s
+}
+
+// TestApplyEnrichment_AnthropicWithoutAPIKey_FailsBeforeRender verifies that
+// when Provider="anthropic" but ANTHROPIC_API_KEY is not set, Run returns an
+// error wrapping ErrBackend AND writes zero output files. The zero-output
+// assertion is the load-bearing "no partial output" contract: the operator
+// must see a clear error without any partially-rendered files on disk.
+//
+// Note: this test does not run in parallel because t.Setenv modifies the
+// process environment, which is shared across goroutines.
+func TestApplyEnrichment_AnthropicWithoutAPIKey_FailsBeforeRender(t *testing.T) {
+	t.Setenv("ANTHROPIC_API_KEY", "")
+
+	outDir := t.TempDir()
+	cfg := &config.RunConfig{
+		FixtureDir: "../../../testdata/fixtures/service-basic",
+		Profile:    "service",
+		OutDir:     outDir,
+		Provider:   "anthropic",
+	}
+
+	err := Run(context.Background(), cfg)
+	if err == nil {
+		t.Fatal("Run with provider=anthropic and no API key should return an error, got nil")
+	}
+	if !errors.Is(err, ErrBackend) {
+		t.Errorf("error should wrap ErrBackend; got: %v", err)
+	}
+
+	// No output files should have been written — enrichment fails before
+	// any rendering or file-write step executes.
+	entries, readErr := os.ReadDir(outDir)
+	if readErr != nil {
+		t.Fatalf("ReadDir(%s): %v", outDir, readErr)
+	}
+	if len(entries) != 0 {
+		names := make([]string, len(entries))
+		for i, e := range entries {
+			names[i] = e.Name()
+		}
+		t.Errorf("expected empty output dir after pre-flight failure, got files: %v", names)
+	}
 }
