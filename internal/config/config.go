@@ -67,6 +67,16 @@ type RunConfig struct {
 	// section preservation across inventory changes is OUT of scope —
 	// see .omc/plans/v0.2-remainder.md §7.2.
 	InPlace bool
+	// LogEnrichmentPayloads is the runtime knob behind the hidden
+	// --log-enrichment-payloads CLI flag. When true AND a non-noop
+	// enrichment provider is selected, the generate pipeline installs a
+	// pre-send PayloadLogger that emits one line per outbound enrichment
+	// HTTP call to stderr (function name, byte count, redacted preview).
+	// DEBUG-ONLY — operators must never wire this into production CI
+	// flows; the flag is hidden from `--help` unless DASHGEN_DEBUG=1 is
+	// set, per the ADVERSARY §6 "debug paths become product paths" guard.
+	// Intentionally not part of the YAML FileConfig schema.
+	LogEnrichmentPayloads bool
 }
 
 // FileConfig is the on-disk YAML schema. Fields are optional; unset fields

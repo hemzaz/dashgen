@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,11 +35,12 @@ func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) err
 		metricMatch  string
 		maxPanels    int
 		// v0.2 enrichment flags
-		provider      string
-		providerModel string
-		enrichModes   string
-		noEnrichCache bool
-		cacheDir      string
+		provider              string
+		providerModel         string
+		enrichModes           string
+		noEnrichCache         bool
+		cacheDir              string
+		logEnrichmentPayloads bool
 	)
 
 	cmd := &cobra.Command{
@@ -101,6 +103,7 @@ func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) err
 			if cacheDir != "" {
 				cfg.CacheDir = cacheDir
 			}
+			cfg.LogEnrichmentPayloads = logEnrichmentPayloads
 			return runFn(cmd.Context(), cfg)
 		},
 	}
@@ -123,6 +126,18 @@ func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) err
 	cmd.Flags().StringVar(&enrichModes, "enrich", "", "comma-separated enrichment modes: titles,rationale,classify,all,none")
 	cmd.Flags().BoolVar(&noEnrichCache, "no-enrich-cache", false, "bypass the enrichment disk cache (force fresh request)")
 	cmd.Flags().StringVar(&cacheDir, "cache-dir", "", "override enrichment cache directory (default: ~/.cache/dashgen/enrich)")
+	// --log-enrichment-payloads is DEBUG-ONLY: when set with a non-noop
+	// provider, the generate pipeline emits a one-line summary (function
+	// name, byte count, redacted preview) per outbound enrichment HTTP
+	// call to stderr. The flag is hidden from --help unless DASHGEN_DEBUG=1
+	// so it cannot drift into production CI flows (ADVERSARY §6 "debug
+	// paths become product paths"). The preview is computed from wire
+	// bytes only — never from pre-redaction caller input — so anything
+	// ValidateBriefs would reject cannot reach the log.
+	cmd.Flags().BoolVar(&logEnrichmentPayloads, "log-enrichment-payloads", false, "DEBUG: log a one-line summary (function, byte count, redacted preview) per outbound enrichment HTTP call to stderr")
+	if os.Getenv("DASHGEN_DEBUG") != "1" {
+		_ = cmd.Flags().MarkHidden("log-enrichment-payloads")
+	}
 
 	cmd.SetContext(context.Background())
 	return cmd

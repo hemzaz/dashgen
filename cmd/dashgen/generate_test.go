@@ -146,6 +146,73 @@ func TestGenerateCmd_UnknownProviderRejected(t *testing.T) {
 	}
 }
 
+// TestGenerateCmd_LogEnrichmentPayloadsHiddenByDefault asserts the hidden-
+// flag contract from ADVERSARY §6: without DASHGEN_DEBUG=1 the
+// --log-enrichment-payloads flag is registered but marked hidden so it
+// cannot drift into operator-facing CI flows. We assert via the pflag
+// Hidden bit (the cobra usage string is generated from this bit, so
+// asserting the bit is the strongest local check).
+func TestGenerateCmd_LogEnrichmentPayloadsHiddenByDefault(t *testing.T) {
+	// Not parallel: t.Setenv mutates the process environment, which is
+	// shared across goroutines — and the flag's hidden state is decided
+	// at command-construction time from the env var.
+	t.Setenv("DASHGEN_DEBUG", "")
+	cmd := newGenerateCmd()
+	flag := cmd.Flags().Lookup("log-enrichment-payloads")
+	if flag == nil {
+		t.Fatal("--log-enrichment-payloads flag is not registered")
+	}
+	if !flag.Hidden {
+		t.Error("--log-enrichment-payloads flag is visible without DASHGEN_DEBUG=1; ADVERSARY §6 drift guard regressed")
+	}
+}
+
+// TestGenerateCmd_LogEnrichmentPayloadsVisibleInDebug asserts the inverse:
+// with DASHGEN_DEBUG=1 set at construction time, the flag is exposed in
+// help output. This is the diagnostic escape hatch the spec requires.
+func TestGenerateCmd_LogEnrichmentPayloadsVisibleInDebug(t *testing.T) {
+	// Not parallel: t.Setenv mutates the process environment.
+	t.Setenv("DASHGEN_DEBUG", "1")
+	cmd := newGenerateCmd()
+	flag := cmd.Flags().Lookup("log-enrichment-payloads")
+	if flag == nil {
+		t.Fatal("--log-enrichment-payloads flag is not registered")
+	}
+	if flag.Hidden {
+		t.Error("--log-enrichment-payloads flag is hidden under DASHGEN_DEBUG=1; expected visible")
+	}
+}
+
+// TestGenerateCmd_LogEnrichmentPayloadsPropagates verifies that the
+// flag value round-trips into the resolved RunConfig regardless of
+// hidden state. cobra's documented behavior is that hidden flags are
+// still parseable on the command line — this test guards against a
+// future MarkHidden upgrade silently breaking that.
+func TestGenerateCmd_LogEnrichmentPayloadsPropagates(t *testing.T) {
+	t.Parallel()
+	var captured *config.RunConfig
+	cmd := newGenerateCmdWithRunner(func(_ context.Context, cfg *config.RunConfig) error {
+		captured = cfg
+		return nil
+	})
+	cmd.SilenceErrors = true
+	cmd.SilenceUsage = true
+	cmd.SetArgs([]string{
+		"--fixture-dir", testFixtureDir,
+		"--out", t.TempDir(),
+		"--log-enrichment-payloads",
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if captured == nil {
+		t.Fatal("runFn was not called")
+	}
+	if !captured.LogEnrichmentPayloads {
+		t.Error("LogEnrichmentPayloads = false; want true after --log-enrichment-payloads")
+	}
+}
+
 // TestGenerateCmd_EnrichModesParse verifies that a comma-separated list with
 // surrounding whitespace is split and trimmed into the correct slice.
 func TestGenerateCmd_EnrichModesParse(t *testing.T) {

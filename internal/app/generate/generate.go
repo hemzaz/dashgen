@@ -321,6 +321,23 @@ func applyEnrichment(_ context.Context, d *ir.Dashboard, cfg *config.RunConfig) 
 		return d, nil
 	}
 
+	// Optional debug-only payload preview logging (Step 5.1). Hosted
+	// providers (anthropic, openai) implement enrich.PayloadLoggerSetter;
+	// the noop path returned above so the type assertion only ever runs
+	// against a real provider. The callback fires once per outbound HTTP
+	// call with (function, byte count, redacted preview); the preview is
+	// derived from wire bytes only, so the redaction guarantee carries
+	// through to stderr. The flag is hidden from --help unless
+	// DASHGEN_DEBUG=1 to prevent the ADVERSARY §6 drift pattern.
+	if cfg.LogEnrichmentPayloads {
+		if setter, ok := enricher.(enrich.PayloadLoggerSetter); ok {
+			provider := desc.Provider
+			setter.SetPayloadLogger(func(fn string, n int, preview string) {
+				fmt.Fprintf(os.Stderr, "dashgen[enrich]: provider=%s fn=%s bytes=%d preview=%q\n", provider, fn, n, preview)
+			})
+		}
+	}
+
 	// No active enricher applies its own mutation logic yet. When the
 	// first real provider lands, branch here on desc.Provider and call
 	// EnrichTitles / EnrichRationale / ClassifyUnknown per cfg.EnrichModes.
