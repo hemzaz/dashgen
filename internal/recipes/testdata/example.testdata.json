@@ -1,0 +1,44 @@
+{
+  "_comment": "Example companion fixture for service_http_rate. See testdata/README.md for schema.",
+  "_recipe": "service_http_rate",
+
+  "positive_metrics": [
+    {
+      "name": "http_requests_total",
+      "type": "counter",
+      "labels": ["job", "method", "route", "status_code"],
+      "traits": ["service_http"]
+    },
+    {
+      "name": "api_requests_total",
+      "type": "counter",
+      "labels": ["job", "handler"],
+      "traits": ["service_http"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: same traits as service_http but histogram, not counter.",
+      "name": "http_request_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["job", "le", "method", "route"],
+      "traits": ["service_http", "latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: counter but missing service_http trait.",
+      "name": "node_cpu_seconds_total",
+      "type": "counter",
+      "labels": ["cpu", "job", "mode"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "HTTP request rate",
+      "query_contains": "rate(",
+      "kind": "timeseries"
+    }
+  ]
+}
