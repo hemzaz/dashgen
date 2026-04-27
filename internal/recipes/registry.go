@@ -38,10 +38,10 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceHTTPLatency())
 	r.Register(NewServiceCPU())
 	r.Register(NewServiceMemory())
-	r.Register(NewServiceGRPCRate())
+	// service_grpc_rate migrated to YAML (T1B.1) — see data/service/service_grpc_rate.yaml.
 	r.Register(NewServiceGRPCErrors())
 	r.Register(NewServiceGRPCLatency())
-	r.Register(NewServiceGoroutines())
+	// service_goroutines migrated to YAML (T1B.1) — see data/service/service_goroutines.yaml.
 	r.Register(NewServiceGCPause())
 	r.Register(NewServiceDBQueryLatency())
 	r.Register(NewServiceTLSExpiry())
@@ -52,6 +52,7 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceKafkaConsumerLag())
 	r.Register(NewServiceRequestSize())
 	r.Register(NewServiceResponseSize())
+	LoadBuiltinYAMLs(r, "service")
 	return r
 }
 
@@ -65,7 +66,7 @@ func NewServiceRegistry() *Registry {
 //   - infra_interrupts                                          (v0.2 Tier-2 stragglers)
 func NewInfraRegistry() *Registry {
 	r := NewRegistry()
-	r.Register(NewInfraCPU())
+	// infra_cpu migrated to YAML (T1B.1) — see data/infra/infra_cpu.yaml.
 	r.Register(NewInfraMemory())
 	r.Register(NewInfraDisk())
 	r.Register(NewInfraNetwork())
@@ -76,8 +77,9 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraConntrack())
 	r.Register(NewInfraDiskIOPS())
 	r.Register(NewInfraDiskIOLatency())
-	r.Register(NewInfraNTPOffset())
+	// infra_ntp_offset migrated to YAML (T1B.1) — see data/infra/infra_ntp_offset.yaml.
 	r.Register(NewInfraInterrupts())
+	LoadBuiltinYAMLs(r, "infra")
 	return r
 }
 
@@ -91,7 +93,7 @@ func NewInfraRegistry() *Registry {
 //   - k8s_scheduler_latency / k8s_coredns                       (v0.2 Tier-2 stragglers)
 func NewK8sRegistry() *Registry {
 	r := NewRegistry()
-	r.Register(NewK8sPodHealth())
+	// k8s_pod_health migrated to YAML (T1B.1) — see data/k8s/k8s_pod_health.yaml.
 	r.Register(NewK8sContainerResources())
 	r.Register(NewK8sRestarts())
 	r.Register(NewK8sDeploymentAvailability())
@@ -103,6 +105,7 @@ func NewK8sRegistry() *Registry {
 	r.Register(NewK8sHPAScaling())
 	r.Register(NewK8sSchedulerLatency())
 	r.Register(NewK8sCoreDNS())
+	LoadBuiltinYAMLs(r, "k8s")
 	return r
 }
 

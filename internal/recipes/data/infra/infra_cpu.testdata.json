@@ -1,0 +1,44 @@
+{
+  "_recipe": "infra_cpu",
+  "_comment": "Exact name match on node_cpu_seconds_total (counter); idle-mode rate yields utilization.",
+
+  "positive_metrics": [
+    {
+      "name": "node_cpu_seconds_total",
+      "type": "counter",
+      "labels": ["cpu", "instance", "job", "mode"],
+      "traits": []
+    },
+    {
+      "name": "node_cpu_seconds_total",
+      "type": "counter",
+      "labels": ["cpu", "instance", "job", "mode", "core"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: gauge with same name; type predicate rejects it.",
+      "name": "node_cpu_seconds_total",
+      "type": "gauge",
+      "labels": ["cpu", "instance", "job", "mode"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: different node_exporter CPU metric (frequency, not utilization).",
+      "name": "node_cpu_frequency_max_hertz",
+      "type": "gauge",
+      "labels": ["cpu", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "CPU utilization",
+      "query_contains": "1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+      "kind": "timeseries"
+    }
+  ]
+}

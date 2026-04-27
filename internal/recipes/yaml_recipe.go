@@ -45,10 +45,13 @@ type YAMLRecipe struct {
 	Path   string
 
 	// Pre-parsed templates per panel index. Lengths always match
-	// len(Spec.Panels) post-construction.
-	titleTmpls  []*Template
-	queryTmpls  []*Template
-	legendTmpls []*Template
+	// len(Spec.Panels) post-construction. rationaleTmpls entries are nil
+	// for panels that omit rationale_template (the default auto-rationale
+	// fallback applies).
+	titleTmpls     []*Template
+	queryTmpls     []*Template
+	legendTmpls    []*Template
+	rationaleTmpls []*Template
 }
 
 // NewYAMLRecipe constructs a YAMLRecipe from a LoadedRecipe. It:
@@ -95,6 +98,18 @@ func NewYAMLRecipe(loaded LoadedRecipe) (*YAMLRecipe, error) {
 			return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
 		}
 		y.legendTmpls = append(y.legendTmpls, legend)
+
+		// rationale_template is optional; nil entry signals "fall back to
+		// the default auto-generated rationale at render time".
+		if panel.RationaleTemplate == "" {
+			y.rationaleTmpls = append(y.rationaleTmpls, nil)
+		} else {
+			rationale, err := Parse(base+".rationale", panel.RationaleTemplate)
+			if err != nil {
+				return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
+			}
+			y.rationaleTmpls = append(y.rationaleTmpls, rationale)
+		}
 	}
 
 	return y, nil
@@ -215,6 +230,12 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 				if err != nil {
 					return
 				}
+				rationaleStr := y.rationale(m, panel, group, pair)
+				if y.rationaleTmpls[i] != nil {
+					if rendered, rerr := y.rationaleTmpls[i].Render(ctx); rerr == nil {
+						rationaleStr = strings.TrimSpace(rendered)
+					}
+				}
 				out = append(out, ir.Panel{
 					UID:        "", // set by synth after dashboardUID computed
 					Title:      strings.TrimSpace(title),
@@ -226,7 +247,7 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 						LegendFormat: strings.TrimSpace(legend),
 						Unit:         panel.Unit,
 					}},
-					Rationale: y.rationale(m, panel, group, pair),
+					Rationale: rationaleStr,
 				})
 			}
 

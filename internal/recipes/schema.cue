@@ -190,6 +190,12 @@ import (
 	// ADVERSARY: T6 — render-time output cap is enforced at render (loader).
 	legend_template: string & strings.MaxRunes(160)
 
+	// Optional per-panel rationale template. When set, replaces the default
+	// auto-generated rationale used in rationale.md (see YAMLRecipe.rationale).
+	// Required for byte-identical migration of Go recipes that emit
+	// hand-written rationale strings (T1B.1+). Sized like description.
+	rationale_template?: string & strings.MaxRunes(280)
+
 	// Optional explicit grouping. If omitted, helper safeGroupLabels() is
 	// invoked at render time with the metric's natural label set.
 	group_by?: [...string]

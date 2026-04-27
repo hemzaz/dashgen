@@ -1,0 +1,44 @@
+{
+  "_recipe": "service_grpc_rate",
+  "_comment": "Counter + service_grpc trait; broken out per gRPC method/service.",
+
+  "positive_metrics": [
+    {
+      "name": "grpc_server_handled_total",
+      "type": "counter",
+      "labels": ["grpc_code", "grpc_method", "grpc_service", "grpc_type", "instance", "job"],
+      "traits": ["service_grpc"]
+    },
+    {
+      "name": "grpc_server_started_total",
+      "type": "counter",
+      "labels": ["grpc_method", "grpc_service", "instance", "job"],
+      "traits": ["service_grpc"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: histogram, not counter — fails type predicate.",
+      "name": "grpc_server_handling_seconds_bucket",
+      "type": "histogram",
+      "labels": ["grpc_method", "grpc_service", "instance", "job", "le"],
+      "traits": ["service_grpc", "latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: counter but missing service_grpc trait.",
+      "name": "http_requests_total",
+      "type": "counter",
+      "labels": ["instance", "job", "method", "route"],
+      "traits": ["service_http"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "gRPC call rate",
+      "query_contains": "rate(grpc_server_handled_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

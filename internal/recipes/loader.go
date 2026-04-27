@@ -186,6 +186,7 @@ type PanelTemplate struct {
 	Unit               string    `json:"unit"`
 	QueryTemplate      string    `json:"query_template"`
 	LegendTemplate     string    `json:"legend_template"`
+	RationaleTemplate  string    `json:"rationale_template,omitempty"`
 	GroupBy            []string  `json:"group_by,omitempty"`
 	PreferredLabels    []string  `json:"preferred_labels,omitempty"`
 	RateWindow         string    `json:"rate_window,omitempty"`

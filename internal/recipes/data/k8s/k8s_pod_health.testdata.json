@@ -1,0 +1,44 @@
+{
+  "_recipe": "k8s_pod_health",
+  "_comment": "Exact name match on kube_pod_status_phase (gauge); pods grouped by namespace+phase.",
+
+  "positive_metrics": [
+    {
+      "name": "kube_pod_status_phase",
+      "type": "gauge",
+      "labels": ["namespace", "phase", "pod"],
+      "traits": []
+    },
+    {
+      "name": "kube_pod_status_phase",
+      "type": "gauge",
+      "labels": ["cluster", "namespace", "phase", "pod"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: different kube-state-metrics gauge (ready conditions, not phase).",
+      "name": "kube_pod_status_ready",
+      "type": "gauge",
+      "labels": ["condition", "namespace", "pod"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: container-level health metric on cAdvisor side.",
+      "name": "kube_pod_container_status_running",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Pods by phase",
+      "query_contains": "sum by (namespace, phase) (kube_pod_status_phase)",
+      "kind": "timeseries"
+    }
+  ]
+}

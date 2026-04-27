@@ -1,0 +1,44 @@
+{
+  "_recipe": "infra_ntp_offset",
+  "_comment": "Exact name match on node_timex_offset_seconds (gauge); rejects similar-named timex metrics.",
+
+  "positive_metrics": [
+    {
+      "name": "node_timex_offset_seconds",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "node_timex_offset_seconds",
+      "type": "gauge",
+      "labels": ["instance", "job", "datacenter"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: different timex gauge (sync status, not offset).",
+      "name": "node_timex_sync_status",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: counter type with same name; type predicate rejects it.",
+      "name": "node_timex_offset_seconds",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "NTP offset",
+      "query_contains": "max by (instance, job) (node_timex_offset_seconds)",
+      "kind": "timeseries"
+    }
+  ]
+}

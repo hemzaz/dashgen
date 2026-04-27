@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_grpc_rate
+  section: traffic
+  profile: service
+  confidence: 0.85
+  tier: v0.3
+  description: "gRPC call rate by service and method."
+  tags: [grpc, traffic, counter]
+
+match:
+  type: counter
+  any_trait: [service_grpc]
+
+panels:
+  - title_template: 'gRPC call rate: {{ .Metric }}'
+    kind: timeseries
+    unit: reqps
+    preferred_labels: [grpc_service, grpc_method]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Counter "{{ .Metric }}" carries gRPC-shape labels; rate over {{ .Window }} grouped by {{ groupBy . }}.'

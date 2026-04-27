@@ -1,0 +1,44 @@
+{
+  "_recipe": "service_goroutines",
+  "_comment": "Exact name match on go_goroutines (gauge); rejects similarly-named runtime metrics.",
+
+  "positive_metrics": [
+    {
+      "name": "go_goroutines",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "go_goroutines",
+      "type": "gauge",
+      "labels": ["instance", "job", "version"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: different runtime gauge (threads, not goroutines).",
+      "name": "go_threads",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: counter type masquerading as the metric name.",
+      "name": "go_goroutines",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Goroutines",
+      "query_contains": "max by (instance, job) (go_goroutines)",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_pod_health
+  section: pods
+  profile: k8s
+  confidence: 0.80
+  tier: v0.3
+  description: "Pods grouped by namespace + phase from kube_pod_status_phase."
+  tags: [pods, kube-state-metrics, gauge]
+
+match:
+  name_equals: kube_pod_status_phase
+
+panels:
+  - title_template: 'Pods by phase: {{ .Metric }}'
+    kind: timeseries
+    unit: short
+    group_by: [namespace, phase]
+    query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'kube-state-metrics gauge "{{ .Metric }}"; summed by namespace+phase gives pod counts per phase.'

@@ -1,0 +1,22 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_goroutines
+  section: saturation
+  profile: service
+  confidence: 0.90
+  tier: v0.3
+  description: "Goroutine-count saturation panel; max-by-instance to surface leaks."
+  tags: [goroutines, runtime, gauge]
+
+match:
+  type: gauge
+  name_equals: go_goroutines
+
+panels:
+  - title_template: 'Goroutines: {{ .Metric }}'
+    kind: timeseries
+    unit: ""
+    query_template: 'max by ({{ groupBy . }}) ({{ .Metric }})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Gauge "{{ .Metric }}" aggregated with max by ({{ groupBy . }}); max rather than sum because each process reports its own count — summing across instances would misleadingly inflate the number.'

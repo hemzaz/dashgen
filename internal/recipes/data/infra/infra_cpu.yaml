@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_cpu
+  section: cpu
+  profile: infra
+  confidence: 0.80
+  tier: v0.3
+  description: "Node CPU utilization derived from idle-mode rate of node_cpu_seconds_total."
+  tags: [cpu, node_exporter, counter]
+
+match:
+  type: counter
+  name_equals: node_cpu_seconds_total
+
+panels:
+  - title_template: 'CPU utilization: {{ .Metric }}'
+    kind: timeseries
+    unit: percentunit
+    group_by: [instance]
+    query_template: '1 - avg by ({{ groupBy . }}) (rate({{ .Metric }}{mode="idle"}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'CPU counter "{{ .Metric }}"; 1 minus the idle-mode rate over {{ .Window }} yields CPU utilization per instance.'

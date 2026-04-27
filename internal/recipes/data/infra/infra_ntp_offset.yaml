@@ -1,0 +1,22 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_ntp_offset
+  section: overview
+  profile: infra
+  confidence: 0.90
+  tier: v0.3
+  description: "Per-host NTP clock drift from node_timex_offset_seconds."
+  tags: [ntp, timex, gauge]
+
+match:
+  type: gauge
+  name_equals: node_timex_offset_seconds
+
+panels:
+  - title_template: 'NTP offset'
+    kind: timeseries
+    unit: s
+    query_template: 'max by ({{ groupBy . }}) ({{ .Metric }})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Gauge "{{ .Metric }}" aggregated with max by ({{ groupBy . }}); max rather than avg because it surfaces the worst-drifting sample when multiple targets share an instance label.'
