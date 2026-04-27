@@ -226,24 +226,21 @@ import (
 // #PairSpec declares a multi-metric join. The join surface is bounded by
 // design: only three modes (suffix_swap, prefix_swap, explicit). No general-
 // purpose join is exposed (DSL §8.3).
+//
+// The mode mutex is encoded structurally as a disjunction over three closed
+// shapes — exactly one of {suffix_swap, prefix_swap, explicit} must be set.
+// CUE keeps the disjunction abstract under standalone `cue vet` and resolves
+// it at unification time when concrete data lands.
 #PairSpec: {
-	// Exactly one of the three modes must be set per pair_with block.
-	suffix_swap?: #SuffixSwap
-	prefix_swap?: #PrefixSwap
-	explicit?:    #ExplicitPair
-
 	// What to do when the pair candidate is absent from the inventory.
 	on_missing: "omit" | "warn" | "use_first_only" | *"omit"
-
-	// Mode mutex — exactly one of {suffix_swap, prefix_swap, explicit}.
-	// Same idiom as the name-predicate mutex above; loader re-validates.
-	_mode_count: len([
-		if suffix_swap != _|_ {1},
-		if prefix_swap != _|_ {1},
-		if explicit != _|_ {1},
-	])
-	_mode_count: 1
-}
+} & ({
+	suffix_swap: #SuffixSwap
+} | {
+	prefix_swap: #PrefixSwap
+} | {
+	explicit: #ExplicitPair
+})
 
 #SuffixSwap: {
 	from_suffix: #MetricNameASCII
