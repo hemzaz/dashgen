@@ -100,6 +100,7 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) | Strategic-revisit doc on recipe authoring & user extensibility (revisit when forcing functions in §9 fire). |
 
 In-flight v0.2 plan: [`.omc/plans/v0.2-remainder.md`](.omc/plans/v0.2-remainder.md).
+v0.3 implementation plan: [`.omc/plans/v0.3-recipes-dsl.md`](.omc/plans/v0.3-recipes-dsl.md) — 8-phase plan with team assignments + per-task DoD for the YAML+CUE+text/template recipe DSL migration.
 
 ---
 
