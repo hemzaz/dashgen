@@ -1,0 +1,459 @@
+# Migration tier table — dashgen v0.3 recipe DSL (T0.4 / Phase 0 design freeze).
+#
+# Maps all 44 original Go recipes to 47 target YAML recipes (3 splits).
+# Authoritative source: docs/RECIPES-DSL.md §12.1
+#
+# Fields:
+#   name                  : recipe name (matches Recipe.Name())
+#   source                : source Go file (relative to repo root)
+#   target                : target YAML path ("" for split-parent tombstones)
+#   tier                  : migration complexity (A | B | C)
+#   schema_features       : CUE constraint names used (valid set from schema.cue)
+#   expected_golden_delta : "none" (golden unchanged) | "regen" (must regenerate)
+#   splits                : child recipe names for split parents; [] otherwise
+#   notes                 : migration notes from §12.1
+#
+# Counts: total=47  regen=3  tier_A=9  tier_B=15  tier_C=23
+# Note: §12.2 phases budget A=10 B=12 C=22; row-level labels in §12.1 yield
+#       A=9 B=15 C=20+3_split_children=23. Discrepancy flagged for team review.
+# Note: infra_network §12.1 inline says "choose single-recipe-two-panel" but
+#       split treatment is required to reach the 47-recipe target count.
+
+recipes:
+
+  # ── service profile ─────────────────────────────────────────────────────────
+
+  - name: service_http_rate
+    source: internal/recipes/service_http_rate.go
+    target: internal/recipes/data/service/service_http_rate.yaml
+    tier: A
+    schema_features: [type, any_trait]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: service_http_errors
+    source: internal/recipes/service_http_errors.go
+    target: internal/recipes/data/service/service_http_errors.yaml
+    tier: B
+    schema_features: [type, has_label_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "uses firstLabelOf for legend"
+
+  - name: service_http_latency
+    source: internal/recipes/service_http_latency.go
+    target: internal/recipes/data/service/service_http_latency.yaml
+    tier: B
+    schema_features: [type, any_trait, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "#HistogramQuantileRecipe; quantiles 0.5/0.95/0.99; bucketName helper"
+
+  - name: service_cpu
+    source: internal/recipes/service_cpu.go
+    target: internal/recipes/data/service/service_cpu.yaml
+    tier: C
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "Tier C-light; one panel, no pair"
+
+  - name: service_memory
+    source: internal/recipes/service_memory.go
+    target: internal/recipes/data/service/service_memory.yaml
+    tier: C
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "same shape as service_cpu; direct"
+
+  - name: service_grpc_rate
+    source: internal/recipes/service_grpc_rate.go
+    target: internal/recipes/data/service/service_grpc_rate.yaml
+    tier: A
+    schema_features: [type, any_trait]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: service_grpc_errors
+    source: internal/recipes/service_grpc_errors.go
+    target: internal/recipes/data/service/service_grpc_errors.yaml
+    tier: B
+    schema_features: [type, any_trait, has_label]
+    expected_golden_delta: none
+    splits: []
+    notes: "grpc_code != 'OK' filter is a query-template detail"
+
+  - name: service_grpc_latency
+    source: internal/recipes/service_grpc_latency.go
+    target: internal/recipes/data/service/service_grpc_latency.yaml
+    tier: B
+    schema_features: [type, any_trait, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "histogram + traits + bucketName; direct"
+
+  - name: service_goroutines
+    source: internal/recipes/service_goroutines.go
+    target: internal/recipes/data/service/service_goroutines.yaml
+    tier: A
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: service_gc_pause
+    source: internal/recipes/service_gc_pause.go
+    target: internal/recipes/data/service/service_gc_pause.yaml
+    tier: C
+    schema_features: [name_equals, requires_metric_type]
+    expected_golden_delta: none
+    splits: []
+    notes: "type-dispatch via requires_metric_type; §5.2.6"
+
+  - name: service_db_query_latency
+    source: internal/recipes/service_db_query_latency.go
+    target: internal/recipes/data/service/service_db_query_latency.yaml
+    tier: C
+    schema_features: [type, any_trait, none_trait, name_contains_any, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "none_trait + name_contains_any exclusion; §5.2.5"
+
+  - name: service_tls_expiry
+    source: internal/recipes/service_tls_expiry.go
+    target: internal/recipes/data/service/service_tls_expiry.yaml
+    tier: B
+    schema_features: [type, name_has_suffix]
+    expected_golden_delta: none
+    splits: []
+    notes: "name_has_suffix (3 alternatives via any_of); (m - time()) / 86400 in template"
+
+  - name: service_cache_hits
+    source: internal/recipes/service_cache_hits.go
+    target: internal/recipes/data/service/service_cache_hits.yaml
+    tier: C
+    schema_features: [name_has_suffix, pair_with.suffix_swap]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: suffix_swap _cache_hits_total <-> _cache_misses_total; direct"
+
+  - name: service_client_http
+    source: internal/recipes/service_client_http.go
+    target: internal/recipes/data/service/service_client_http.yaml
+    tier: C
+    schema_features: [type, name_contains, has_label_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: service_db_pool
+    source: internal/recipes/service_db_pool.go
+    target: ""
+    tier: C
+    schema_features: [type, name_equals_any, pair_with.suffix_swap]
+    expected_golden_delta: regen
+    splits:
+      - service_db_pool_go_sql_stats
+      - service_db_pool_pgxpool
+    notes: "split into two recipes per §8.3; golden must be regenerated"
+
+  - name: service_job_success
+    source: internal/recipes/service_job_success.go
+    target: internal/recipes/data/service/service_job_success.yaml
+    tier: C
+    schema_features: [type, name_has_suffix, pair_with.suffix_swap, on_missing]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: suffix_swap _jobs_succeeded_total <-> _jobs_failed_total; on_missing: warn"
+
+  - name: service_kafka_consumer_lag
+    source: internal/recipes/service_kafka_lag.go
+    target: internal/recipes/data/service/service_kafka_consumer_lag.yaml
+    tier: B
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct; source file name is service_kafka_lag.go"
+
+  - name: service_request_size
+    source: internal/recipes/service_request_size.go
+    target: internal/recipes/data/service/service_request_size.yaml
+    tier: B
+    schema_features: [type, name_has_suffix, has_label_any, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "§5.2.3; direct"
+
+  - name: service_response_size
+    source: internal/recipes/service_response_size.go
+    target: internal/recipes/data/service/service_response_size.yaml
+    tier: B
+    schema_features: [type, name_has_suffix, has_label_any, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "same shape as request_size; direct"
+
+  # ── infra profile ────────────────────────────────────────────────────────────
+
+  - name: infra_cpu
+    source: internal/recipes/infra_cpu.go
+    target: internal/recipes/data/infra/infra_cpu.yaml
+    tier: A
+    schema_features: [type, name_equals, preferred_labels]
+    expected_golden_delta: none
+    splits: []
+    notes: "mode breakdown via preferred_labels; direct"
+
+  - name: infra_memory
+    source: internal/recipes/infra_memory.go
+    target: internal/recipes/data/infra/infra_memory.yaml
+    tier: C
+    schema_features: [type, name_equals_any, pair_with.explicit]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: explicit node_memory_MemTotal_bytes <-> node_memory_MemAvailable_bytes; direct"
+
+  - name: infra_disk
+    source: internal/recipes/infra_disk.go
+    target: internal/recipes/data/infra/infra_disk.yaml
+    tier: C
+    schema_features: [type, name_equals_any, pair_with.suffix_swap]
+    expected_golden_delta: none
+    splits: []
+    notes: "mirror of filesystem_usage; kept separate to preserve current goldens"
+
+  - name: infra_network
+    source: internal/recipes/infra_network.go
+    target: ""
+    tier: C
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: regen
+    splits:
+      - infra_network_receive
+      - infra_network_transmit
+    notes: "§12.1 inline suggests single-recipe-two-panel; treated as split to reach 47-recipe count — requires team-lead resolution"
+
+  - name: infra_load
+    source: internal/recipes/infra_load.go
+    target: internal/recipes/data/infra/infra_load.yaml
+    tier: A
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "one recipe, multiple panels; direct"
+
+  - name: infra_filesystem_usage
+    source: internal/recipes/infra_filesystem_usage.go
+    target: internal/recipes/data/infra/infra_filesystem_usage.yaml
+    tier: C
+    schema_features: [type, name_equals, pair_with.suffix_swap]
+    expected_golden_delta: none
+    splits: []
+    notes: "§5.2.4; direct"
+
+  - name: infra_file_descriptors
+    source: internal/recipes/infra_file_descriptors.go
+    target: internal/recipes/data/infra/infra_file_descriptors.yaml
+    tier: C
+    schema_features: [type, name_equals, pair_with.explicit]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: explicit process_open_fds <-> process_max_fds; direct"
+
+  - name: infra_nic_errors
+    source: internal/recipes/infra_nic_errors.go
+    target: internal/recipes/data/infra/infra_nic_errors.yaml
+    tier: B
+    schema_features: [type, name_matches]
+    expected_golden_delta: none
+    splits: []
+    notes: "name_matches: ^node_network_.*_(errs|drop)_total$; direct"
+
+  - name: infra_conntrack
+    source: internal/recipes/infra_conntrack.go
+    target: internal/recipes/data/infra/infra_conntrack.yaml
+    tier: C
+    schema_features: [type, name_equals, pair_with.explicit]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: explicit node_nf_conntrack_entries <-> node_nf_conntrack_entries_limit; direct"
+
+  - name: infra_disk_iops
+    source: internal/recipes/infra_disk_iops.go
+    target: internal/recipes/data/infra/infra_disk_iops.yaml
+    tier: B
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "one recipe, two panels; direct"
+
+  - name: infra_disk_io_latency
+    source: internal/recipes/infra_disk_io_latency.go
+    target: internal/recipes/data/infra/infra_disk_io_latency.yaml
+    tier: B
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: none
+    splits: []
+    notes: "weighted variant via second panel; direct"
+
+  - name: infra_ntp_offset
+    source: internal/recipes/infra_ntp_offset.go
+    target: internal/recipes/data/infra/infra_ntp_offset.yaml
+    tier: A
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: infra_interrupts
+    source: internal/recipes/infra_interrupts.go
+    target: internal/recipes/data/infra/infra_interrupts.yaml
+    tier: A
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  # ── k8s profile ──────────────────────────────────────────────────────────────
+
+  - name: k8s_pod_health
+    source: internal/recipes/k8s_pod_health.go
+    target: internal/recipes/data/k8s/k8s_pod_health.yaml
+    tier: A
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: k8s_container_resources
+    source: internal/recipes/k8s_container_resources.go
+    target: ""
+    tier: C
+    schema_features: [type, name_equals_any]
+    expected_golden_delta: regen
+    splits:
+      - k8s_container_cpu
+      - k8s_container_memory
+    notes: "split into two recipes per §8.3; golden must be regenerated"
+
+  - name: k8s_restarts
+    source: internal/recipes/k8s_restarts.go
+    target: internal/recipes/data/k8s/k8s_restarts.yaml
+    tier: A
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: k8s_deployment_availability
+    source: internal/recipes/k8s_deployment_availability.go
+    target: internal/recipes/data/k8s/k8s_deployment_availability.yaml
+    tier: C
+    schema_features: [type, name_equals, pair_with.explicit]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: explicit kube_deployment_status_replicas_available <-> kube_deployment_spec_replicas; direct"
+
+  - name: k8s_node_conditions
+    source: internal/recipes/k8s_node_conditions.go
+    target: internal/recipes/data/k8s/k8s_node_conditions.yaml
+    tier: C
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "multiple panels with fixed condition filters; no pair_with; §5.2.7"
+
+  - name: k8s_pvc_usage
+    source: internal/recipes/k8s_pvc_usage.go
+    target: internal/recipes/data/k8s/k8s_pvc_usage.yaml
+    tier: C
+    schema_features: [name_equals, pair_with.suffix_swap]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: suffix_swap _available_bytes <-> _capacity_bytes; direct"
+
+  - name: k8s_oom_kills
+    source: internal/recipes/k8s_oom_kills.go
+    target: internal/recipes/data/k8s/k8s_oom_kills.yaml
+    tier: B
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "query-template embeds { reason='OOMKilled' } literal; direct"
+
+  - name: k8s_apiserver_latency
+    source: internal/recipes/k8s_apiserver_latency.go
+    target: internal/recipes/data/k8s/k8s_apiserver_latency.yaml
+    tier: B
+    schema_features: [type, name_equals, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "group by verb/resource; direct"
+
+  - name: k8s_etcd_commit
+    source: internal/recipes/k8s_etcd_commit.go
+    target: internal/recipes/data/k8s/k8s_etcd_commit.yaml
+    tier: B
+    schema_features: [type, name_equals, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "direct"
+
+  - name: k8s_hpa_scaling
+    source: internal/recipes/k8s_hpa_scaling.go
+    target: internal/recipes/data/k8s/k8s_hpa_scaling.yaml
+    tier: C
+    schema_features: [type, name_equals, pair_with.suffix_swap]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: suffix_swap _current_replicas <-> _desired_replicas; direct"
+
+  - name: k8s_coredns
+    source: internal/recipes/k8s_coredns.go
+    target: internal/recipes/data/k8s/k8s_coredns.yaml
+    tier: C
+    schema_features: [name_equals_any, pair_with.explicit, on_missing]
+    expected_golden_delta: none
+    splits: []
+    notes: "pair_with: explicit coredns_dns_requests_total; on_missing: warn; direct"
+
+  - name: k8s_scheduler_latency
+    source: internal/recipes/k8s_scheduler_latency.go
+    target: internal/recipes/data/k8s/k8s_scheduler_latency.yaml
+    tier: B
+    schema_features: [type, name_equals, has_label, quantiles]
+    expected_golden_delta: none
+    splits: []
+    notes: "histogram + bucketName + group by result; direct"
+
+  # ── split child entries (net-new; second child referenced only in parent splits[]) ──
+
+  - name: service_db_pool_go_sql_stats
+    source: internal/recipes/service_db_pool.go
+    target: internal/recipes/data/service/service_db_pool_go_sql_stats.yaml
+    tier: C
+    schema_features: [type, name_equals_any, pair_with.suffix_swap]
+    expected_golden_delta: none
+    splits: []
+    notes: "first child of service_db_pool split; net-new YAML recipe; second child service_db_pool_pgxpool referenced in parent splits[]"
+
+  - name: infra_network_receive
+    source: internal/recipes/infra_network.go
+    target: internal/recipes/data/infra/infra_network_receive.yaml
+    tier: C
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "first child of infra_network split; net-new YAML recipe; second child infra_network_transmit referenced in parent splits[]"
+
+  - name: k8s_container_cpu
+    source: internal/recipes/k8s_container_resources.go
+    target: internal/recipes/data/k8s/k8s_container_cpu.yaml
+    tier: C
+    schema_features: [type, name_equals]
+    expected_golden_delta: none
+    splits: []
+    notes: "first child of k8s_container_resources split; net-new YAML recipe; second child k8s_container_memory referenced in parent splits[]"
