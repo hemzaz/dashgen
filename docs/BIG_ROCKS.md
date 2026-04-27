@@ -1,5 +1,21 @@
 # Big Rocks: Recipe Authoring & User Extensibility
 
+> **Superseded (2026-04-27) by v0.3 DRAFT specs**, after the owner pushed back
+> on the "stay in Go" conclusion: forking + recompiling per recipe was rejected
+> as bad practice, and user independence was prioritized over maintainer
+> simplicity. The v0.3 path is the **two-tier hybrid this doc rejected** in §3:
+> YAML wire format + CUE-defined schema + Go `text/template` rendering, with a
+> bounded set of join primitives that cover all 22 Tier-C recipes. See:
+>
+> - [`RECIPES-DSL.md`](RECIPES-DSL.md) — full spec, schema, migration of all 44 recipes.
+> - [`RECIPES-DSL-ADVERSARY.md`](RECIPES-DSL-ADVERSARY.md) — DSL threat model.
+> - [`RECIPES-CLI.md`](RECIPES-CLI.md) — `dashgen recipe ...` subcommand surface.
+>
+> The strategic argument below remains the best summary of *why the original
+> recommendation was conservative* — it's preserved for the historical record
+> and for the "don't grow a worse Starlark" discipline that the v0.3 schema
+> still respects.
+
 > Strategic-revisit document. Not committed to action. Authored 2026-04-26
 > by a parallel thinker team (architect / critic / analyst). Review at the
 > end of v0.2 or when one of the explicit forcing functions in §9 fires.

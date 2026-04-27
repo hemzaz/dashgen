@@ -424,6 +424,9 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 | `docs/ROADMAP.md` | Staged timeline + cross-stage rules |
 | `docs/RECIPES.md` | **Recipe catalog + authoring contract + test matrix** |
 | `docs/V0.2-PLAN.md` | **v0.2 enrichment contract + AI boundary + phased delivery** |
+| `docs/RECIPES-DSL.md` | **v0.3 DRAFT.** YAML wire + CUE schema + text/template runtime; migration plan for all 44 → 47 recipes; supersedes the Go-recipe authoring contract once Phase 0 ships |
+| `docs/RECIPES-DSL-ADVERSARY.md` | **v0.3 DRAFT.** DSL threat model: 20 threats, 15 invariants, adversary corpus, reviewer audit checklist |
+| `docs/RECIPES-CLI.md` | **v0.3 DRAFT.** `dashgen recipe ...` 8-subcommand surface (init / scaffold / lint / list / show / test / explain / diff) + 10 CLI-surface threats |
 | `docs/AI-PROVIDERS.md` | **Anthropic + OpenAI + ollama provider matrix:** setup, env vars, default models, redaction contract, cache behavior, failure modes |
 | `docs/lint.md` | `dashgen lint` check catalog + JSON output schema (Phase 6) |
 | `docs/coverage.md` | `dashgen coverage` report schema + family-grouping behavior (Phase 6) |

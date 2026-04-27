@@ -87,7 +87,10 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design + package responsibilities. |
 | [`docs/STRUCTURE.md`](docs/STRUCTURE.md) | Repo layout + dependency direction. |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Staged timeline + cross-stage rules. |
-| [`docs/RECIPES.md`](docs/RECIPES.md) | Recipe catalog + authoring contract + test matrix. |
+| [`docs/RECIPES.md`](docs/RECIPES.md) | Recipe catalog + authoring contract + test matrix (current Go-recipe contract). |
+| [`docs/RECIPES-DSL.md`](docs/RECIPES-DSL.md) | **v0.3 DRAFT.** YAML wire + CUE schema + text/template runtime spec; full migration plan for all 44 → 47 recipes. Supersedes the Go-recipe contract once Phase 0 of the DSL plan ships. |
+| [`docs/RECIPES-DSL-ADVERSARY.md`](docs/RECIPES-DSL-ADVERSARY.md) | **v0.3 DRAFT.** DSL threat model: 20 threats, 15 invariants, adversary corpus, reviewer checklist. |
+| [`docs/RECIPES-CLI.md`](docs/RECIPES-CLI.md) | **v0.3 DRAFT.** `dashgen recipe ...` 8-subcommand spec (init / scaffold / lint / list / show / test / explain / diff) + 10-threat CLI adversary catalog. |
 | [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md) | v0.2 enrichment contract + AI boundary + phased delivery. |
 | [`docs/lint.md`](docs/lint.md) | `dashgen lint` check catalog + JSON output schema (Phase 6). |
 | [`docs/coverage.md`](docs/coverage.md) | `dashgen coverage` report schema + family-grouping behavior (Phase 6). |
