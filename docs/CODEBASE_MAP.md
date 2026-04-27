@@ -424,6 +424,8 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 | `docs/ROADMAP.md` | Staged timeline + cross-stage rules |
 | `docs/RECIPES.md` | **Recipe catalog + authoring contract + test matrix** |
 | `docs/V0.2-PLAN.md` | **v0.2 enrichment contract + AI boundary + phased delivery** |
+| `docs/V0.2-REMAINDER.md` | v0.2 RALPLAN-DR consensus plan (historical; v0.2.0 shipped) |
+| `docs/V0.3-PLAN.md` | **v0.3 implementation plan** — 8-phase rollout, team assignments, per-task DoD, risk register, release-level acceptance |
 | `docs/RECIPES-DSL.md` | **v0.3 DRAFT.** YAML wire + CUE schema + text/template runtime; migration plan for all 44 → 47 recipes; supersedes the Go-recipe authoring contract once Phase 0 ships |
 | `docs/RECIPES-DSL-ADVERSARY.md` | **v0.3 DRAFT.** DSL threat model: 20 threats, 15 invariants, adversary corpus, reviewer audit checklist |
 | `docs/RECIPES-CLI.md` | **v0.3 DRAFT.** `dashgen recipe ...` 8-subcommand surface (init / scaffold / lint / list / show / test / explain / diff) + 10 CLI-surface threats |

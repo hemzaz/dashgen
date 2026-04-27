@@ -92,6 +92,8 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/RECIPES-DSL-ADVERSARY.md`](docs/RECIPES-DSL-ADVERSARY.md) | **v0.3 DRAFT.** DSL threat model: 20 threats, 15 invariants, adversary corpus, reviewer checklist. |
 | [`docs/RECIPES-CLI.md`](docs/RECIPES-CLI.md) | **v0.3 DRAFT.** `dashgen recipe ...` 8-subcommand spec (init / scaffold / lint / list / show / test / explain / diff) + 10-threat CLI adversary catalog. |
 | [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md) | v0.2 enrichment contract + AI boundary + phased delivery. |
+| [`docs/V0.2-REMAINDER.md`](docs/V0.2-REMAINDER.md) | v0.2 RALPLAN-DR consensus implementation plan (historical; everything in scope shipped at v0.2.0). |
+| [`docs/V0.3-PLAN.md`](docs/V0.3-PLAN.md) | **v0.3 implementation plan** — 8-phase rollout for the recipe DSL migration with team assignments, per-task DoD, risk register, release acceptance criteria. Companion to the three RECIPES-DSL specs above. |
 | [`docs/lint.md`](docs/lint.md) | `dashgen lint` check catalog + JSON output schema (Phase 6). |
 | [`docs/coverage.md`](docs/coverage.md) | `dashgen coverage` report schema + family-grouping behavior (Phase 6). |
 | [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
@@ -99,8 +101,7 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) | AI provider setup, redaction contract, extension contract. |
 | [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) | Strategic-revisit doc on recipe authoring & user extensibility (revisit when forcing functions in §9 fire). |
 
-In-flight v0.2 plan: [`.omc/plans/v0.2-remainder.md`](.omc/plans/v0.2-remainder.md).
-v0.3 implementation plan: [`.omc/plans/v0.3-recipes-dsl.md`](.omc/plans/v0.3-recipes-dsl.md) — 8-phase plan with team assignments + per-task DoD for the YAML+CUE+text/template recipe DSL migration.
+All v0.2 and v0.3 design + implementation plans live under `docs/` as tracked content (see the index above).
 
 ---
 
