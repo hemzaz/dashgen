@@ -1,0 +1,29 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_db_query_latency
+  section: latency
+  profile: service
+  confidence: 0.80
+  tier: v0.2-T2
+
+match:
+  all_of:
+    - type: histogram
+    - any_trait: [latency_histogram]
+    - name_contains_any: [query, db, sql]
+    - none_trait: [service_http, service_grpc]
+
+panels:
+  - title_template: "DB query latency p99"
+    kind: timeseries
+    unit: seconds
+    quantiles: [0.99]
+    preferred_labels: [database, table, operation]
+    query_template: |
+      histogram_quantile(0.99,
+        sum by ({{ groupByWith . "le" }}) (
+          rate({{ bucketName .Metric }}{ {{ .ScopeFilter }} }[{{ .Window }}])
+        )
+      )
+    legend_template: "{{ legendFor . }}"

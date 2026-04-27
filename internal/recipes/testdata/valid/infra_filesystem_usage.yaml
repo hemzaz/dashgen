@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_filesystem_usage
+  section: disk
+  profile: infra
+  confidence: 0.85
+  tier: v0.2-T1
+
+pair_with:
+  suffix_swap: { from_suffix: "_size_bytes", to_suffix: "_avail_bytes" }
+  on_missing: omit
+
+match:
+  all_of:
+    - type: gauge
+    - name_equals: node_filesystem_size_bytes
+
+panels:
+  - title_template: "Filesystem usage by mountpoint"
+    kind: timeseries
+    unit: ratio
+    preferred_labels: [instance, mountpoint, fstype]
+    requires_pair: true
+    query_template: |
+      ({{ .Metric }}{ {{ .ScopeFilter }} } - {{ .Pair.Name }}{ {{ .ScopeFilter }} })
+      / {{ .Metric }}{ {{ .ScopeFilter }} }
+    legend_template: "{{ legendFor . }} {{ index .Labels \"mountpoint\" }}"

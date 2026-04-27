@@ -1,0 +1,29 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_request_size
+  section: saturation
+  profile: service
+  confidence: 0.75
+  tier: v0.2-T2
+
+match:
+  all_of:
+    - type: histogram
+    - any_of:
+        - { name_has_suffix: "_request_size_bytes" }
+        - { name_has_suffix: "_request_size_bytes_bucket" }
+    - has_label_any: [method, handler]
+
+panels:
+  - title_template: "Request size p99"
+    kind: timeseries
+    unit: bytes
+    quantiles: [0.99]
+    query_template: |
+      histogram_quantile(0.99,
+        sum by ({{ groupByWith . "le" }}) (
+          rate({{ bucketName (stripSuffix .Metric "_bucket") }}{ {{ .ScopeFilter }} }[{{ .Window }}])
+        )
+      )
+    legend_template: "{{ legendFor . }}"

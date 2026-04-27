@@ -1,0 +1,25 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_http_rate
+  section: traffic
+  profile: service
+  confidence: 0.85
+  tier: v0.1
+  description: "HTTP request rate by route + status code."
+  tags: [http, traffic, counter]
+
+match:
+  type: counter
+  any_trait: [service_http]
+
+panels:
+  - title_template: "HTTP request rate"
+    kind: timeseries
+    unit: ops/sec
+    preferred_labels: [method, route, status_code]
+    query_template: |
+      sum by ({{ groupBy . }}) (
+        rate({{ .Metric }}{ {{ .ScopeFilter }} }[{{ .Window }}])
+      )
+    legend_template: "{{ legendFor . }}"

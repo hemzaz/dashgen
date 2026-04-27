@@ -1,0 +1,49 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_node_conditions
+  section: resources
+  profile: k8s
+  confidence: 0.90
+  tier: v0.2-T1
+
+match:
+  type: gauge
+  name_equals: kube_node_status_condition
+
+panels:
+  - title_template: "Node Ready"
+    kind: stat
+    unit: count
+    query_template: |
+      sum by (node) (
+        {{ .Metric }}{ condition="Ready", status="true", {{ .ScopeFilter }} }
+      )
+    legend_template: "{{ legendFor . }}"
+
+  - title_template: "Node DiskPressure"
+    kind: stat
+    unit: count
+    query_template: |
+      sum by (node) (
+        {{ .Metric }}{ condition="DiskPressure", status="true", {{ .ScopeFilter }} }
+      )
+    legend_template: "{{ legendFor . }}"
+
+  - title_template: "Node MemoryPressure"
+    kind: stat
+    unit: count
+    query_template: |
+      sum by (node) (
+        {{ .Metric }}{ condition="MemoryPressure", status="true", {{ .ScopeFilter }} }
+      )
+    legend_template: "{{ legendFor . }}"
+
+  - title_template: "Node PIDPressure"
+    kind: stat
+    unit: count
+    query_template: |
+      sum by (node) (
+        {{ .Metric }}{ condition="PIDPressure", status="true", {{ .ScopeFilter }} }
+      )
+    legend_template: "{{ legendFor . }}"

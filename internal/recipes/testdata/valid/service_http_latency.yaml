@@ -1,0 +1,25 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_http_latency
+  section: latency
+  profile: service
+  confidence: 0.85
+  tier: v0.1
+
+match:
+  all_traits: [service_http, latency_histogram]
+
+panels:
+  - title_template: "HTTP latency p{{ .Quantile100 }}"
+    kind: timeseries
+    unit: seconds
+    quantiles: [0.5, 0.95, 0.99]
+    preferred_labels: [method, route]
+    query_template: |
+      histogram_quantile({{ .Quantile }},
+        sum by ({{ groupByWith . "le" }}) (
+          rate({{ bucketName .Metric }}{ {{ .ScopeFilter }} }[{{ .Window }}])
+        )
+      )
+    legend_template: "{{ legendFor . }}"

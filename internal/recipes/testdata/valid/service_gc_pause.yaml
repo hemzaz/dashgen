@@ -1,0 +1,37 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_gc_pause
+  section: latency
+  profile: service
+  confidence: 0.85
+  tier: v0.2-T1
+
+match:
+  any_of:
+    - { name_equals: "go_gc_duration_seconds", type: summary }
+    - { name_equals: "go_gc_duration_seconds", type: histogram }
+
+panels:
+  - title_template: "GC pause p99 (summary)"
+    kind: timeseries
+    unit: seconds
+    requires_metric_type: summary
+    query_template: |
+      max by ({{ groupByWith . "quantile" }}) (
+        {{ .Metric }}{ quantile="0.99", {{ .ScopeFilter }} }
+      )
+    legend_template: "{{ legendFor . }}"
+
+  - title_template: "GC pause p99 (histogram)"
+    kind: timeseries
+    unit: seconds
+    requires_metric_type: histogram
+    quantiles: [0.99]
+    query_template: |
+      histogram_quantile(0.99,
+        sum by ({{ groupByWith . "le" }}) (
+          rate({{ bucketName .Metric }}{ {{ .ScopeFilter }} }[{{ .Window }}])
+        )
+      )
+    legend_template: "{{ legendFor . }}"
