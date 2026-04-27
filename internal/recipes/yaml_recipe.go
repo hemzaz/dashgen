@@ -235,7 +235,7 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 				Type:            string(m.Type),
 				Labels:          labelMap,
 				LabelList:       labelList,
-				ScopeFilter:     "", // synth supplies via $vars at render time
+				ScopeFilter:     snapshot.ScopeFilter, // threaded from synth (T1B.1)
 				Window:          window,
 				GroupBy:         group,
 				PreferredLabels: panel.PreferredLabels,

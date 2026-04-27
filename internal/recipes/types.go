@@ -53,6 +53,16 @@ func (c ClassifiedMetricView) HasLabel(name string) bool {
 type ClassifiedInventorySnapshot struct {
 	Inventory *inventory.MetricInventory
 	Metrics   []ClassifiedMetricView
+
+	// ScopeFilter is the pre-rendered Prometheus matcher fragment threaded
+	// through to v0.3 YAML recipes via RenderContext.ScopeFilter. Today's
+	// Go recipes (v0.1/v0.2) emit no scope filter at all, so synth populates
+	// this with the empty string and YAML recipes that need byte-identical
+	// goldens omit the matcher block from their query_template. When synth
+	// gains a per-recipe scope context (Phase 4A+), populating this field
+	// flows the value through every YAMLRecipe.BuildPanels invocation
+	// without further plumbing. See docs/V0.3-PLAN.md §10 carry-forward #5.
+	ScopeFilter string
 }
 
 // Recipe builds zero or more panels for a profile out of a classified

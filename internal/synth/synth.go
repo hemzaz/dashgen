@@ -130,6 +130,11 @@ func snapshotOf(inv *classify.ClassifiedInventory) recipes.ClassifiedInventorySn
 	return recipes.ClassifiedInventorySnapshot{
 		Inventory: inv.Inventory,
 		Metrics:   views,
+		// ScopeFilter is empty in v0.3.0: existing Go recipes (v0.1/v0.2)
+		// emit no scope-matcher fragment, so the threaded value preserves
+		// byte-identical output. When synth gains a per-recipe scope
+		// context, populate this here. See docs/V0.3-PLAN.md §10 #5.
+		ScopeFilter: "",
 	}
 }
 

@@ -227,6 +227,59 @@ func TestYAMLRecipe_PanelKindMapping(t *testing.T) {
 }
 
 // =============================================================================
+// TestYAMLRecipe_ScopeFilterThreaded
+// =============================================================================
+
+// TestYAMLRecipe_ScopeFilterThreaded verifies that the scope-filter value
+// supplied via ClassifiedInventorySnapshot.ScopeFilter flows through to
+// RenderContext.ScopeFilter and reaches the rendered query string. T1B.1
+// prerequisite: synth.snapshotOf populates this field; YAMLRecipe.BuildPanels
+// must read it.
+func TestYAMLRecipe_ScopeFilterThreaded(t *testing.T) {
+	loaded := loadFixture(t, "service_http_rate.yaml")
+	yr, err := NewYAMLRecipe(loaded)
+	if err != nil {
+		t.Fatalf("NewYAMLRecipe: %v", err)
+	}
+
+	hit := makeView(
+		"http_requests_total",
+		inventory.MetricTypeCounter,
+		[]string{"service_http"},
+		[]string{"job", "instance", "method", "route", "status_code"},
+	)
+
+	// Case 1 — empty ScopeFilter (today's Go-recipe baseline).
+	emptySnap := ClassifiedInventorySnapshot{
+		Metrics:     []ClassifiedMetricView{hit},
+		ScopeFilter: "",
+	}
+	emptyPanels := yr.BuildPanels(emptySnap, profiles.ProfileService)
+	if len(emptyPanels) == 0 {
+		t.Fatal("expected at least one panel from empty-ScopeFilter snapshot")
+	}
+	emptyExpr := emptyPanels[0].Queries[0].Expr
+	if strings.Contains(emptyExpr, `job="$job"`) {
+		t.Errorf("empty ScopeFilter must NOT inject job=\"$job\": %q", emptyExpr)
+	}
+
+	// Case 2 — populated ScopeFilter (forward-compatible synth path).
+	scoped := `job="$job"`
+	popSnap := ClassifiedInventorySnapshot{
+		Metrics:     []ClassifiedMetricView{hit},
+		ScopeFilter: scoped,
+	}
+	popPanels := yr.BuildPanels(popSnap, profiles.ProfileService)
+	if len(popPanels) == 0 {
+		t.Fatal("expected at least one panel from populated-ScopeFilter snapshot")
+	}
+	popExpr := popPanels[0].Queries[0].Expr
+	if !strings.Contains(popExpr, scoped) {
+		t.Errorf("populated ScopeFilter %q not threaded into rendered expr: %q", scoped, popExpr)
+	}
+}
+
+// =============================================================================
 // TestYAMLRecipe_FormatQuantile
 // =============================================================================
 
