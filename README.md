@@ -216,18 +216,19 @@ the same lookup the `--fixture-dir` backend uses at replay time.
 
 ## Roadmap
 
-- **v0.1** (current): deterministic core, three profiles, three CLI
+- **v0.1** (shipped): deterministic core, three profiles, three CLI
   commands, three-file output. Validated end-to-end against the public
   Prometheus demo + Grafana.
-- **v0.2** (in progress — Phase 3 Anthropic and Phase 4 OpenAI enrichers
-  shipped): optional AI enrichment (titles, rationale, unknown-metric grouping)
-  behind a `--provider` flag, plus a broader recipe catalog. Both
-  `--provider anthropic` and `--provider openai` are live and share the same
-  redaction contract and on-disk cache; remaining work is Phase 5
-  (unknown-family grouping) and Phase 6 (lint/coverage hardening). Detailed
+- **v0.2** (current): optional AI enrichment (titles + rationale) behind a
+  `--provider` flag (`anthropic` and `openai` both live, shared redaction
+  contract and on-disk cache), expanded recipe catalog (44 recipes across
+  service / infra / k8s profiles), `dashgen lint` (offline bundle audit, seven
+  check classes) and `dashgen coverage` (metrics coverage report). Detailed
   plan in [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md); recipe catalog in
   [`docs/RECIPES.md`](docs/RECIPES.md). Stage definitions in
   [`docs/ROADMAP.md`](docs/ROADMAP.md).
+- **v0.3** (planned): unknown-family metric grouping, user-extensible recipe
+  catalog, and further enrichment improvements.
 
 AI enrichment in v0.2 is strictly non-overriding: it cannot generate
 PromQL, cannot upgrade a refused verdict, and cannot bypass the
