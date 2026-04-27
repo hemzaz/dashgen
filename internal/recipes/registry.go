@@ -1,6 +1,11 @@
 package recipes
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+
+	"dashgen/internal/profiles"
+)
 
 // Registry is the sorted collection of recipes available to synthesis.
 //
@@ -125,4 +130,202 @@ func (r *Registry) All() []Recipe {
 	out := make([]Recipe, len(r.recipes))
 	copy(out, r.recipes)
 	return out
+}
+
+// ByName returns the registered recipe whose Name() matches name, or nil
+// if no such recipe is registered. Used by the v0.3 override flow to
+// detect collisions between built-in and user recipes.
+func (r *Registry) ByName(name string) Recipe {
+	if r == nil {
+		return nil
+	}
+	for _, rec := range r.recipes {
+		if rec.Name() == name {
+			return rec
+		}
+	}
+	return nil
+}
+
+// Replace swaps in rec in place of any existing recipe with the same
+// Name(). If no existing recipe matches, Replace falls back to Register.
+// The internal sort order is preserved (replacement at the same index).
+//
+// This is the in-place override hook used by ProfileRegistries when a
+// user YAML recipe shadows a built-in (DSL §10, T12).
+func (r *Registry) Replace(rec Recipe) {
+	if r == nil || rec == nil {
+		return
+	}
+	name := rec.Name()
+	for i, existing := range r.recipes {
+		if existing.Name() == name {
+			r.recipes[i] = rec
+			return
+		}
+	}
+	r.Register(rec)
+}
+
+// =============================================================================
+// v0.3 — Profile-aware merge of built-in + user-loaded recipes
+// =============================================================================
+
+// ErrDuplicateRecipe is returned when two same-source recipes share a
+// name within the same profile. User → user collisions are errors;
+// built-in → user is an override (logged WARN, not error).
+type ErrDuplicateRecipe struct {
+	Name    string
+	Profile string
+	PathA   string // first registration's path
+	PathB   string // second registration's path
+}
+
+// Error returns the canonical message format. Tests pin against the
+// "duplicate recipe" prefix.
+func (e *ErrDuplicateRecipe) Error() string {
+	return fmt.Sprintf(
+		"duplicate recipe %q in profile %q: %s vs %s",
+		e.Name, e.Profile, e.PathA, e.PathB,
+	)
+}
+
+// ProfileRegistries holds one Registry per profile (service, infra, k8s)
+// and is the v0.3 integration point for built-in + user YAML recipe
+// loading. The three Registry fields are pre-populated with the existing
+// Go-implementing-Recipe recipes via NewProfileRegistries; v0.3 user
+// recipes are added on top via RegisterFromLoaded.
+type ProfileRegistries struct {
+	Service *Registry
+	Infra   *Registry
+	K8s     *Registry
+
+	// sources records the source label per (profile, name) so we can
+	// detect overrides. Recipe is an interface and has no Source method;
+	// this map is the side channel.
+	sources map[profileNameKey]string
+	paths   map[profileNameKey]string
+
+	logger Logger
+}
+
+type profileNameKey struct {
+	profile string
+	name    string
+}
+
+// NewProfileRegistries returns a ProfileRegistries pre-loaded with all
+// built-in Go recipes (preserving v0.2 behavior). Use WithLogger to
+// attach a logger before calling RegisterFromLoaded so override warnings
+// reach the user.
+func NewProfileRegistries() *ProfileRegistries {
+	return &ProfileRegistries{
+		Service: NewServiceRegistry(),
+		Infra:   NewInfraRegistry(),
+		K8s:     NewK8sRegistry(),
+		sources: map[profileNameKey]string{},
+		paths:   map[profileNameKey]string{},
+		logger:  nopLogger{},
+	}
+}
+
+// WithLogger attaches l for override-warning emission. Returns the
+// receiver so the call is chainable.
+func (pr *ProfileRegistries) WithLogger(l Logger) *ProfileRegistries {
+	if l != nil {
+		pr.logger = l
+	}
+	return pr
+}
+
+// For returns the registry for profile p. Returns nil for an unknown
+// profile so callers can branch defensively.
+func (pr *ProfileRegistries) For(p profiles.Profile) *Registry {
+	if pr == nil {
+		return nil
+	}
+	switch p {
+	case profiles.ProfileService:
+		return pr.Service
+	case profiles.ProfileInfra:
+		return pr.Infra
+	case profiles.ProfileK8s:
+		return pr.K8s
+	}
+	return nil
+}
+
+// RegisterFromLoaded converts each LoadedRecipe into a *YAMLRecipe and
+// registers it in the appropriate profile's registry, applying override
+// + duplicate semantics per DSL §10:
+//
+//   - Built-in already registered + new is user → log WARN, replace (T12).
+//   - Same-source duplicate (user→user, builtin→builtin) → ErrDuplicateRecipe.
+//   - Different profiles, same name → both register (profile is part of identity).
+//   - Unknown profile → error.
+//
+// Built-in Go recipes registered via NewServiceRegistry/etc. are NOT
+// tracked in the sources map (they predate v0.3). When a user YAML
+// recipe arrives with a name that matches a built-in Go recipe, the
+// missing source entry is treated as SourceBuiltin — so the user wins
+// via the override path with a WARN.
+//
+// Stops on the first error; partial registrations from prior loop
+// iterations remain visible (callers should treat any error as a
+// signal to abort the run).
+func (pr *ProfileRegistries) RegisterFromLoaded(loaded []LoadedRecipe) error {
+	if pr == nil {
+		return fmt.Errorf("recipes: nil ProfileRegistries")
+	}
+	for _, l := range loaded {
+		rec, err := NewYAMLRecipe(l)
+		if err != nil {
+			return err
+		}
+
+		profStr := l.Spec.Metadata.Profile
+		target := pr.For(profiles.Profile(profStr))
+		if target == nil {
+			return fmt.Errorf("recipe %s: unknown profile %q", l.Spec.Metadata.Name, profStr)
+		}
+
+		key := profileNameKey{profile: profStr, name: l.Spec.Metadata.Name}
+		existing := target.ByName(l.Spec.Metadata.Name)
+		existingSource := pr.sources[key]
+
+		if existing != nil {
+			// If the existing entry isn't tracked in sources, it's a
+			// pre-v0.3 Go recipe registered via NewServiceRegistry/etc.
+			// Treat as built-in.
+			if existingSource == "" {
+				existingSource = SourceBuiltin
+			}
+			switch {
+			case existingSource == SourceBuiltin && l.Source == SourceUser:
+				pr.logger.Warnf(
+					"recipe %q (%s): user recipe at %s overrides built-in",
+					l.Spec.Metadata.Name, profStr, l.Path,
+				)
+				target.Replace(rec)
+			case existingSource == l.Source:
+				return &ErrDuplicateRecipe{
+					Name:    l.Spec.Metadata.Name,
+					Profile: profStr,
+					PathA:   pr.paths[key],
+					PathB:   l.Path,
+				}
+			default:
+				// existingSource=user + new=builtin: per DSL §9.1 builtin
+				// always loads first, so this branch is unreachable in
+				// normal flow. Defensive: replace.
+				target.Replace(rec)
+			}
+		} else {
+			target.Register(rec)
+		}
+
+		pr.sources[key] = l.Source
+		pr.paths[key] = l.Path
+	}
+	return nil
 }
