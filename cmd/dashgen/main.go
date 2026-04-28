@@ -53,6 +53,11 @@ func exitCodeFor(err error) int {
 		return 2 // ambiguous name across profiles
 	case errors.Is(err, recipe.ErrShowNotFound):
 		return 1 // recipe not found
+	// recipe test exit codes (RECIPES-CLI.md §3.6).
+	case errors.Is(err, recipe.ErrTestFixtureError):
+		return 2 // fixture not found or malformed
+	case errors.Is(err, recipe.ErrTestLoadFailure):
+		return 1 // recipe load failed
 	case errors.Is(err, generate.ErrBackend):
 		return exitBackendError
 	case errors.Is(err, generate.ErrRender):

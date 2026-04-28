@@ -22,5 +22,6 @@ YAML recipe files. See 'dashgen recipe <subcommand> --help' for details.`,
 	cmd.AddCommand(newLintCmd())
 	cmd.AddCommand(newListCmd())
 	cmd.AddCommand(newShowCmd())
+	cmd.AddCommand(newTestCmd())
 	return cmd
 }
