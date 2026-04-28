@@ -1,0 +1,50 @@
+{
+  "_recipe": "service_tls_expiry",
+  "_comment": "Gauge with cert-expiry Unix-timestamp suffix; three suffix variants accepted.",
+
+  "positive_metrics": [
+    {
+      "name": "probe_cert_expiry_timestamp_seconds",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "api_tls_not_after_timestamp",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "traefik_ssl_cert_not_after",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: counter with matching suffix is rejected by type predicate.",
+      "name": "probe_cert_expiry_timestamp_seconds",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge but suffix does not match any of the three patterns.",
+      "name": "probe_ssl_earliest_cert_expiry",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "TLS cert days to expiry",
+      "query_contains": "time()) / 86400",
+      "kind": "timeseries"
+    }
+  ]
+}

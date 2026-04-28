@@ -1,0 +1,44 @@
+{
+  "_recipe": "infra_disk_iops",
+  "_comment": "Exact name match on node_disk_{reads,writes}_completed_total counters; rate yields IOPS.",
+
+  "positive_metrics": [
+    {
+      "name": "node_disk_reads_completed_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "node_disk_writes_completed_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: byte throughput counter — name not in approved set.",
+      "name": "node_disk_read_bytes_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "node_disk_reads_completed_total",
+      "type": "gauge",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Disk read IOPS",
+      "query_contains": "rate(node_disk_reads_completed_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

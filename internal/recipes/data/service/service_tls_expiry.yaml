@@ -1,0 +1,26 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_tls_expiry
+  section: saturation
+  profile: service
+  confidence: 0.80
+  tier: v0.3
+  description: "TLS certificate days-to-expiry derived from cert-expiry Unix-timestamp gauges."
+  tags: [tls, expiry, gauge]
+
+match:
+  all_of:
+    - type: gauge
+    - any_of:
+        - name_has_suffix: _cert_expiry_timestamp_seconds
+        - name_has_suffix: _tls_not_after_timestamp
+        - name_has_suffix: _ssl_cert_not_after
+
+panels:
+  - title_template: 'TLS cert days to expiry: {{ .Metric }}'
+    kind: timeseries
+    unit: d
+    query_template: '({{ .Metric }} - time()) / 86400'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Cert-expiry timestamp gauge "{{ .Metric }}"; (metric - time()) / 86400 yields days until expiry.'

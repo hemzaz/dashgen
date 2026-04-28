@@ -1,0 +1,45 @@
+{
+  "_recipe": "service_grpc_errors",
+  "_comment": "Counter + service_grpc trait + grpc_code label; filters to grpc_code!=\"OK\" error rate.",
+
+  "positive_metrics": [
+    {
+      "name": "grpc_server_handled_total",
+      "type": "counter",
+      "labels": ["grpc_code", "grpc_method", "grpc_service", "grpc_type", "instance", "job"],
+      "traits": ["service_grpc"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: counter + service_grpc trait but missing grpc_code label.",
+      "name": "grpc_server_started_total",
+      "type": "counter",
+      "labels": ["grpc_method", "grpc_service", "instance", "job"],
+      "traits": ["service_grpc"]
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "grpc_server_handled_total",
+      "type": "gauge",
+      "labels": ["grpc_code", "grpc_method", "grpc_service", "instance", "job"],
+      "traits": ["service_grpc"]
+    },
+    {
+      "_comment": "Look-alike: counter with grpc_code but missing service_grpc trait.",
+      "name": "app_rpc_calls_total",
+      "type": "counter",
+      "labels": ["grpc_code", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "gRPC error rate: grpc_server_handled_total",
+      "query_contains": "rate(grpc_server_handled_total{grpc_code!=\"OK\"}[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_kafka_consumer_lag
+  section: errors
+  profile: service
+  confidence: 0.85
+  tier: v0.3
+  description: "Kafka consumer group lag from kafka_exporter per-partition and aggregate gauges."
+  tags: [kafka, lag, gauge]
+
+match:
+  type: gauge
+  name_equals_any: [kafka_consumergroup_lag, kafka_consumergroup_lag_sum]
+
+panels:
+  - title_template: '{{ if eq .Metric "kafka_consumergroup_lag" }}Kafka consumer lag{{ else }}Kafka consumer lag (sum){{ end }}'
+    kind: timeseries
+    unit: short
+    preferred_labels: [consumergroup, topic, partition]
+    query_template: 'max by ({{ groupBy . }}) ({{ .Metric }})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'kafka_exporter gauge "{{ .Metric }}"; max by consumergroup/topic/partition avoids double-counting when multiple replicas report the same partition.'

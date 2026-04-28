@@ -1,0 +1,24 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_grpc_errors
+  section: errors
+  profile: service
+  confidence: 0.85
+  tier: v0.3
+  description: "Non-OK gRPC error rate for counters with the service_grpc trait and grpc_code label."
+  tags: [grpc, errors, counter]
+
+match:
+  type: counter
+  any_trait: [service_grpc]
+  has_label: grpc_code
+
+panels:
+  - title_template: 'gRPC error rate: {{ .Metric }}'
+    kind: timeseries
+    unit: reqps
+    preferred_labels: [grpc_service, grpc_method]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}{grpc_code!="OK"}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Counter "{{ .Metric }}" has a grpc_code label; filtering to grpc_code!="OK" gives the RPC error rate.'

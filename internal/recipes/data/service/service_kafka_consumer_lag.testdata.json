@@ -1,0 +1,44 @@
+{
+  "_recipe": "service_kafka_consumer_lag",
+  "_comment": "Exact name match on kafka_exporter lag gauges; max avoids double-counting replicas.",
+
+  "positive_metrics": [
+    {
+      "name": "kafka_consumergroup_lag",
+      "type": "gauge",
+      "labels": ["consumergroup", "instance", "job", "partition", "topic"],
+      "traits": []
+    },
+    {
+      "name": "kafka_consumergroup_lag_sum",
+      "type": "gauge",
+      "labels": ["consumergroup", "instance", "job", "topic"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: counter type is rejected by type predicate.",
+      "name": "kafka_consumergroup_lag",
+      "type": "counter",
+      "labels": ["consumergroup", "instance", "job", "partition", "topic"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: name not in the approved name set.",
+      "name": "kafka_consumer_group_lag",
+      "type": "gauge",
+      "labels": ["consumergroup", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Kafka consumer lag",
+      "query_contains": "max by (consumergroup",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -39,17 +39,17 @@ func NewServiceRegistry() *Registry {
 	// service_cpu migrated to YAML (T4A.1) — see data/service/service_cpu.yaml.
 	// service_memory migrated to YAML (T4A.1) — see data/service/service_memory.yaml.
 	// service_grpc_rate migrated to YAML (T1B.1) — see data/service/service_grpc_rate.yaml.
-	r.Register(NewServiceGRPCErrors())
+	// service_grpc_errors migrated to YAML (T5.1) — see data/service/service_grpc_errors.yaml.
 	r.Register(NewServiceGRPCLatency())
 	// service_goroutines migrated to YAML (T1B.1) — see data/service/service_goroutines.yaml.
 	r.Register(NewServiceGCPause())
 	r.Register(NewServiceDBQueryLatency())
-	r.Register(NewServiceTLSExpiry())
+	// service_tls_expiry migrated to YAML (T5.1) — see data/service/service_tls_expiry.yaml.
 	r.Register(NewServiceCacheHits())
 	r.Register(NewServiceJobSuccess())
 	r.Register(NewServiceClientHTTP())
 	r.Register(NewServiceDBPool())
-	r.Register(NewServiceKafkaConsumerLag())
+	// service_kafka_consumer_lag migrated to YAML (T5.1) — see data/service/service_kafka_consumer_lag.yaml.
 	r.Register(NewServiceRequestSize())
 	r.Register(NewServiceResponseSize())
 	LoadBuiltinYAMLs(r, "service")
@@ -75,7 +75,7 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraFileDescriptors())
 	r.Register(NewInfraNICErrors())
 	r.Register(NewInfraConntrack())
-	r.Register(NewInfraDiskIOPS())
+	// infra_disk_iops migrated to YAML (T5.1) — see data/infra/infra_disk_iops.yaml.
 	r.Register(NewInfraDiskIOLatency())
 	// infra_ntp_offset migrated to YAML (T1B.1) — see data/infra/infra_ntp_offset.yaml.
 	// infra_interrupts migrated to YAML (T4A.1) — see data/infra/infra_interrupts.yaml.
