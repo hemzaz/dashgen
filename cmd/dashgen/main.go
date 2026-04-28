@@ -58,6 +58,9 @@ func exitCodeFor(err error) int {
 		return 2 // fixture not found or malformed
 	case errors.Is(err, recipe.ErrTestLoadFailure):
 		return 1 // recipe load failed
+	// recipe explain exit codes (RECIPES-CLI.md §3.7).
+	case errors.Is(err, recipe.ErrExplainNotFound):
+		return 2 // recipe-not-found or metric-not-found
 	case errors.Is(err, generate.ErrBackend):
 		return exitBackendError
 	case errors.Is(err, generate.ErrRender):
