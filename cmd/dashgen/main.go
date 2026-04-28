@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"dashgen/cmd/dashgen/recipe"
 	appcov "dashgen/internal/app/coverage"
 	"dashgen/internal/app/generate"
 	applint "dashgen/internal/app/lint"
@@ -38,6 +39,8 @@ func main() {
 
 func exitCodeFor(err error) int {
 	switch {
+	case errors.Is(err, recipe.ErrDirExists):
+		return 2 // RECIPES-CLI.md §6: existing directory without --force
 	case errors.Is(err, generate.ErrBackend):
 		return exitBackendError
 	case errors.Is(err, generate.ErrRender):
@@ -74,5 +77,6 @@ func newRootCmd() *cobra.Command {
 	root.AddCommand(newInspectCmd())
 	root.AddCommand(newLintCmd())
 	root.AddCommand(newCoverageCmd())
+	root.AddCommand(recipe.NewCmd())
 	return root
 }
