@@ -77,6 +77,18 @@ type RunConfig struct {
 	// set, per the ADVERSARY §6 "debug paths become product paths" guard.
 	// Intentionally not part of the YAML FileConfig schema.
 	LogEnrichmentPayloads bool
+
+	// RecipesDirs holds the resolved absolute paths of user recipe
+	// directories supplied via --recipes-dir (repeatable). The generate
+	// pipeline loads *.yaml files from each directory alongside the
+	// built-in Go recipe corpus. Empty means "no explicit user dirs" —
+	// the pipeline then checks the XDG default location.
+	RecipesDirs []string
+
+	// NoUserRecipes disables all user-recipe loading when true
+	// (--no-user-recipes). The pipeline runs with built-in recipes only,
+	// matching v0.1/v0.2 behavior.
+	NoUserRecipes bool
 }
 
 // FileConfig is the on-disk YAML schema. Fields are optional; unset fields

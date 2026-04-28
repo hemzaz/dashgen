@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -243,5 +244,71 @@ func TestGenerateCmd_EnrichModesParse(t *testing.T) {
 		if captured.EnrichModes[i] != w {
 			t.Errorf("EnrichModes[%d] = %q, want %q", i, captured.EnrichModes[i], w)
 		}
+	}
+}
+
+// TestGenerateCmd_RecipesDirFlagWiring verifies that --recipes-dir is
+// abs-resolved and propagated into cfg.RecipesDirs.
+func TestGenerateCmd_RecipesDirFlagWiring(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	var captured *config.RunConfig
+	cmd := newGenerateCmdWithRunner(func(_ context.Context, cfg *config.RunConfig) error {
+		captured = cfg
+		return nil
+	})
+	cmd.SilenceErrors = true
+	cmd.SilenceUsage = true
+	cmd.SetArgs([]string{
+		"--fixture-dir", testFixtureDir,
+		"--out", t.TempDir(),
+		"--recipes-dir", tmpDir,
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if captured == nil {
+		t.Fatal("runFn was not called")
+	}
+	abs, err := filepath.Abs(tmpDir)
+	if err != nil {
+		t.Fatalf("filepath.Abs: %v", err)
+	}
+	if len(captured.RecipesDirs) != 1 || captured.RecipesDirs[0] != abs {
+		t.Errorf("RecipesDirs = %v, want [%s]", captured.RecipesDirs, abs)
+	}
+	if captured.NoUserRecipes {
+		t.Error("NoUserRecipes = true; want false when --no-user-recipes is not set")
+	}
+}
+
+// TestGenerateCmd_NoUserRecipesFlagWiring verifies that --no-user-recipes
+// propagates into cfg.NoUserRecipes = true and cfg.RecipesDirs remains nil
+// (the resolution is skipped entirely when the flag is set).
+func TestGenerateCmd_NoUserRecipesFlagWiring(t *testing.T) {
+	t.Parallel()
+	var captured *config.RunConfig
+	cmd := newGenerateCmdWithRunner(func(_ context.Context, cfg *config.RunConfig) error {
+		captured = cfg
+		return nil
+	})
+	cmd.SilenceErrors = true
+	cmd.SilenceUsage = true
+	cmd.SetArgs([]string{
+		"--fixture-dir", testFixtureDir,
+		"--out", t.TempDir(),
+		"--no-user-recipes",
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if captured == nil {
+		t.Fatal("runFn was not called")
+	}
+	if !captured.NoUserRecipes {
+		t.Error("NoUserRecipes = false; want true after --no-user-recipes")
+	}
+	if len(captured.RecipesDirs) != 0 {
+		t.Errorf("RecipesDirs = %v; want nil/empty when --no-user-recipes is set", captured.RecipesDirs)
 	}
 }

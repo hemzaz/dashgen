@@ -81,17 +81,27 @@ func Run(ctx context.Context, cfg *config.RunConfig) error {
 	inv.Sort()
 
 	classified := classify.Classify(inv)
-	var registry *recipes.Registry
-	switch profile {
-	case profiles.ProfileService:
-		registry = recipes.NewServiceRegistry()
-	case profiles.ProfileInfra:
-		registry = recipes.NewInfraRegistry()
-	case profiles.ProfileK8s:
-		registry = recipes.NewK8sRegistry()
-	default:
+
+	// Build the profile registry. v0.3: user recipes are overlaid on the
+	// built-in Go recipe corpus via ProfileRegistries (T12 override semantics).
+	pr := recipes.NewProfileRegistries().WithLogger(generateStderrLogger{})
+	if !cfg.NoUserRecipes && len(cfg.RecipesDirs) > 0 {
+		loaded, loadErr := recipes.Load(ctx, recipes.LoaderConfig{
+			UserDirs: cfg.RecipesDirs,
+			Logger:   generateStderrLogger{},
+		})
+		if loadErr != nil {
+			return fmt.Errorf("load user recipes: %w", loadErr)
+		}
+		if regErr := pr.RegisterFromLoaded(loaded); regErr != nil {
+			return fmt.Errorf("register user recipes: %w", regErr)
+		}
+	}
+	registry := pr.For(profile)
+	if registry == nil {
 		return fmt.Errorf("generate: unsupported profile %q", profile)
 	}
+
 	dashboard := synth.SynthesizeWithCap(classified, profile, registry, cfg.MaxPanels)
 
 	policy := safety.NewPolicy(nil)
@@ -520,4 +530,13 @@ func writeOutputs(dir string, dash, rat, warn []byte, inPlace bool) error {
 		}
 	}
 	return nil
+}
+
+// generateStderrLogger implements recipes.Logger for the generate pipeline.
+// Override warnings (T12) are written to stderr so operators see them without
+// mixing into the dashboard JSON / rationale / warnings output files.
+type generateStderrLogger struct{}
+
+func (generateStderrLogger) Warnf(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, "WARN: "+format+"\n", args...)
 }

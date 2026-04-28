@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,9 @@ func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) err
 		noEnrichCache         bool
 		cacheDir              string
 		logEnrichmentPayloads bool
+		// v0.3 user-recipe flags
+		recipesDirs   []string
+		noUserRecipes bool
 	)
 
 	cmd := &cobra.Command{
@@ -104,6 +108,15 @@ func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) err
 				cfg.CacheDir = cacheDir
 			}
 			cfg.LogEnrichmentPayloads = logEnrichmentPayloads
+			// v0.3 user-recipe resolution.
+			cfg.NoUserRecipes = noUserRecipes
+			if !noUserRecipes {
+				userDirs, err := resolveGenerateUserDirs(recipesDirs)
+				if err != nil {
+					return fmt.Errorf("resolve user recipe directories: %w", err)
+				}
+				cfg.RecipesDirs = userDirs
+			}
 			return runFn(cmd.Context(), cfg)
 		},
 	}
@@ -138,7 +151,44 @@ func newGenerateCmdWithRunner(runFn func(context.Context, *config.RunConfig) err
 	if os.Getenv("DASHGEN_DEBUG") != "1" {
 		_ = cmd.Flags().MarkHidden("log-enrichment-payloads")
 	}
+	// v0.3 user-recipe flags (same semantics as `dashgen recipe list`).
+	cmd.Flags().StringArrayVar(&recipesDirs, "recipes-dir", nil,
+		"user recipe directory (repeatable; default: $XDG_CONFIG_HOME/dashgen/recipes)")
+	cmd.Flags().BoolVar(&noUserRecipes, "no-user-recipes", false,
+		"ignore user directories; load built-in recipes only")
 
 	cmd.SetContext(context.Background())
 	return cmd
+}
+
+// resolveGenerateUserDirs returns the list of user recipe directories for the
+// generate pipeline. When explicit dirs are given they are abs-resolved and
+// returned. When none are given the XDG default is tried; a missing default
+// is silently skipped (the user simply hasn't run "dashgen recipe init" yet).
+func resolveGenerateUserDirs(explicit []string) ([]string, error) {
+	if len(explicit) > 0 {
+		dirs := make([]string, 0, len(explicit))
+		for _, d := range explicit {
+			abs, err := filepath.Abs(d)
+			if err != nil {
+				return nil, fmt.Errorf("resolve path %q: %w", d, err)
+			}
+			dirs = append(dirs, abs)
+		}
+		return dirs, nil
+	}
+	// No explicit dirs: try XDG default, skip if it doesn't exist yet.
+	base := os.Getenv("XDG_CONFIG_HOME")
+	if base == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("resolve home directory: %w", err)
+		}
+		base = filepath.Join(home, ".config")
+	}
+	xdgDir := filepath.Join(base, "dashgen", "recipes")
+	if _, statErr := os.Stat(xdgDir); os.IsNotExist(statErr) {
+		return nil, nil
+	}
+	return []string{xdgDir}, nil
 }

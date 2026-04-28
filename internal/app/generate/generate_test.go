@@ -502,6 +502,50 @@ func TestDiscrimination_K8sRealistic(t *testing.T) {
 	}
 }
 
+// TestUserRecipeOverridesBuiltin verifies that a user-supplied YAML recipe
+// with the same name as a Go built-in (service_grpc_rate) is accepted by the
+// pipeline without error, and that the T12 override warning is emitted to
+// stderr (visible in test output with -v). Goldens are not compared — the
+// test only asserts a clean Run exit.
+func TestUserRecipeOverridesBuiltin(t *testing.T) {
+	t.Parallel()
+
+	// A minimal valid YAML recipe that shadows the built-in service_grpc_rate.
+	const recipeYAML = `apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_grpc_rate
+  section: traffic
+  profile: service
+  confidence: 0.95
+  tier: v0.3
+match:
+  type: counter
+  any_trait: [service_grpc]
+panels:
+  - title_template: 'user gRPC rate: {{ .Metric }}'
+    kind: timeseries
+    unit: reqps
+    preferred_labels: [grpc_service, grpc_method]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+`
+	recipeDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipeDir, "service_grpc_rate.yaml"), []byte(recipeYAML), 0o644); err != nil {
+		t.Fatalf("write recipe: %v", err)
+	}
+
+	cfg := &config.RunConfig{
+		FixtureDir:  fixtureDir,
+		Profile:     "service",
+		OutDir:      t.TempDir(),
+		RecipesDirs: []string{recipeDir},
+	}
+	if err := Run(context.Background(), cfg); err != nil {
+		t.Fatalf("Run with user recipe override: %v", err)
+	}
+}
+
 func readFile(t *testing.T, path string) []byte {
 	t.Helper()
 	b, err := os.ReadFile(path)
