@@ -1,0 +1,44 @@
+{
+  "_recipe": "infra_load",
+  "_comment": "Name-set match on node_load{1,5,15} gauges; emits one panel per matched metric.",
+
+  "positive_metrics": [
+    {
+      "name": "node_load1",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "node_load5",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: suffix not in the approved name set.",
+      "name": "node_load_avg",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: shares node_ prefix but wrong family.",
+      "name": "node_memory_MemAvailable_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Load 1m: node_load1",
+      "query_contains": "avg by (instance) (node_load1)",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_load
+  section: cpu
+  profile: infra
+  confidence: 0.90
+  tier: v0.3
+  description: "Node load-average panels (1m, 5m, 15m) from node_exporter."
+  tags: [load, node_exporter, gauge]
+
+match:
+  name_equals_any: [node_load1, node_load5, node_load15]
+
+panels:
+  - title_template: 'Load {{ slice .Metric 9 }}m: {{ .Metric }}'
+    kind: timeseries
+    unit: ""
+    group_by: [instance]
+    query_template: 'avg by ({{ groupBy . }}) ({{ .Metric }})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter load gauge "{{ .Metric }}"; avg by (instance) gives the {{ slice .Metric 9 }}-minute runqueue average per host.'

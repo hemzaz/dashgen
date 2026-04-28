@@ -1,0 +1,21 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_memory
+  section: saturation
+  profile: service
+  confidence: 0.80
+  tier: v0.3
+  description: "Resident-memory gauge panel; sum per instance to show bytes in use."
+  tags: [memory, process, gauge]
+
+match:
+  name_equals_any: [process_resident_memory_bytes, container_memory_usage_bytes, container_memory_working_set_bytes]
+
+panels:
+  - title_template: 'Memory: {{ .Metric }}'
+    kind: timeseries
+    unit: bytes
+    query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Memory gauge "{{ .Metric }}" summed by {{ groupBy . }}.'

@@ -1,0 +1,44 @@
+{
+  "_recipe": "service_cpu",
+  "_comment": "Exact name match on CPU-seconds counters (counter); rate yields cores consumed.",
+
+  "positive_metrics": [
+    {
+      "name": "process_cpu_seconds_total",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "container_cpu_usage_seconds_total",
+      "type": "counter",
+      "labels": ["container", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "process_cpu_seconds_total",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: different CPU metric not in the approved name set.",
+      "name": "other_cpu_seconds_total",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "CPU (cores used)",
+      "query_contains": "rate(process_cpu_seconds_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

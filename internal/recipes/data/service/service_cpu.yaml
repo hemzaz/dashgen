@@ -1,0 +1,22 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_cpu
+  section: saturation
+  profile: service
+  confidence: 0.80
+  tier: v0.3
+  description: "CPU-seconds rate panel; sum per instance to show cores consumed."
+  tags: [cpu, process, counter]
+
+match:
+  type: counter
+  name_equals_any: [process_cpu_seconds_total, container_cpu_usage_seconds_total]
+
+panels:
+  - title_template: 'CPU (cores used): {{ .Metric }}'
+    kind: timeseries
+    unit: short
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'CPU-seconds counter "{{ .Metric }}"; rate over {{ .Window }} yields cores consumed.'

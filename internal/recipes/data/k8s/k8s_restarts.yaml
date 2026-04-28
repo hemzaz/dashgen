@@ -1,0 +1,24 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_restarts
+  section: workloads
+  profile: k8s
+  confidence: 0.80
+  tier: v0.3
+  description: "Container restart rate from kube_pod_container_status_restarts_total."
+  tags: [restarts, kube-state-metrics, counter]
+
+match:
+  type: counter
+  name_equals: kube_pod_container_status_restarts_total
+
+panels:
+  - title_template: 'Container restart rate: {{ .Metric }}'
+    kind: timeseries
+    unit: short
+    rate_window: "15m"
+    group_by: [namespace, pod, container]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'kube-state-metrics counter "{{ .Metric }}"; rate over {{ .Window }} grouped by namespace+pod+container.'

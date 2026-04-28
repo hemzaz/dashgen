@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_interrupts
+  section: saturation
+  profile: infra
+  confidence: 0.80
+  tier: v0.3
+  description: "Per-CPU hardware interrupt rate from node_interrupts_total."
+  tags: [interrupts, node_exporter, counter]
+
+match:
+  type: counter
+  name_equals: node_interrupts_total
+
+panels:
+  - title_template: 'Hardware interrupt rate by CPU'
+    kind: timeseries
+    unit: ops
+    group_by: [instance, cpu]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ printf "{{instance}} cpu{{cpu}}" }}'
+    rationale_template: 'node_exporter counter node_interrupts_total; rate over {{ .Window }} summed per instance+cpu.'

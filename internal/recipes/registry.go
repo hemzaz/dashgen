@@ -36,8 +36,8 @@ func NewServiceRegistry() *Registry {
 	r.Register(NewServiceHTTPRate())
 	r.Register(NewServiceHTTPErrors())
 	r.Register(NewServiceHTTPLatency())
-	r.Register(NewServiceCPU())
-	r.Register(NewServiceMemory())
+	// service_cpu migrated to YAML (T4A.1) — see data/service/service_cpu.yaml.
+	// service_memory migrated to YAML (T4A.1) — see data/service/service_memory.yaml.
 	// service_grpc_rate migrated to YAML (T1B.1) — see data/service/service_grpc_rate.yaml.
 	r.Register(NewServiceGRPCErrors())
 	r.Register(NewServiceGRPCLatency())
@@ -70,7 +70,7 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraMemory())
 	r.Register(NewInfraDisk())
 	r.Register(NewInfraNetwork())
-	r.Register(NewInfraLoad())
+	// infra_load migrated to YAML (T4A.1) — see data/infra/infra_load.yaml.
 	r.Register(NewInfraFilesystemUsage())
 	r.Register(NewInfraFileDescriptors())
 	r.Register(NewInfraNICErrors())
@@ -78,7 +78,7 @@ func NewInfraRegistry() *Registry {
 	r.Register(NewInfraDiskIOPS())
 	r.Register(NewInfraDiskIOLatency())
 	// infra_ntp_offset migrated to YAML (T1B.1) — see data/infra/infra_ntp_offset.yaml.
-	r.Register(NewInfraInterrupts())
+	// infra_interrupts migrated to YAML (T4A.1) — see data/infra/infra_interrupts.yaml.
 	LoadBuiltinYAMLs(r, "infra")
 	return r
 }
@@ -95,11 +95,11 @@ func NewK8sRegistry() *Registry {
 	r := NewRegistry()
 	// k8s_pod_health migrated to YAML (T1B.1) — see data/k8s/k8s_pod_health.yaml.
 	r.Register(NewK8sContainerResources())
-	r.Register(NewK8sRestarts())
+	// k8s_restarts migrated to YAML (T4A.1) — see data/k8s/k8s_restarts.yaml.
 	r.Register(NewK8sDeploymentAvailability())
 	r.Register(NewK8sNodeConditions())
 	r.Register(NewK8sPVCUsage())
-	r.Register(NewK8sOOMKills())
+	// k8s_oom_kills migrated to YAML (T4A.1) — see data/k8s/k8s_oom_kills.yaml.
 	r.Register(NewK8sApiserverLatency())
 	r.Register(NewK8sEtcdCommit())
 	r.Register(NewK8sHPAScaling())

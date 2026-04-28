@@ -1,0 +1,44 @@
+{
+  "_recipe": "k8s_oom_kills",
+  "_comment": "Exact name match on kube_pod_container_status_terminated_reason; filters to reason=OOMKilled.",
+
+  "positive_metrics": [
+    {
+      "name": "kube_pod_container_status_terminated_reason",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod", "reason"],
+      "traits": []
+    },
+    {
+      "name": "kube_pod_container_status_terminated_reason",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod", "reason", "uid"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: different kube-state-metrics gauge (different suffix).",
+      "name": "kube_pod_container_status_ready",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: restarts counter shares prefix but is a counter with different semantics.",
+      "name": "kube_pod_container_status_restarts_total",
+      "type": "counter",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "OOM kills",
+      "query_contains": "kube_pod_container_status_terminated_reason{reason=\"OOMKilled\"}",
+      "kind": "timeseries"
+    }
+  ]
+}

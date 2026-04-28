@@ -1,0 +1,22 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_oom_kills
+  section: pods
+  profile: k8s
+  confidence: 0.90
+  tier: v0.3
+  description: "OOM-killed containers from kube_pod_container_status_terminated_reason."
+  tags: [oom, kube-state-metrics, gauge]
+
+match:
+  name_equals: kube_pod_container_status_terminated_reason
+
+panels:
+  - title_template: 'OOM kills'
+    kind: timeseries
+    unit: short
+    group_by: [namespace, pod]
+    query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }}{reason="OOMKilled"})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'kube-state-metrics gauge "{{ .Metric }}" filtered to reason=OOMKilled; sum by namespace+pod counts OOM-terminated containers per pod.'

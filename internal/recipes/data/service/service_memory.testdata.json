@@ -1,0 +1,44 @@
+{
+  "_recipe": "service_memory",
+  "_comment": "Name-set match on memory gauges; no type filter (gauge/unknown both accepted by Go recipe, YAML omits type).",
+
+  "positive_metrics": [
+    {
+      "name": "process_resident_memory_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "container_memory_usage_bytes",
+      "type": "gauge",
+      "labels": ["container", "instance", "job", "namespace", "pod"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: different memory metric not in the approved name set.",
+      "name": "node_memory_MemAvailable_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: close but non-matching name.",
+      "name": "process_virtual_memory_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Memory: process_resident_memory_bytes",
+      "query_contains": "process_resident_memory_bytes",
+      "kind": "timeseries"
+    }
+  ]
+}

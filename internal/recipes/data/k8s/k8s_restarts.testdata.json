@@ -1,0 +1,44 @@
+{
+  "_recipe": "k8s_restarts",
+  "_comment": "Exact name match on kube_pod_container_status_restarts_total (counter); rate over 15m.",
+
+  "positive_metrics": [
+    {
+      "name": "kube_pod_container_status_restarts_total",
+      "type": "counter",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    },
+    {
+      "name": "kube_pod_container_status_restarts_total",
+      "type": "counter",
+      "labels": ["container", "namespace", "pod", "uid"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "kube_pod_container_status_restarts_total",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: terminated_reason gauge shares prefix but different name and semantics.",
+      "name": "kube_pod_container_status_terminated_reason",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod", "reason"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Container restart rate: kube_pod_container_status_restarts_total",
+      "query_contains": "rate(kube_pod_container_status_restarts_total[15m])",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "_recipe": "infra_interrupts",
+  "_comment": "Exact name match on node_interrupts_total (counter); rate yields per-CPU IRQ throughput.",
+
+  "positive_metrics": [
+    {
+      "name": "node_interrupts_total",
+      "type": "counter",
+      "labels": ["cpu", "instance", "job", "type"],
+      "traits": []
+    },
+    {
+      "name": "node_interrupts_total",
+      "type": "counter",
+      "labels": ["cpu", "instance", "job", "type", "values"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "node_interrupts_total",
+      "type": "gauge",
+      "labels": ["cpu", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: software interrupts are a distinct signal (different name).",
+      "name": "node_softirqs_total",
+      "type": "counter",
+      "labels": ["cpu", "instance", "job", "type"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Hardware interrupt rate by CPU",
+      "query_contains": "rate(node_interrupts_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}
