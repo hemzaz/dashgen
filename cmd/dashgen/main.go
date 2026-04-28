@@ -48,6 +48,11 @@ func exitCodeFor(err error) int {
 		return 2 // file not found or unreadable
 	case errors.Is(err, recipe.ErrLintFailure):
 		return 1 // one or more recipe files failed validation
+	// recipe show exit codes (RECIPES-CLI.md §3.5).
+	case errors.Is(err, recipe.ErrShowAmbiguous):
+		return 2 // ambiguous name across profiles
+	case errors.Is(err, recipe.ErrShowNotFound):
+		return 1 // recipe not found
 	case errors.Is(err, generate.ErrBackend):
 		return exitBackendError
 	case errors.Is(err, generate.ErrRender):
