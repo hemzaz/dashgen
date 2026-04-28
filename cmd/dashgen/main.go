@@ -41,6 +41,13 @@ func exitCodeFor(err error) int {
 	switch {
 	case errors.Is(err, recipe.ErrDirExists):
 		return 2 // RECIPES-CLI.md §6: existing directory without --force
+	// recipe lint exit codes (RECIPES-CLI.md §6).
+	case errors.Is(err, recipe.ErrLintResourceLimit):
+		return 5 // resource limit: file too large, too many files, deadline
+	case errors.Is(err, recipe.ErrLintInputError):
+		return 2 // file not found or unreadable
+	case errors.Is(err, recipe.ErrLintFailure):
+		return 1 // one or more recipe files failed validation
 	case errors.Is(err, generate.ErrBackend):
 		return exitBackendError
 	case errors.Is(err, generate.ErrRender):
