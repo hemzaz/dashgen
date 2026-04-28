@@ -61,6 +61,15 @@ func exitCodeFor(err error) int {
 	// recipe explain exit codes (RECIPES-CLI.md §3.7).
 	case errors.Is(err, recipe.ErrExplainNotFound):
 		return 2 // recipe-not-found or metric-not-found
+	// recipe diff exit codes (RECIPES-CLI.md §3.8).
+	case errors.Is(err, recipe.ErrDiffNotFound):
+		return 2 // --against-builtin recipe not found / ambiguous
+	case errors.Is(err, recipe.ErrDiffFixtureError):
+		return 2 // fixture missing or malformed
+	case errors.Is(err, recipe.ErrDiffLoadFailure):
+		return 1 // recipe load failed
+	case errors.Is(err, recipe.ErrDiffMismatch):
+		return 1 // panels differ (CI gate)
 	case errors.Is(err, generate.ErrBackend):
 		return exitBackendError
 	case errors.Is(err, generate.ErrRender):
