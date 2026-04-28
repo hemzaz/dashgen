@@ -18,5 +18,6 @@ func NewCmd() *cobra.Command {
 YAML recipe files. See 'dashgen recipe <subcommand> --help' for details.`,
 	}
 	cmd.AddCommand(newInitCmd())
+	cmd.AddCommand(newScaffoldCmd())
 	return cmd
 }
