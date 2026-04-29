@@ -103,7 +103,7 @@ type Template struct {
 
 // helperFuncMap returns the closed FuncMap for DSL template rendering.
 //
-// CLOSED NAMESPACE: exactly the 5 helpers below ship in v0.3.
+// CLOSED NAMESPACE: exactly the helpers below ship in v0.3.
 // To add a helper, file a docs PR updating docs/RECIPES-DSL-HELPERS.md §4
 // with ≥2 demand cases. See §1 of that doc for the change process.
 //
@@ -125,6 +125,7 @@ func helperFuncMap() template.FuncMap {
 		"legendFor":         templateLegendFor,
 		"bucketName":        templateBucketName,
 		"stripSuffix":       templateStripSuffix,
+		"firstLabelOf":      templateFirstLabelOf,
 	}
 }
 
@@ -210,6 +211,26 @@ func templateBucketName(s string) string {
 //	stripSuffix("http_request_size_bytes",        "_bucket") → "http_request_size_bytes"
 func templateStripSuffix(s, suffix string) string {
 	return strings.TrimSuffix(s, suffix)
+}
+
+// templateFirstLabelOf returns the first candidate label name that is present
+// on the matched metric, walking candidates in argument order. Returns "" if
+// none of the candidates are present. Used by recipes that pick a label
+// dynamically at render time, e.g. service_http_errors picks the first of
+// {status_code, code}:
+//
+//	{{ .Metric }}{ {{ firstLabelOf . "status_code" "code" }}=~"5.." }
+//
+// Determinism: candidates are scanned in argument order; the result depends
+// only on (candidates, ctx.Labels). The receiver is the closed Labels map
+// (names-only, invariant I2).
+func templateFirstLabelOf(ctx RenderContext, candidates ...string) string {
+	for _, c := range candidates {
+		if _, ok := ctx.Labels[c]; ok {
+			return c
+		}
+	}
+	return ""
 }
 
 // Parse parses src as a text/template with the closed FuncMap and

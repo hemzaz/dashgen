@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_http_errors
+  section: errors
+  profile: service
+  confidence: 0.80
+  tier: v0.3
+  description: "5xx HTTP error rate from a counter that carries either a status_code or code label."
+  tags: [http, errors, counter]
+
+match:
+  type: counter
+  has_label_any: [status_code, code]
+
+panels:
+  - title_template: '5xx error rate: {{ .Metric }}'
+    kind: timeseries
+    unit: reqps
+    preferred_labels: [route, handler]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}{ {{- firstLabelOf . "status_code" "code" -}} =~"5.."}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Counter "{{ .Metric }}" has a "{{ firstLabelOf . "status_code" "code" }}" label; filtering to 5.. gives a 5xx error rate.'

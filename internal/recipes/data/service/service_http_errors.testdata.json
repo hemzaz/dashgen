@@ -1,0 +1,56 @@
+{
+  "_recipe": "service_http_errors",
+  "_comment": "Counter + first-present HTTP-status label of {status_code, code}; filters to 5.. error rate.",
+
+  "positive_metrics": [
+    {
+      "name": "http_requests_total",
+      "type": "counter",
+      "labels": ["instance", "job", "route", "status_code"],
+      "traits": []
+    },
+    {
+      "name": "prometheus_http_requests_total",
+      "type": "counter",
+      "labels": ["code", "handler", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: bare 'status' is ambiguous (e.g. alertmanager firing/accepted); rejected per SPECS Rule 5.",
+      "name": "alerts_received_total",
+      "type": "counter",
+      "labels": ["instance", "job", "status"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "http_requests_total",
+      "type": "gauge",
+      "labels": ["instance", "job", "status_code"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: counter without any HTTP-status label.",
+      "name": "http_requests_total",
+      "type": "counter",
+      "labels": ["instance", "job", "method"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "5xx error rate: http_requests_total",
+      "query_contains": "rate(http_requests_total{status_code=~\"5..\"}[5m])",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "5xx error rate: prometheus_http_requests_total",
+      "query_contains": "rate(prometheus_http_requests_total{code=~\"5..\"}[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

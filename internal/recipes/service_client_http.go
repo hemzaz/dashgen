@@ -48,6 +48,22 @@ func NewServiceClientHTTP() Recipe { return &serviceClientHTTPRecipe{} }
 func (serviceClientHTTPRecipe) Name() string    { return "service_client_http" }
 func (serviceClientHTTPRecipe) Section() string { return "traffic" }
 
+// httpStatusLabels mirrors the priority list previously declared in
+// service_http_errors.go (now migrated to YAML). The bare "status" label is
+// excluded — it's ambiguous (alertmanager-style "firing"/"accepted") and would
+// produce dead 5xx panels (SPECS Rule 5).
+var httpStatusLabels = []string{"status_code", "code"}
+
+// hasHTTPStatusLabel reports whether m carries any of httpStatusLabels.
+func hasHTTPStatusLabel(m ClassifiedMetricView) bool {
+	for _, l := range httpStatusLabels {
+		if m.HasLabel(l) {
+			return true
+		}
+	}
+	return false
+}
+
 // Match requires:
 //  1. MetricTypeCounter
 //  2. Name contains "client" (case-insensitive) — guards against inbound
@@ -61,7 +77,7 @@ func (r serviceClientHTTPRecipe) Match(m ClassifiedMetricView) bool {
 	if !strings.Contains(strings.ToLower(m.Descriptor.Name), "client") {
 		return false
 	}
-	return statusLabelOf(m) != ""
+	return hasHTTPStatusLabel(m)
 }
 
 func (r serviceClientHTTPRecipe) BuildPanels(inv ClassifiedInventorySnapshot, p profiles.Profile) []ir.Panel {
