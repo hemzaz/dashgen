@@ -1,0 +1,38 @@
+version: 2
+
+builds:
+  - id: dashgen
+    main: ./cmd/dashgen
+    binary: dashgen
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: dashgen
+    ids:
+      - dashgen
+    name_template: "dashgen_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    files:
+      - none*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot-{{ .ShortCommit }}"
+
+changelog:
+  disable: true

@@ -18,12 +18,59 @@ rationale Markdown, and a machine-readable warnings summary.
 
 ## Install
 
-DashGen uses a local Go module path (`module dashgen`), so clone and build:
+### Download a binary (recommended)
+
+Pre-built binaries for macOS and Linux are attached to each [GitHub release](https://github.com/hemzaz/dashgen/releases).
+
+> **macOS note:** Binaries are unsigned in v0.3.x; users will see a Gatekeeper prompt on first run.
+> Run `xattr -d com.apple.quarantine ./dashgen` to clear it, or right-click → Open in Finder.
+> Notarization is tracked for v0.4.
+
+Replace `<VERSION>` with the release tag (e.g. `0.3.0`):
+
+**macOS (Apple Silicon / arm64)**
+```bash
+curl -L https://github.com/hemzaz/dashgen/releases/download/v<VERSION>/dashgen_<VERSION>_darwin_arm64.tar.gz | tar xz
+sudo mv dashgen /usr/local/bin/
+```
+
+**macOS (Intel / amd64)**
+```bash
+curl -L https://github.com/hemzaz/dashgen/releases/download/v<VERSION>/dashgen_<VERSION>_darwin_amd64.tar.gz | tar xz
+sudo mv dashgen /usr/local/bin/
+```
+
+**Linux (amd64)**
+```bash
+curl -L https://github.com/hemzaz/dashgen/releases/download/v<VERSION>/dashgen_<VERSION>_linux_amd64.tar.gz | tar xz
+sudo mv dashgen /usr/local/bin/
+```
+
+**Linux (arm64)**
+```bash
+curl -L https://github.com/hemzaz/dashgen/releases/download/v<VERSION>/dashgen_<VERSION>_linux_arm64.tar.gz | tar xz
+sudo mv dashgen /usr/local/bin/
+```
+
+Verify the download against `checksums.txt` published on the same release page:
+```bash
+sha256sum -c checksums.txt --ignore-missing
+```
+
+### Build from source
+
+Requires Go 1.25+. DashGen uses a local Go module path (`module dashgen`), so clone and build:
 
 ```bash
-git clone <repo-url> dashgen
+git clone https://github.com/hemzaz/dashgen dashgen
 cd dashgen
 make build         # produces ./dashgen
+```
+
+Or install directly with the Go toolchain:
+
+```bash
+go install github.com/hemzaz/dashgen/cmd/dashgen@latest
 ```
 
 ## Usage
