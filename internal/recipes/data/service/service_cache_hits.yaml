@@ -1,0 +1,36 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_cache_hits
+  section: traffic
+  profile: service
+  confidence: 0.80
+  tier: v0.2-T2
+  description: "Cache hit/miss rate and hit ratio for a service's cache layer (counter pair: <prefix>_cache_hits_total / <prefix>_cache_misses_total)."
+  tags: [cache, traffic, pair]
+
+pair_with:
+  suffix_swap: { from_suffix: "_cache_hits_total", to_suffix: "_cache_misses_total" }
+  on_missing: omit
+
+match:
+  type: counter
+  name_has_suffix: "_cache_hits_total"
+
+panels:
+  - title_template: 'Cache hit/miss: {{ stripSuffix .Metric "_cache_hits_total" }}'
+    kind: timeseries
+    unit: cps
+    group_by: [instance, job]
+    requires_pair: true
+    rationale_template: 'cache hit/miss pair {{ .Metric }} / {{ .Pair.Name }}: rates per second and hit ratio per (instance, job).'
+    queries:
+      - query_template: 'sum by (instance, job) (rate({{ .Metric }}[{{ .Window }}]))'
+        legend_template: '{{ legendFor . }} hits'
+        unit: cps
+      - query_template: 'sum by (instance, job) (rate({{ .Pair.Name }}[{{ .Window }}]))'
+        legend_template: '{{ legendFor . }} misses'
+        unit: cps
+      - query_template: 'sum by (instance, job) (rate({{ .Metric }}[{{ .Window }}])) / (sum by (instance, job) (rate({{ .Metric }}[{{ .Window }}])) + sum by (instance, job) (rate({{ .Pair.Name }}[{{ .Window }}])))'
+        legend_template: '{{ legendFor . }} hit ratio'
+        unit: percentunit

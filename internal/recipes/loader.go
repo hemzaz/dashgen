@@ -180,14 +180,22 @@ type MatchPredicate struct {
 
 // PanelTemplate is one rendered output unit in a recipe (CUE:
 // #PanelTemplate).
+//
+// Two query-emission forms are mutually exclusive (CUE-enforced):
+//   - Single-query form: QueryTemplate + LegendTemplate are set; Queries is empty.
+//   - Multi-query form:  Queries is non-empty; QueryTemplate + LegendTemplate are "".
+//
+// The multi-query form is also incompatible with Quantiles (CUE rejects the
+// combination at unification — see schema.cue's #PanelTemplate disjunction).
 type PanelTemplate struct {
 	TitleTemplate      string            `json:"title_template"`
 	TitlePerMetric     map[string]string `json:"title_per_metric,omitempty"`
 	UnitPerMetric      map[string]string `json:"unit_per_metric,omitempty"`
 	Kind               string            `json:"kind,omitempty"`
 	Unit               string            `json:"unit"`
-	QueryTemplate      string            `json:"query_template"`
-	LegendTemplate     string            `json:"legend_template"`
+	QueryTemplate      string            `json:"query_template,omitempty"`
+	LegendTemplate     string            `json:"legend_template,omitempty"`
+	Queries            []PanelQuery      `json:"queries,omitempty"`
 	RationaleTemplate  string            `json:"rationale_template,omitempty"`
 	GroupBy            []string          `json:"group_by,omitempty"`
 	PreferredLabels    []string          `json:"preferred_labels,omitempty"`
@@ -195,6 +203,15 @@ type PanelTemplate struct {
 	Quantiles          []float64         `json:"quantiles,omitempty"`
 	RequiresPair       bool              `json:"requires_pair,omitempty"`
 	RequiresMetricType string            `json:"requires_metric_type,omitempty"`
+}
+
+// PanelQuery is one entry in PanelTemplate.Queries (multi-query form). Each
+// entry contributes a single ir.QueryCandidate to the panel; the panel itself
+// is rendered once and accumulates len(Queries) candidates in YAML source order.
+type PanelQuery struct {
+	QueryTemplate  string `json:"query_template"`
+	LegendTemplate string `json:"legend_template"`
+	Unit           string `json:"unit"`
 }
 
 // PairSpec describes a multi-metric join (DSL §8). Exactly one of

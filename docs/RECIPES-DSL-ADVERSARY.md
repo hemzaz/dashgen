@@ -333,6 +333,7 @@ After load, the following invariants hold and the test suite enforces them:
 | I13 | Profile binding is enforced — service recipes don't leak to infra dashboards. | `loader_test.go::TestRegistry_ProfileBinding`. |
 | I14 | apiVersion is exactly `dashgen.io/v1`. | CUE schema constraint. |
 | I15 | Metric-name fields (name_equals etc.) are ASCII-only. | CUE schema constraint. |
+| I16 | A panel uses exactly one query-emission form: single (`query_template` + `legend_template`) OR multi (`queries:` list) — never both, never neither. The multi-query form is also forbidden in combination with `quantiles:`. | CUE `#PanelTemplate` disjunction. Tested in `loader_test.go::TestPanelQueryFormMutex` (BothFormsPresent / NeitherFormPresent / QuantilesWithMultiQuery). |
 
 These invariants are tested in `internal/recipes/loader_test.go`, `matcher_test.go`, `template_test.go`, and `pair_test.go`.
 

@@ -48,10 +48,18 @@ type YAMLRecipe struct {
 	// len(Spec.Panels) post-construction. rationaleTmpls entries are nil
 	// for panels that omit rationale_template (the default auto-rationale
 	// fallback applies).
-	titleTmpls     []*Template
-	queryTmpls     []*Template
-	legendTmpls    []*Template
-	rationaleTmpls []*Template
+	//
+	// For panels using the multi-query form (panel.Queries is non-empty),
+	// queryTmpls[i] and legendTmpls[i] are nil; multiQueryTmpls[i] and
+	// multiLegendTmpls[i] hold the per-query parsed templates instead.
+	// For single-query panels, the inverse holds. The two forms are
+	// mutually exclusive — schema-enforced via CUE disjunction.
+	titleTmpls       []*Template
+	queryTmpls       []*Template
+	legendTmpls      []*Template
+	multiQueryTmpls  [][]*Template
+	multiLegendTmpls [][]*Template
+	rationaleTmpls   []*Template
 }
 
 // NewYAMLRecipe constructs a YAMLRecipe from a LoadedRecipe. It:
@@ -87,17 +95,45 @@ func NewYAMLRecipe(loaded LoadedRecipe) (*YAMLRecipe, error) {
 		}
 		y.titleTmpls = append(y.titleTmpls, title)
 
-		query, err := Parse(base+".query", panel.QueryTemplate)
-		if err != nil {
-			return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
-		}
-		y.queryTmpls = append(y.queryTmpls, query)
+		// Branch on which query-emission form this panel uses. Schema
+		// (CUE disjunction) guarantees exactly one is set.
+		if len(panel.Queries) > 0 {
+			// Multi-query form: parse one query/legend pair per entry.
+			multiQueries := make([]*Template, 0, len(panel.Queries))
+			multiLegends := make([]*Template, 0, len(panel.Queries))
+			for j, pq := range panel.Queries {
+				qbase := fmt.Sprintf("%s.queries[%d]", base, j)
+				q, err := Parse(qbase+".query", pq.QueryTemplate)
+				if err != nil {
+					return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
+				}
+				l, err := Parse(qbase+".legend", pq.LegendTemplate)
+				if err != nil {
+					return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
+				}
+				multiQueries = append(multiQueries, q)
+				multiLegends = append(multiLegends, l)
+			}
+			y.queryTmpls = append(y.queryTmpls, nil)
+			y.legendTmpls = append(y.legendTmpls, nil)
+			y.multiQueryTmpls = append(y.multiQueryTmpls, multiQueries)
+			y.multiLegendTmpls = append(y.multiLegendTmpls, multiLegends)
+		} else {
+			query, err := Parse(base+".query", panel.QueryTemplate)
+			if err != nil {
+				return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
+			}
+			y.queryTmpls = append(y.queryTmpls, query)
 
-		legend, err := Parse(base+".legend", panel.LegendTemplate)
-		if err != nil {
-			return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
+			legend, err := Parse(base+".legend", panel.LegendTemplate)
+			if err != nil {
+				return nil, fmt.Errorf("recipe %s (%s): %w", name, loaded.Path, err)
+			}
+			y.legendTmpls = append(y.legendTmpls, legend)
+
+			y.multiQueryTmpls = append(y.multiQueryTmpls, nil)
+			y.multiLegendTmpls = append(y.multiLegendTmpls, nil)
 		}
-		y.legendTmpls = append(y.legendTmpls, legend)
 
 		// rationale_template is optional; nil entry signals "fall back to
 		// the default auto-generated rationale at render time".
@@ -227,6 +263,17 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 				GroupBy:         group,
 				PreferredLabels: panel.PreferredLabels,
 				Pair:            pair,
+			}
+
+			// Multi-query panel: render the title once and accumulate one
+			// ir.QueryCandidate per entry into a single ir.Panel. Mirrors
+			// the histogram-quantile path below but without quantile
+			// substitution; per-query units come from panel.Queries[j].Unit.
+			if len(panel.Queries) > 0 {
+				if rendered, ok := y.renderMultiQueryPanel(i, panel, baseCtx, m, group, pair); ok {
+					out = append(out, rendered)
+				}
+				continue
 			}
 
 			// Non-quantile panel: render and emit one panel with one query.
@@ -387,6 +434,62 @@ func renderUnit(panel PanelTemplate, m ClassifiedMetricView) string {
 		return u
 	}
 	return panel.Unit
+}
+
+// renderMultiQueryPanel renders one ir.Panel from the i-th panel template
+// when that panel uses the multi-query form (panel.Queries non-empty). The
+// title is rendered once against ctx; each entry in panel.Queries contributes
+// one ir.QueryCandidate by rendering its query_template + legend_template
+// against the SAME ctx (queries share the matched-metric's context). Per-query
+// Grafana units come from panel.Queries[j].Unit, distinct from the panel-level
+// display unit (panel.Unit) which appears on the panel envelope itself.
+//
+// Determinism: queries iterate in YAML source order (same as panel.Queries).
+// Returns (zero, false) if any template render fails.
+func (y *YAMLRecipe) renderMultiQueryPanel(
+	i int,
+	panel PanelTemplate,
+	ctx RenderContext,
+	m ClassifiedMetricView,
+	group []string,
+	pair *PairContext,
+) (ir.Panel, bool) {
+	title, err := y.renderTitle(i, panel, ctx, m)
+	if err != nil {
+		return ir.Panel{}, false
+	}
+	queries := make([]ir.QueryCandidate, 0, len(panel.Queries))
+	for j, pq := range panel.Queries {
+		expr, err := y.multiQueryTmpls[i][j].Render(ctx)
+		if err != nil {
+			return ir.Panel{}, false
+		}
+		legend, err := y.multiLegendTmpls[i][j].Render(ctx)
+		if err != nil {
+			return ir.Panel{}, false
+		}
+		queries = append(queries, ir.QueryCandidate{
+			Expr:         strings.TrimSpace(expr),
+			LegendFormat: strings.TrimSpace(legend),
+			Unit:         pq.Unit,
+		})
+	}
+	rationaleStr := y.rationale(m, panel, group, pair)
+	if y.rationaleTmpls[i] != nil {
+		if rendered, rerr := y.rationaleTmpls[i].Render(ctx); rerr == nil {
+			rationaleStr = strings.TrimSpace(rendered)
+		}
+	}
+	unit := renderUnit(panel, m)
+	return ir.Panel{
+		UID:        "", // set by synth after dashboardUID computed
+		Title:      strings.TrimSpace(title),
+		Kind:       panelKindFor(panel.Kind),
+		Unit:       unit,
+		Confidence: y.Spec.Metadata.Confidence,
+		Queries:    queries,
+		Rationale:  rationaleStr,
+	}, true
 }
 
 // renderSinglePanel renders one ir.Panel from the i-th panel template under

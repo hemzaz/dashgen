@@ -47,9 +47,18 @@ type expectedPanel struct {
 }
 
 // recipeTestData is the full decoded companion fixture.
+//
+// PairMetrics is the optional list of metrics to include in the snapshot
+// without asserting they Match() the recipe. Required for pair_with recipes
+// where the matched metric needs a partner present in the inventory for
+// pair_with: suffix_swap / prefix_swap / explicit to resolve. Schema-wise
+// the partner does NOT match the recipe's predicate (e.g. service_cache_hits
+// matches *_cache_hits_total; the *_cache_misses_total partner is in
+// pair_metrics, not positive_metrics).
 type recipeTestData struct {
 	PositiveMetrics []testMetricEntry `json:"positive_metrics"`
 	NegativeMetrics []testMetricEntry `json:"negative_metrics"`
+	PairMetrics     []testMetricEntry `json:"pair_metrics,omitempty"`
 	ExpectedPanels  []expectedPanel   `json:"expected_panels"`
 }
 
@@ -213,11 +222,17 @@ func TestRecipesYAML_MatchAndBuild(t *testing.T) {
 			if len(td.ExpectedPanels) == 0 {
 				return
 			}
-			positiveViews := make([]ClassifiedMetricView, len(td.PositiveMetrics))
-			for i, pm := range td.PositiveMetrics {
-				positiveViews[i] = makeViewFromEntry(pm)
+			// Merge positive + pair_metrics into the snapshot. PairMetrics
+			// (optional) provides metrics that must be present for pair_with:
+			// resolution but are not themselves expected to Match() the recipe.
+			views := make([]ClassifiedMetricView, 0, len(td.PositiveMetrics)+len(td.PairMetrics))
+			for _, pm := range td.PositiveMetrics {
+				views = append(views, makeViewFromEntry(pm))
 			}
-			snap := makeHarnessSnapshot(positiveViews)
+			for _, pm := range td.PairMetrics {
+				views = append(views, makeViewFromEntry(pm))
+			}
+			snap := makeHarnessSnapshot(views)
 			profile := profiles.Profile(loaded.Spec.Metadata.Profile)
 			panels := recipe.BuildPanels(snap, profile)
 

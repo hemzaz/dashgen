@@ -475,6 +475,120 @@ panels:
 }
 
 // =============================================================================
+// TestPanelQueryFormMutex — T5.0.E mutual-exclusion enforcement.
+// =============================================================================
+//
+// The CUE schema's #PanelTemplate disjunction (schema.cue) requires every panel
+// to use exactly one query-emission form: either the single-query trio
+// (query_template + legend_template) OR the multi-query queries: list — never
+// both, and never neither. Multi-query is also incompatible with quantiles.
+// These three rejection tests pin those invariants at the loader level so a
+// regression in the disjunction surfaces immediately.
+
+func TestPanelQueryFormMutex(t *testing.T) {
+	cases := []struct {
+		name     string
+		body     string
+		wantSubs []string
+	}{
+		{
+			name: "BothFormsPresent",
+			// Single-query trio AND queries: list — schema must reject via the
+			// #PanelTemplate disjunction's empty-disjunction error.
+			body: `apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: ambiguous_recipe
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: cps
+    query_template: "rate(foo[5m])"
+    legend_template: "x"
+    queries:
+      - query_template: "rate(foo[5m])"
+        legend_template: "x"
+        unit: cps
+`,
+			wantSubs: []string{"panels.0", "empty disjunction"},
+		},
+		{
+			name: "NeitherFormPresent",
+			// No query_template AND no queries: — schema must reject because
+			// the single-query arm requires query_template + legend_template.
+			body: `apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: empty_recipe
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: cps
+`,
+			wantSubs: []string{"missing required field", "query_template"},
+		},
+		{
+			name: "QuantilesWithMultiQuery",
+			// queries: list combined with quantiles: — schema's multi-query
+			// disjunction arm forbids quantiles, so unification fails.
+			body: `apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: forbidden_combo
+  section: latency
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: histogram
+panels:
+  - title_template: "x"
+    unit: s
+    quantiles: [0.5, 0.95]
+    queries:
+      - query_template: "rate(foo[5m])"
+        legend_template: "x"
+        unit: s
+`,
+			wantSubs: []string{"panels.0", "empty disjunction"},
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			writeFile(t, filepath.Join(dir, "case.yaml"), tc.body)
+
+			_, err := Load(context.Background(), LoaderConfig{UserDirs: []string{dir}})
+			if err == nil {
+				t.Fatalf("%s: expected schema rejection, got nil", tc.name)
+			}
+			msg := err.Error()
+			for _, sub := range tc.wantSubs {
+				if !strings.Contains(msg, sub) {
+					t.Errorf("%s: error %q does not contain %q", tc.name, msg, sub)
+				}
+			}
+			var le *LoadError
+			if !errors.As(err, &le) {
+				t.Errorf("%s: expected *LoadError, got %T", tc.name, err)
+			}
+		})
+	}
+}
+
+// =============================================================================
 // SchemaBytes — defensive copy.
 // =============================================================================
 

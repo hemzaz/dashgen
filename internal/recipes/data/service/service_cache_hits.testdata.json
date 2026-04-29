@@ -1,0 +1,60 @@
+{
+  "_recipe": "service_cache_hits",
+  "_comment": "Counter pair <prefix>_cache_hits_total / <prefix>_cache_misses_total; emits one panel with three queries: hit rate (cps), miss rate (cps), hit ratio (percentunit).",
+
+  "positive_metrics": [
+    {
+      "name": "redis_cache_hits_total",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for the pair_with: suffix_swap to resolve. Does not itself Match() the recipe (Match keys on _cache_hits_total).",
+      "name": "redis_cache_misses_total",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: misses-side counter alone never matches (Match keys on hits suffix).",
+      "name": "http_cache_misses_total",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: contains 'cache' but wrong suffix.",
+      "name": "cache_evictions_total",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected.",
+      "name": "redis_cache_hits_total",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Cache hit/miss: redis",
+      "query_contains": "sum by (instance, job) (rate(redis_cache_hits_total[5m]))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Cache hit/miss: redis",
+      "query_contains": "sum by (instance, job) (rate(redis_cache_misses_total[5m]))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Cache hit/miss: redis",
+      "query_contains": "sum by (instance, job) (rate(redis_cache_hits_total[5m])) / (sum by (instance, job) (rate(redis_cache_hits_total[5m])) + sum by (instance, job) (rate(redis_cache_misses_total[5m])))",
+      "kind": "timeseries"
+    }
+  ]
+}

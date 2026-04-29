@@ -45,7 +45,7 @@ func NewServiceRegistry() *Registry {
 	// service_gc_pause migrated to YAML (T6A.1) — see data/service/service_gc_pause.yaml.
 	// service_db_query_latency migrated to YAML (T6A.1) — see data/service/service_db_query_latency.yaml.
 	// service_tls_expiry migrated to YAML (T5.1) — see data/service/service_tls_expiry.yaml.
-	r.Register(NewServiceCacheHits())
+	// service_cache_hits migrated to YAML (T5.0.E) — see data/service/service_cache_hits.yaml.
 	r.Register(NewServiceJobSuccess())
 	// service_client_http migrated to YAML (T6A.1) — see data/service/service_client_http.yaml.
 	r.Register(NewServiceDBPool())

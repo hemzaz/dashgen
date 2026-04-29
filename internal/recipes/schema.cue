@@ -199,12 +199,26 @@ import (
 	// units per metric (e.g. infra_disk_io_latency: "percentunit" vs "s").
 	unit_per_metric?: [#MetricNameASCII]: #Unit
 
-	kind:           "timeseries" | "stat" | "gauge" | "barchart" | *"timeseries"
-	unit:           #Unit
-	query_template: string & strings.MaxRunes(2048)
+	kind: "timeseries" | "stat" | "gauge" | "barchart" | *"timeseries"
+	unit: #Unit
 
-	// ADVERSARY: T6 — render-time output cap is enforced at render (loader).
-	legend_template: string & strings.MaxRunes(160)
+	// Single-query form (default). EITHER this trio is set, OR the multi-query
+	// `queries` list below is set — not both. The mutual-exclusion is encoded
+	// by the disjunction at the bottom of #PanelTemplate.
+	query_template?:  string & strings.MaxRunes(2048)
+	legend_template?: string & strings.MaxRunes(160)
+
+	// Multi-query form. When set, this panel emits N queries from N distinct
+	// templates against the SAME render context. Required for recipes whose
+	// single panel mixes queries with different exprs, legends, AND per-query
+	// units (e.g. service_cache_hits: hit rate / miss rate / hit ratio with
+	// units cps / cps / percentunit). Capped at 5 entries to bound per-panel
+	// fan-out (matches the quantiles cap above).
+	//
+	// ADVERSARY: T13 — per-panel fan-out cap. Same MaxItems(5) limit as
+	//                  quantiles. The two forms are mutually exclusive (see
+	//                  bottom of #PanelTemplate).
+	queries?: [...#PanelQuery] & list.MinItems(1) & list.MaxItems(5)
 
 	// Optional per-panel rationale template. When set, replaces the default
 	// auto-generated rationale used in rationale.md (see YAMLRecipe.rationale).
@@ -233,6 +247,32 @@ import (
 
 	// Type-dispatch: panel only emits when the matched metric is of this type.
 	requires_metric_type?: "counter" | "gauge" | "histogram" | "summary"
+}
+
+// #PanelTemplate disjunction: a panel must use exactly one query-emission form.
+//   - Single-query form: query_template + legend_template are set; queries is absent.
+//   - Multi-query form:  queries is set; query_template + legend_template are absent.
+// Multi-query is also forbidden in combination with quantiles (T5.0.E): the two
+// forms address disjoint needs and combining them silently raises per-panel
+// fan-out beyond design.
+#PanelTemplate: ({
+	query_template:  string
+	legend_template: string
+	queries?:        _|_
+} | {
+	queries:          [...#PanelQuery]
+	query_template?:  _|_
+	legend_template?: _|_
+	quantiles?:       _|_
+})
+
+// #PanelQuery is one entry in the multi-query form's queries list. Each entry
+// carries its own query template, legend template, and Grafana unit. Caps
+// mirror the panel-level single-query caps (160 / 2048 / 160 runes).
+#PanelQuery: {
+	query_template:  string & strings.MaxRunes(2048)
+	legend_template: string & strings.MaxRunes(160)
+	unit:            #Unit
 }
 
 // #Unit is the canonical unit set; the trailing `string` arm is the vendor-
