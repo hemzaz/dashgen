@@ -459,10 +459,16 @@ func TestEval_Combinators(t *testing.T) {
 // ─── ReDoS immunity ──────────────────────────────────────────────────────────
 
 // TestEval_RedosImmunity verifies that matching a pathological polynomial-
-// blowup regex against a long adversarial string completes in under 10ms.
+// blowup regex against a long adversarial string completes in under 25ms.
 // Go's RE2-backed regexp is linear-time, so this is always expected to pass.
 // It acts as a canary: if the package ever switches to a backtracking engine,
 // this test would time out (ADVERSARY T4).
+//
+// Ceiling widened from 10ms → 25ms in T7.3: the original 10ms ceiling flaked
+// ~40% under -race on busy hardware (race-mode adds 5–15× wall-clock cost).
+// 25ms keeps the canary tight enough to catch a real engine swap (a back-
+// tracking engine on this input is seconds, not milliseconds) while absorbing
+// -race overhead without false positives.
 func TestEval_RedosImmunity(t *testing.T) {
 	// Classic polynomial regex: "(a+)+" would be O(2^n) on backtracking engines.
 	// Go's RE2 handles it in O(n).
@@ -482,8 +488,8 @@ func TestEval_RedosImmunity(t *testing.T) {
 	if result {
 		t.Error("Eval should not match: adversarial string ends with '!' which breaks (a+)+$")
 	}
-	if elapsed > 10*time.Millisecond {
-		t.Errorf("RE2 immunity violated: match took %v (want < 10ms)", elapsed)
+	if elapsed > 25*time.Millisecond {
+		t.Errorf("RE2 immunity violated: match took %v (want < 25ms)", elapsed)
 	}
 }
 

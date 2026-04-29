@@ -521,8 +521,11 @@ func TestLint_ValidBuiltinFixtures(t *testing.T) {
 }
 
 // BenchmarkLint_SingleFile measures cold lint performance for a single file.
-// Target: ≤200ms cold (RECIPES-CLI.md §3.3 G3, §10.3).
+// Target: ≤200ms cold (RECIPES-CLI.md §3.3 G3, §10.3). T7.3 wired the budget
+// assertion so a regression that pushes lint past 200ms/op fails the bench.
 func BenchmarkLint_SingleFile(b *testing.B) {
+	const budgetMS = 200.0
+
 	dir := b.TempDir()
 	p := filepath.Join(dir, "bench.yaml")
 	if err := os.WriteFile(p, []byte(validRecipeYAML), 0o644); err != nil {
@@ -539,5 +542,11 @@ func BenchmarkLint_SingleFile(b *testing.B) {
 		if err := cmd.Execute(); err != nil {
 			b.Fatalf("lint error: %v", err)
 		}
+	}
+	b.StopTimer()
+
+	msPerOp := float64(b.Elapsed()) / float64(b.N) / 1e6
+	if msPerOp > budgetMS {
+		b.Errorf("budget exceeded: lint %.1fms/op > %.0fms (T7.3)", msPerOp, budgetMS)
 	}
 }
