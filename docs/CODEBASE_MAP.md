@@ -42,7 +42,7 @@ graph TB
         Prof[profiles<br/>service / infra / k8s]
     end
     subgraph Recipes["internal/recipes"]
-        Reg[Registry<br/>44 recipes]
+        Reg[Registry<br/>47 YAML recipes]
         Rcp[Recipe interface]
     end
     subgraph Render["internal/render"]
@@ -104,7 +104,7 @@ dashgen/
 │   ├── inventory/            # canonical MetricInventory + Sort + hash
 │   ├── classify/             # deterministic trait classifier (3 traits)
 │   ├── profiles/             # profile enum + section order + panel cap
-│   ├── recipes/              # 44 recipe files + interface + helpers + registry
+│   ├── recipes/              # YAML loader + matcher + pair + registry + template + helpers + types + schema_embed + data_embed + yaml_recipe (47 built-in YAMLs in data/)
 │   ├── synth/                # recipe-driven panel synthesis
 │   ├── ids/                  # SHA-256 stable UID generator
 │   ├── safety/               # denylist + cardinality policy
@@ -136,7 +136,7 @@ dashgen/
 | `internal/inventory` | Canonical `MetricInventory` with sorted metric names + labels; hash-stable | `MetricInventory`, `MetricDescriptor`, `MetricType`, `InventoryHash` | sort, sha256 |
 | `internal/classify` | Deterministic trait classifier; attaches `service_http`, `service_grpc`, `latency_histogram` by labels + name patterns + LOW-weight help-text hints (regex-gated, label-suppressed) | `Classify`, `ClassifiedInventory`, `Trait` constants | inventory, regexp |
 | `internal/profiles` | Profile enum (`service`/`infra`/`k8s`) + section order + `PanelCap` | `Profile`, `Sections`, `PanelCap`, `IsKnown` | (none) |
-| `internal/recipes` | 44 recipes + `Recipe` interface + helpers + 3 registries | `Recipe`, `Registry`, `NewServiceRegistry`, `NewInfraRegistry`, `NewK8sRegistry`, `safeGroupLabels`, `legendFor`, `DefaultRateWindow` | classify, inventory, ir, profiles |
+| `internal/recipes` | YAML recipe loader + CUE schema validation + `text/template` rendering + 47 built-in recipes (embedded from `data/`); user-dir loading via `--recipes-dir` / XDG default; `YAMLRecipe` implements `Recipe` interface unchanged | `Recipe`, `Registry`, `NewServiceRegistry`, `NewInfraRegistry`, `NewK8sRegistry`, `LoadYAML`, `LoadDir`, `safeGroupLabels`, `legendFor`, `firstLabelOf`, `DefaultRateWindow` | classify, inventory, ir, profiles, cuelang.org/go/cue |
 | `internal/synth` | Recipe-driven panel synthesis; applies panel cap by `(Confidence desc, UID asc)` | `Synthesize`, `SynthesizeWithCap`, `snapshotOf` | classify, ids, inventory, ir, profiles, recipes |
 | `internal/ids` | Stable SHA-256[:16] UIDs for dashboard + panel | `DashboardUID`, `PanelUID` | sha256 |
 | `internal/safety` | Banned-label denylist + cardinality threshold + `le`-exemption | `Policy`, `NewPolicy`, `EvaluateGrouping`, `CardinalityRisk`, `BannedLabels` | ir, strings, sort |
@@ -228,22 +228,25 @@ sequenceDiagram
 
 Defaults: `TotalBudget: 200` calls per run, `PerQueryTimeout: 5s` (app layer; validate package default is 3s).
 
-## Recipe catalog (44 total)
+## Recipe catalog (47 total)
 
 ### Recipe authoring
 
-Every recipe implements the `Recipe` interface: `Name()`, `Section()`, `Match(ClassifiedMetricView) bool`, `BuildPanels(ClassifiedInventorySnapshot, Profile) []ir.Panel`. Recipes are registered in one of three profile registries and sorted by name for deterministic tie-breaking.
+Every recipe implements the `Recipe` interface: `Name()`, `Section()`, `Match(ClassifiedMetricView) bool`, `BuildPanels(ClassifiedInventorySnapshot, Profile) []ir.Panel`. In v0.3 all recipes are YAML files loaded and validated at startup; the interface is unchanged so synth/validate/render/safety are agnostic to the source format. Recipes are registered in one of three profile registries and sorted by name for deterministic tie-breaking.
 
-Shared helpers in `internal/recipes/helpers.go`:
+Built-in YAML recipes live in `internal/recipes/data/{service,infra,k8s}/`. User recipes are loaded from `--recipes-dir` paths or `$XDG_CONFIG_HOME/dashgen/recipes/` (fallback `~/.config/dashgen/recipes/`). See [`docs/RECIPES.md`](RECIPES.md) for the authoring contract and [`docs/RECIPES-USER-GUIDE.md`](RECIPES-USER-GUIDE.md) for the walkthrough.
+
+Shared helpers in `internal/recipes/helpers.go` (available in `text/template` as `groupBy`, `legendFor`, `firstLabelOf`):
 
 - `safeGroupLabels(m, preferred...)` — always includes `job`+`instance` if present, adds preferred labels that exist on the descriptor, filters banned labels, sorts for determinism. Fallback: `["job"]`.
 - `legendFor(labels)` — Grafana legend template `"{{job}} {{instance}}"`.
+- `firstLabelOf(m, candidates...)` — returns the first candidate label present on the metric descriptor.
 - `ensureLabel(labels, want)` — forces a label into the grouping (used for `le` on histogram_quantile).
 - `without(labels, drop)` — strips a label from the legend (used to hide `le` from display).
 - `statusLabelOf(m)` — first HTTP-status label (`status_code` or `code`) present on the descriptor.
 - `DefaultRateWindow()` / `defaultRateWindow = "5m"`.
 
-### Service profile (17 recipes)
+### Service profile (20 recipes)
 
 | Name | Section | Confidence | Primary signal | Tier |
 |------|---------|-----------|----------------|------|
@@ -258,23 +261,25 @@ Shared helpers in `internal/recipes/helpers.go`:
 | service_goroutines | saturation | 0.90 | exact `go_goroutines` gauge, `max by (instance)` | v0.2 T1 |
 | service_gc_pause | latency | 0.85 | `go_gc_duration_seconds` summary-or-histogram | v0.2 T1 |
 | service_db_query_latency | latency | 0.80 | histogram with `latency_histogram` + name contains query/db/sql + NOT HTTP + NOT gRPC | v0.2 T2 |
-| service_tls_expiry | saturation | 0.80 | gauge ending `_tls_not_after_timestamp` / `_cert_expiry_timestamp_seconds` / `_ssl_cert_not_after`; `(m - time()) / 86400` | v0.2 T2 |
+| service_tls_expiry | saturation | 0.80 | gauge ending `_tls_not_after_timestamp` / `_cert_expiry_timestamp_seconds` / `_ssl_cert_not_after` | v0.2 T2 |
 | service_cache_hits | traffic | 0.80 | `*_cache_hits_total` + `*_cache_misses_total` pair | v0.2 T2 |
 | service_client_http | traffic | 0.75 | counter + name contains "client" + has status label | v0.2 T2 |
-| service_db_pool | saturation | 0.80 | `go_sql_stats_connections_in_use` + max; or `pgxpool_acquired_connections` + max | v0.2 T2 |
-| service_job_success | errors | 0.80 | `*_jobs_succeeded_total` + `*_jobs_failed_total` (or success/failure variant) | v0.2 T2 |
-| service_kafka_consumer_lag | errors | 0.85 | `kafka_consumergroup_lag` / `kafka_consumergroup_lag_sum` gauge (Tier-3 promoted) | v0.2 T2 |
-| service_request_size | saturation | 0.75 | histogram with name ending `_request_size_bytes` + HTTP-shape guard (`method` or `handler`); accepts `_bucket` form via TrimSuffix | v0.2 T2 |
-| service_response_size | saturation | 0.75 | histogram with name ending `_response_size_bytes` + HTTP-shape guard; same `_bucket` handling | v0.2 T2 |
+| service_db_pool_go_sql_stats | saturation | 0.80 | `go_sql_stats_connections_in_use` / `_max` pair (v0.3 split) | v0.3 |
+| service_db_pool_pgxpool | saturation | 0.80 | `pgxpool_acquired_connections` / `_max` pair (v0.3 split) | v0.3 |
+| service_job_success | errors | 0.80 | `*_jobs_succeeded_total` + `*_jobs_failed_total` pair | v0.2 T2 |
+| service_kafka_consumer_lag | errors | 0.85 | `kafka_consumergroup_lag` / `kafka_consumergroup_lag_sum` gauge | v0.2 T2 |
+| service_request_size | saturation | 0.75 | histogram with name ending `_request_size_bytes` + HTTP-shape guard | v0.2 T2 |
+| service_response_size | saturation | 0.75 | histogram with name ending `_response_size_bytes` + HTTP-shape guard | v0.2 T2 |
 
-### Infra profile (12 recipes)
+### Infra profile (14 recipes)
 
 | Name | Section | Confidence | Primary signal | Tier |
 |------|---------|-----------|----------------|------|
 | infra_cpu | cpu | 0.85 | `node_cpu_seconds_total` mode breakdown | v0.1 |
 | infra_memory | memory | 0.85 | `node_memory_Mem{Available,Total}_bytes` pair | v0.1 |
 | infra_disk | disk | 0.85 | `node_filesystem_{avail,size}_bytes` pair | v0.1 |
-| infra_network | network | 0.85 | `node_network_{receive,transmit}_bytes_total` | v0.1 |
+| infra_network_receive | network | 0.85 | `node_network_receive_bytes_total` (v0.3 split) | v0.3 |
+| infra_network_transmit | network | 0.85 | `node_network_transmit_bytes_total` (v0.3 split) | v0.3 |
 | infra_load | cpu | 0.90 | `node_load{1,5,15}` gauges | v0.2 T1 |
 | infra_filesystem_usage | disk | 0.85 | used-ratio per `{instance, mountpoint, fstype}` | v0.2 T1 |
 | infra_file_descriptors | overview | 0.90 | `process_{open,max}_fds` ratio | v0.2 T1 |
@@ -285,12 +290,13 @@ Shared helpers in `internal/recipes/helpers.go`:
 | infra_ntp_offset | overview | 0.90 | `node_timex_offset_seconds` | v0.2 T2 |
 | infra_interrupts | saturation | 0.80 | exact `node_interrupts_total` counter | v0.2 T2 |
 
-### Kubernetes profile (10 recipes)
+### Kubernetes profile (13 recipes)
 
 | Name | Section | Confidence | Primary signal | Tier |
 |------|---------|-----------|----------------|------|
 | k8s_pod_health | pods | 0.90 | `kube_pod_status_phase` gauge | v0.1 |
-| k8s_container_resources | resources | 0.85 | cAdvisor `container_cpu_*` / `container_memory_*` with namespace/pod filter | v0.1 |
+| k8s_container_cpu | resources | 0.85 | cAdvisor `container_cpu_usage_seconds_total` with namespace/pod filter (v0.3 split) | v0.3 |
+| k8s_container_memory | resources | 0.85 | cAdvisor `container_memory_working_set_bytes` with namespace/pod filter (v0.3 split) | v0.3 |
 | k8s_restarts | workloads | 0.75 | `kube_pod_container_status_restarts_total` | v0.1 |
 | k8s_deployment_availability | workloads | 0.90 | `kube_deployment_{spec,status_replicas_available}_replicas` pair | v0.2 T1 |
 | k8s_node_conditions | resources | 0.90 | 4-query fixed set over `kube_node_status_condition{condition=...}` | v0.2 T1 |
@@ -300,9 +306,9 @@ Shared helpers in `internal/recipes/helpers.go`:
 | k8s_etcd_commit | resources | 0.90 | `etcd_disk_backend_commit_duration_seconds` histogram | v0.2 T2 |
 | k8s_hpa_scaling | workloads | 0.90 | `kube_horizontalpodautoscaler_status_{current,desired}_replicas` pair | v0.2 T2 |
 | k8s_coredns | latency | 0.85 | paired `coredns_dns_request_duration_seconds` histogram + `coredns_dns_requests_total` counter | v0.2 T2 |
-| k8s_scheduler_latency | latency | 0.85 | exact `scheduler_scheduling_attempt_duration_seconds` histogram + `result` label; accepts `_bucket` form | v0.2 T2 |
+| k8s_scheduler_latency | latency | 0.85 | exact `scheduler_scheduling_attempt_duration_seconds` histogram + `result` label | v0.2 T2 |
 
-Every recipe ships with a `<name>_test.go` file: table-driven `Match` test covering the named look-alike negatives from `RECIPES.md`, plus a `BuildPanels` test verifying query shape, grouping, and (for pair-metric recipes) graceful omission when the pair is incomplete.
+Every built-in recipe is a YAML file in `internal/recipes/data/`. The YAML harness covers Match + BuildPanels via parameterized `testdata/*.json` fixture tables; per-recipe Go test files no longer exist.
 
 ## Fixtures and tests
 
@@ -422,7 +428,8 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 | `docs/ARCHITECTURE.md` | **System design + package responsibilities** |
 | `docs/STRUCTURE.md` | **Repo layout + dependency direction** |
 | `docs/ROADMAP.md` | Staged timeline + cross-stage rules |
-| `docs/RECIPES.md` | **Recipe catalog + authoring contract + test matrix** |
+| `docs/RECIPES.md` | **Recipe authoring contract (v0.3+ YAML)** — replaces the Go-recipe contract |
+| `docs/RECIPES-USER-GUIDE.md` | **Beginner walkthrough** — install, init, scaffold, lint, test, override; 3 worked examples |
 | `docs/V0.2-PLAN.md` | **v0.2 enrichment contract + AI boundary + phased delivery** |
 | `docs/V0.2-REMAINDER.md` | v0.2 RALPLAN-DR consensus plan (historical; v0.2.0 shipped) |
 | `docs/V0.3-PLAN.md` | **v0.3 implementation plan** — 8-phase rollout, team assignments, per-task DoD, risk register, release-level acceptance |
@@ -463,7 +470,7 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 
 | To do… | Touch |
 |--------|-------|
-| **Add a new recipe** | Create `internal/recipes/<name>.go` + `<name>_test.go` following the authoring contract (§1 of `RECIPES.md`); register in `registry.go`; update `service_memory_test.go`'s registry-count list; extend the relevant `*-realistic` fixture with a positive case AND at least one look-alike; regenerate goldens with `UPDATE_GOLDENS=1`. |
+| **Add a new recipe** | Author `internal/recipes/data/<profile>/<name>.yaml` following the authoring contract in `RECIPES.md`; run `dashgen recipe lint` + `dashgen recipe test`; extend the relevant `*-realistic` fixture with a positive case AND at least one look-alike; regenerate goldens with `UPDATE_GOLDENS=1`. See `RECIPES-USER-GUIDE.md` for the step-by-step walkthrough. |
 | **Add a new classifier trait** | Edit `internal/classify/classify.go` (new `Trait` const + detection in `classifyOne`); if the trait should accept LOW-weight help-text hints, extend `helpHints` with a strict regex AND `applyHelpHint`'s switch (mind the infra-label suppression rule); add table cases in `classify_test.go` covering positive label evidence, help-only positive, and contradicting-label suppression; document the trait in `RECIPES.md §6`. |
 | **Change a safety rule** | Edit `internal/safety/policy.go`; add test cases in `policy_test.go` covering both the positive and regression case; check `safety.CardinalityRisk` handling of `le`. |
 | **Add a validate stage** | Edit `internal/validate/validate.go` (insert a new case in `Pipeline.Validate`'s stage switch) and one of the stage files (`execute.go` / `selector.go` / `safety_stage.go`); extend `ValidationResult` if new reasons apply; add `TestRun/<stage>_case` in `app/validate/validate_test.go`. |
@@ -476,4 +483,4 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 
 ---
 
-**Recipe count:** 44 recipes (12 v0.1 + 32 v0.2). **Tests:** 604 pass across 25 packages (with `-race`, including on-path enrichment dispatch determinism + degradation tests and the Phase 3 + Phase 4 hosted-provider proxy-capture canaries; live-API smoke tests gated on `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). **Total tracked source files:** 280 (~321k tokens). **CLI subcommands:** generate, validate, inspect, lint, coverage. **AI enrichment:** anthropic (Phase 3) + openai (Phase 4) wired end-to-end through `applyEnrichment` (commit `1c2f298`); ollama placeholder for v0.3. **Lint (toolchain):** golangci-lint v2.11.4 (config v2 schema; CI workflow uses `golangci-lint-action@v9`).
+**Recipe count:** 47 YAML recipes (12 v0.1 + 32 v0.2 + 3 v0.3 splits). **Tests:** 703 pass across 26 packages (with `-race`, including YAML recipe loader, DSL adversary corpus (20 tests), CLI adversary corpus (10 tests), perf budget benchmarks, on-path enrichment dispatch determinism + degradation tests, and Phase 3 + Phase 4 hosted-provider proxy-capture canaries; live-API smoke tests gated on `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). **CLI subcommands:** generate, validate, inspect, lint, coverage, recipe (8 sub-verbs: init/scaffold/lint/list/show/test/explain/diff). **AI enrichment:** anthropic (Phase 3) + openai (Phase 4) wired end-to-end through `applyEnrichment` (commit `1c2f298`); ollama placeholder for v0.3. **Lint (toolchain):** golangci-lint v2.11.4 (config v2 schema; CI workflow uses `golangci-lint-action@v9`).

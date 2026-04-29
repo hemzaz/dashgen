@@ -106,6 +106,34 @@ dashgen coverage \
   --in testdata/goldens/service-realistic
 ```
 
+## Recipes
+
+DashGen ships 47 built-in recipes covering service, infra, and Kubernetes
+metric families. Recipes are YAML files validated against a CUE schema;
+no Go toolchain is required to author or override them.
+
+```bash
+# List all loaded recipes
+dashgen recipe list
+
+# Scaffold a custom recipe for your own exporter
+dashgen recipe scaffold \
+  --metric mycorp_queue_depth --type gauge \
+  --section saturation --profile service \
+  --output ~/.config/dashgen/recipes/mycorp_queue_depth.yaml
+
+# Lint and test before use
+dashgen recipe lint ~/.config/dashgen/recipes/mycorp_queue_depth.yaml
+dashgen recipe test ~/.config/dashgen/recipes/mycorp_queue_depth.yaml \
+  --fixture testdata/fixtures/service-realistic
+```
+
+Drop your YAML in `~/.config/dashgen/recipes/` (or pass `--recipes-dir`)
+and `dashgen generate` picks it up automatically alongside the built-ins.
+
+Full walkthrough: [`docs/RECIPES-USER-GUIDE.md`](docs/RECIPES-USER-GUIDE.md).
+Schema reference: [`docs/RECIPES-DSL.md`](docs/RECIPES-DSL.md).
+
 ## AI enrichment (optional)
 
 Default `--provider off` is byte-identical to v0.1; AI is opt-in only and cannot

@@ -1,414 +1,288 @@
-# DashGen — Recipe Catalog
+# DashGen — Recipe Authoring Contract (v0.3+)
 
-Each recipe is a deterministic function from *classified metrics* to
-*panels*. This file is the authoritative catalog of what recipes exist,
-what signals they match, and what invariants each one must preserve.
+Recipes are the deterministic functions that translate classified Prometheus
+metrics into Grafana panels. Starting with v0.3, every built-in recipe is a
+YAML file validated against a CUE schema and rendered by Go `text/template`.
+The Go-per-recipe code that existed in v0.1–v0.2 is fully replaced; zero
+`<recipe_name>.go` files remain in `internal/recipes/`.
 
-Read `V0.2-PLAN.md` for the v0.2 strategy and phasing. Read
-`ARCHITECTURE.md` for the overall pipeline shape.
+This document is the **authoring contract** for v0.3+.
+
+- Full wire-format schema: [`RECIPES-DSL.md`](RECIPES-DSL.md)
+- CLI authoring tools: [`RECIPES-CLI.md`](RECIPES-CLI.md)
+- Beginner walkthrough: [`RECIPES-USER-GUIDE.md`](RECIPES-USER-GUIDE.md)
 
 ---
 
-## 1. Recipe authoring contract
+## 1. Overview
 
-Every recipe **must**:
+Each recipe is a YAML file with the fields described below. At startup the
+loader (`internal/recipes/loader.go`) reads every built-in YAML embedded
+via `go:embed` (from `internal/recipes/data/`) and every user-supplied YAML
+found in `--recipes-dir` paths or the XDG default
+(`$XDG_CONFIG_HOME/dashgen/recipes/`, fallback `~/.config/dashgen/recipes/`).
+Each file is parsed, unified against the CUE schema (`internal/recipes/schema.cue`),
+and decoded into a `YAMLRecipe` struct implementing the standard `Recipe`
+interface. Synth, validate, safety, and render never know whether a recipe
+came from a YAML file or (historically) a Go struct.
 
-1. Live in `internal/recipes/<recipe_name>.go` as a type implementing
-   the `Recipe` interface (`Name`, `Section`, `Match`, `BuildPanels`).
-2. Be registered under the correct profile registry:
-   `recipes.NewServiceRegistry` / `NewInfraRegistry` / `NewK8sRegistry`.
-3. Ship with these tests (minimum):
-   - `TestX_Match`: table-driven positive **and** negative cases.
-     Each confirmed false-positive class from the real world gets one
-     negative row.
-   - `TestX_BuildPanels`: verifies the generated PromQL is
-     syntactically correct (parse-only, no live backend needed) and
-     contains the expected aggregations / filters.
-4. Contribute fixture entries to the `service-realistic` /
-   `infra-realistic` / `k8s-realistic` fixtures (to be created
-   alongside the existing `*-basic` fixtures) so end-to-end tests
-   exercise it.
-5. Ship with a **discrimination assertion** (either as a new case in
-   `TestDiscrimination_*` or as a new `TestDiscrimination_X`) that
-   names at least one look-alike metric the recipe **must not** match.
-6. Document (as a doc comment at the top of the recipe file):
-   - What operator question the panel is meant to answer.
-   - The canonical signals (name patterns, label patterns, metadata).
-   - The aggregation shape and why.
-   - The confidence value and why it's set there.
-   - Known look-alikes that must not match.
+---
 
-Code that ships without the full set does not merge.
+## 2. Authoring contract
 
-### 1.1 Confidence values (guidance)
+A recipe file **must**:
+
+1. Have `apiVersion: dashgen.io/v1` and `kind: Recipe`.
+2. Declare a unique `metadata.name` (snake_case).
+3. Declare `metadata.section`, `metadata.profile`, and `metadata.confidence`.
+4. Provide a `match` block that unambiguously identifies the metric(s) the
+   recipe handles (see §4).
+5. Provide at least one panel in the `panels` list with valid `query_template`
+   and `title_template` (see §5).
+6. Pass `dashgen recipe lint` with zero errors (see [`RECIPES-CLI.md`](RECIPES-CLI.md) §3.3).
+7. Have a fixture entry in the relevant `*-realistic` fixture so end-to-end
+   tests exercise it.
+8. Have a discrimination case — at least one look-alike metric asserted absent
+   from the generated `dashboard.json` — added to `TestDiscrimination_*`.
+
+Code (or recipes) that ship without all of the above do not merge.
+
+### 2.1 Confidence guidance
 
 | Range | Meaning |
 |-------|---------|
-| 0.90 – 0.95 | Extremely specific match (exact metric name like `up`, or unambiguous family like `process_cpu_seconds_total`). |
-| 0.80 – 0.89 | Strong label + name match (canonical HTTP request rate, Go runtime specifics). |
-| 0.70 – 0.79 | Shape-based match (any histogram whose name says "duration" + has HTTP labels). Bulk of recipes live here. |
-| 0.60 – 0.69 | Probable match with known look-alike risk; only land when the discrimination test is sharp. |
-| < 0.60 | Reserve for AI-enriched unknown-family grouping in v0.2 Phase 5. |
+| 0.90–0.95 | Extremely specific match (exact metric name like `go_goroutines`, or unambiguous pair). |
+| 0.80–0.89 | Strong label + name match (canonical HTTP request rate, DB pool pair). |
+| 0.70–0.79 | Shape-based match (any histogram whose name says "duration" + has HTTP labels). |
+| 0.60–0.69 | Probable match with known look-alike risk; only land when the discrimination test is sharp. |
+| < 0.60 | Reserved for AI-enriched unknown-family grouping. |
 
-Within a profile, higher confidence wins when the panel cap is hit
-(see `internal/synth/enforcePanelCap`).
+Within a profile, higher confidence wins when the panel cap is reached.
 
-### 1.2 Anti-patterns (never do these)
+### 2.2 Anti-patterns (never do these)
 
-- Matching on metric name alone without any label signal.
-- Emitting a query that references a label the metric may not have
-  (causes empty-result warnings on every run).
-- Hardcoding a specific label *value* (e.g., `job="checkout"`) in a
-  generic recipe.
-- Using `without()` in grouping sets.
-- Emitting more than one panel from a recipe per source metric
-  (multi-query panels are fine; multi-panel-per-metric is not).
+- Match on metric name alone without any label or type signal.
+- Emit a query referencing a label the metric may not have (causes
+  `empty_result` warnings on every run).
+- Hard-code a specific label value (e.g., `job="checkout"`) in a generic recipe.
+- Use `without()` in grouping sets.
+- Emit more than one panel from a recipe per source metric (multi-query
+  panels are fine; multi-panel-per-metric is not).
 
 ---
 
-## 2. v0.1 baseline (shipped)
+## 3. Built-in recipe inventory (47 recipes)
 
-| Recipe | Profile | Section | Confidence | Match summary |
-|--------|---------|---------|------------|---------------|
-| `service_http_rate` | service | traffic | 0.85 | counter + `service_http` trait |
-| `service_http_errors` | service | errors | 0.80 | counter + status-like label (`status_code` or `code`) |
-| `service_http_latency` | service | latency | 0.75 | histogram + `latency_histogram` trait + `service_http` trait |
-| `service_cpu` | service | saturation | 0.80 | counter ending `cpu_seconds_total` with `process`/`container` family |
-| `service_memory` | service | saturation | 0.80 | gauge ending `memory_bytes` with `process`/`container` family |
-| `infra_cpu` | infra | cpu | 0.80 | `node_cpu_seconds_total` specifically |
-| `infra_memory` | infra | memory | 0.80 | `node_memory_Mem{Available,Total}_bytes` pair |
-| `infra_disk` | infra | disk | 0.80 | `node_filesystem_{avail,size}_bytes` pair |
-| `infra_network` | infra | network | 0.80 | `node_network_{receive,transmit}_bytes_total` |
-| `k8s_container_resources` | k8s | resources | 0.80 | `container_{cpu,memory}_*` with `namespace`/`pod`/`container` labels |
-| `k8s_pod_health` | k8s | pods | 0.80 | `kube_pod_status_phase` |
-| `k8s_restarts` | k8s | workloads | 0.75 | `kube_pod_container_status_restarts_total` |
+Built-in recipes live under `internal/recipes/data/`, grouped by profile:
 
----
+```
+internal/recipes/data/
+├── service/   # 20 recipes
+├── infra/     # 14 recipes
+└── k8s/       # 13 recipes
+```
 
-## 3. v0.2 Tier-1 recipes (must ship)
+### Service profile (20 recipes)
 
-Total: 12 new recipes across profiles. Priority order within each
-profile is top-down; earlier recipes depend on fewer new traits.
+| Name | Section | Confidence | Primary signal |
+|------|---------|-----------|----------------|
+| `service_http_rate` | traffic | 0.85 | counter + `service_http` trait |
+| `service_http_errors` | errors | 0.85 | counter + status label + HTTP trait |
+| `service_http_latency` | latency | 0.85 | histogram + `service_http` + `latency_histogram` |
+| `service_cpu` | cpu | 0.85 | `process_cpu_seconds_total` or `container_cpu_usage_seconds_total` |
+| `service_memory` | memory | 0.85 | `process_resident_memory_bytes` or `container_memory_working_set_bytes` |
+| `service_grpc_rate` | traffic | 0.85 | counter + `service_grpc` trait |
+| `service_grpc_errors` | errors | 0.85 | `grpc_code != "OK"` filter |
+| `service_grpc_latency` | latency | 0.85 | histogram + `service_grpc` + `latency_histogram` |
+| `service_goroutines` | saturation | 0.90 | exact `go_goroutines` gauge, `max by (instance)` |
+| `service_gc_pause` | latency | 0.85 | `go_gc_duration_seconds` summary-or-histogram |
+| `service_db_pool_go_sql_stats` | saturation | 0.80 | `go_sql_stats_connections_in_use` / `_max` pair |
+| `service_db_pool_pgxpool` | saturation | 0.80 | `pgxpool_acquired_connections` / `_max` pair |
+| `service_db_query_latency` | latency | 0.80 | histogram + `latency_histogram` + name contains query/db/sql, NOT HTTP/gRPC |
+| `service_tls_expiry` | saturation | 0.80 | gauge ending `_tls_not_after_timestamp` / `_cert_expiry_timestamp_seconds` |
+| `service_cache_hits` | traffic | 0.80 | `*_cache_hits_total` + `*_cache_misses_total` pair |
+| `service_client_http` | traffic | 0.75 | counter + name contains "client" + has status label |
+| `service_job_success` | errors | 0.80 | `*_jobs_succeeded_total` + `*_jobs_failed_total` pair |
+| `service_kafka_consumer_lag` | errors | 0.85 | `kafka_consumergroup_lag` / `kafka_consumergroup_lag_sum` gauge |
+| `service_request_size` | saturation | 0.75 | histogram + name ends `_request_size_bytes` + HTTP-shape guard |
+| `service_response_size` | saturation | 0.75 | histogram + name ends `_response_size_bytes` + HTTP-shape guard |
 
-### 3.1 Service profile
+### Infra profile (14 recipes)
 
-#### 3.1.1 `service_grpc_rate` → traffic
+| Name | Section | Confidence | Primary signal |
+|------|---------|-----------|----------------|
+| `infra_cpu` | cpu | 0.85 | `node_cpu_seconds_total` mode breakdown |
+| `infra_memory` | memory | 0.85 | `node_memory_Mem{Available,Total}_bytes` pair |
+| `infra_disk` | disk | 0.85 | `node_filesystem_{avail,size}_bytes` pair |
+| `infra_network_receive` | network | 0.85 | `node_network_receive_bytes_total` |
+| `infra_network_transmit` | network | 0.85 | `node_network_transmit_bytes_total` |
+| `infra_load` | cpu | 0.90 | `node_load{1,5,15}` gauges |
+| `infra_filesystem_usage` | disk | 0.85 | used-ratio per `{instance, mountpoint, fstype}` |
+| `infra_file_descriptors` | overview | 0.90 | `process_{open,max}_fds` ratio |
+| `infra_nic_errors` | network | 0.85 | `node_network_*_{errs,drop}_total` counters |
+| `infra_conntrack` | saturation | 0.90 | `node_nf_conntrack_entries{,_limit}` ratio |
+| `infra_disk_iops` | disk | 0.85 | `node_disk_{reads,writes}_completed_total` |
+| `infra_disk_io_latency` | disk | 0.85 | `node_disk_io_time_seconds_total` / weighted variant |
+| `infra_ntp_offset` | overview | 0.90 | `node_timex_offset_seconds` |
+| `infra_interrupts` | saturation | 0.80 | exact `node_interrupts_total` counter |
 
-- **Question**: how many RPC calls per second, per method?
-- **Signals**:
-  - Name matches `grpc_server_handled_total` (canonical) or
-    `grpc_server_started_total`.
-  - Labels include `grpc_method` **or** `method` + `grpc_service`.
-  - New trait: `service_grpc` attached in classify when any of
-    `grpc_method`, `grpc_service`, `grpc_type`, `grpc_code` are
-    present.
-- **Grouping**: `{instance, job, grpc_service, grpc_method}` minus any
-  banned label.
-- **Query**: `sum by (instance, job, grpc_service, grpc_method) (rate(grpc_server_handled_total[5m]))`
-- **Confidence**: 0.85.
-- **Look-alikes to reject**: counters whose name happens to start with
-  `grpc_` but lack both `grpc_method` and `grpc_service` labels
-  (e.g., internal metric of a gRPC client library counting retries).
+### Kubernetes profile (13 recipes)
 
-#### 3.1.2 `service_grpc_errors` → errors
+| Name | Section | Confidence | Primary signal |
+|------|---------|-----------|----------------|
+| `k8s_pod_health` | pods | 0.90 | `kube_pod_status_phase` gauge |
+| `k8s_container_cpu` | resources | 0.85 | cAdvisor `container_cpu_usage_seconds_total` with namespace/pod filter |
+| `k8s_container_memory` | resources | 0.85 | cAdvisor `container_memory_working_set_bytes` with namespace/pod filter |
+| `k8s_restarts` | workloads | 0.75 | `kube_pod_container_status_restarts_total` |
+| `k8s_deployment_availability` | workloads | 0.90 | `kube_deployment_{spec,status_replicas_available}_replicas` pair |
+| `k8s_node_conditions` | resources | 0.90 | 4-query fixed set over `kube_node_status_condition{condition=...}` |
+| `k8s_pvc_usage` | resources | 0.85 | `kubelet_volume_stats_{available,capacity}_bytes` |
+| `k8s_oom_kills` | pods | 0.90 | `kube_pod_container_status_terminated_reason{reason="OOMKilled"}` |
+| `k8s_apiserver_latency` | resources | 0.90 | `apiserver_request_duration_seconds` histogram |
+| `k8s_etcd_commit` | resources | 0.90 | `etcd_disk_backend_commit_duration_seconds` histogram |
+| `k8s_hpa_scaling` | workloads | 0.90 | `kube_horizontalpodautoscaler_status_{current,desired}_replicas` pair |
+| `k8s_coredns` | latency | 0.85 | `coredns_dns_request_duration_seconds` histogram + `coredns_dns_requests_total` counter |
+| `k8s_scheduler_latency` | latency | 0.85 | `scheduler_scheduling_attempt_duration_seconds` histogram |
 
-- **Question**: rate of non-OK RPC outcomes per method.
-- **Signals**: same base metric as `service_grpc_rate` (need the
-  same inventory) + label `grpc_code`.
-- **Query**: `sum by (instance, job, grpc_service, grpc_method) (rate(grpc_server_handled_total{grpc_code!="OK"}[5m]))`
-- **Confidence**: 0.85.
-- **Look-alike to reject**: metrics with a bare `code` label that's not
-  populated by `grpc_code` semantics (same risk class as the
-  alertmanager `code` false positive fixed in v0.1).
+### Deliberate Tier-C splits (v0.3)
 
-#### 3.1.3 `service_grpc_latency` → latency
+Three v0.2 single-recipe entries were split into two child recipes each
+(commit `da62cc4`). The split was required because each pair of child recipes
+has incompatible match predicates that cannot be unified in one YAML file
+without general branching logic (ruled out by the non-goals in
+[`RECIPES-DSL.md`](RECIPES-DSL.md)):
 
-- **Question**: p50/p95/p99 RPC handling latency per method.
-- **Signals**: histogram named `grpc_server_handling_seconds` (bare base
-  name) + `service_grpc` trait + histogram type.
-- **Grouping**: `{instance, job, grpc_service, grpc_method, le}`.
-- **Query**: `histogram_quantile(Q, sum by (instance, job, grpc_service, grpc_method, le) (rate(grpc_server_handling_seconds_bucket[5m])))` for Q∈{0.50, 0.95, 0.99}.
-- **Confidence**: 0.85.
+| v0.2 recipe | v0.3 children | Why split |
+|---|---|---|
+| `service_db_pool` | `service_db_pool_go_sql_stats`, `service_db_pool_pgxpool` | `go_sql_stats_*` and `pgxpool_*` are distinct metric families with different name patterns; a single `match` block cannot address both without OR logic. |
+| `infra_network` | `infra_network_receive`, `infra_network_transmit` | Separate `_receive_` and `_transmit_` metric names; splitting enables per-direction panel layout and independent confidence tuning. |
+| `k8s_container_resources` | `k8s_container_cpu`, `k8s_container_memory` | CPU and memory are independent metric families requiring distinct unit annotations (`cores` vs `bytes`) without conditional unit dispatch in the template. |
 
-#### 3.1.4 `service_goroutines` → saturation
-
-- **Question**: is the process leaking goroutines?
-- **Signals**: gauge `go_goroutines` exactly. This is one of the few
-  recipes that matches on name equality because the Go runtime
-  exporter is canonical.
-- **Query**: `max by (instance, job) (go_goroutines)` — max rather
-  than sum because each process reports its own count; summing across
-  instances would misleadingly add.
-- **Confidence**: 0.90.
-- **Look-alikes**: none known. Skip the discrimination test here.
-
-#### 3.1.5 `service_gc_pause` → saturation
-
-- **Question**: how much time does the process spend in stop-the-world GC?
-- **Signals**: histogram `go_gc_duration_seconds` **or**
-  summary `go_gc_duration_seconds` (Go runtime exposes it as a summary
-  on most versions — detect both). Summary handling is a new code path;
-  recipes currently only emit histogram_quantile against histograms.
-- **Query shape** (summary): `avg by (instance, job) (go_gc_duration_seconds{quantile="0.99"})`
-- **Query shape** (histogram): p99 via histogram_quantile.
-- **Confidence**: 0.85.
-
-### 3.2 Infra profile
-
-#### 3.2.1 `infra_load` → cpu
-
-- **Question**: is the kernel's runqueue saturated?
-- **Signals**: gauges `node_load1`, `node_load5`, `node_load15`. Emit
-  a single panel per host with all three as separate query
-  candidates.
-- **Query**: `avg by (instance) (node_load1)` + two siblings for 5/15.
-- **Confidence**: 0.90.
-
-#### 3.2.2 `infra_filesystem_usage` → disk
-
-- **Question**: what percent of each filesystem is in use?
-- **Signals**: `node_filesystem_{avail,size}_bytes` pair + label
-  `mountpoint`.
-- **Query**:
-  `(node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes`
-  grouped by `{instance, mountpoint, fstype}`.
-- **Confidence**: 0.85.
-- Note: overlaps conceptually with v0.1 `infra_disk` (which shows raw
-  avail/size). The usage-ratio panel is a complementary, operator-ready
-  saturation view. Keep both.
-
-#### 3.2.3 `infra_file_descriptors` → saturation
-
-- **Question**: are we close to the fd limit?
-- **Signals**: `process_open_fds` and `process_max_fds` must both be
-  present (gauge pair).
-- **Query**: `process_open_fds / process_max_fds` grouped by `{instance, job}`.
-- **Confidence**: 0.90.
-
-#### 3.2.4 `infra_nic_errors` → network
-
-- **Question**: any NIC errors or drops?
-- **Signals**: `node_network_{receive,transmit}_{errs,drop}_total`
-  (all four, if any present; emit what's available).
-- **Query**: `sum by (instance, device) (rate(...[5m]))`, four
-  series per device.
-- **Confidence**: 0.85.
-
-### 3.3 k8s profile
-
-#### 3.3.1 `k8s_deployment_availability` → workloads
-
-- **Question**: how many replicas are available vs. desired per deployment?
-- **Signals**: pair `kube_deployment_status_replicas_available` +
-  `kube_deployment_spec_replicas` (gauges).
-- **Query**: emit both as side-by-side candidates; a third candidate
-  for the ratio
-  `kube_deployment_status_replicas_available / kube_deployment_spec_replicas`.
-- **Confidence**: 0.90.
-
-#### 3.3.2 `k8s_node_conditions` → resources
-
-- **Question**: are any nodes not Ready or reporting memory/disk/pid
-  pressure?
-- **Signals**: `kube_node_status_condition`. Gauge valued 0/1.
-- **Query**: `max by (node, condition) (kube_node_status_condition{status="true"})`
-  for condition ∈ {`NotReady`, `MemoryPressure`, `DiskPressure`,
-  `PIDPressure`}. One panel, one candidate per condition.
-- **Confidence**: 0.90.
-
-#### 3.3.3 `k8s_pvc_usage` → resources
-
-- **Question**: are any persistent volumes running out of space?
-- **Signals**: pair `kubelet_volume_stats_available_bytes` +
-  `kubelet_volume_stats_capacity_bytes`.
-- **Query**: `1 - (kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes)`
-  grouped by `{namespace, persistentvolumeclaim}`.
-- **Confidence**: 0.85.
-
-#### 3.3.4 `k8s_oom_kills` → pods
-
-- **Question**: are pods being OOMKilled?
-- **Signals**: `kube_pod_container_status_terminated_reason` gauge
-  filtered to `reason="OOMKilled"`.
-- **Query**: `sum by (namespace, pod) (kube_pod_container_status_terminated_reason{reason="OOMKilled"})`
-- **Confidence**: 0.90.
+These splits change panel UIDs (because the recipe `Name()` changes). Goldens
+were regenerated for the affected fixtures: `service-realistic`,
+`infra-basic`, `infra-realistic`, `k8s-basic`, `k8s-realistic`.
 
 ---
 
-## 4. v0.2 Tier-2 recipes (best effort)
+## 4. YAML schema gist
 
-These ship if Tier-1 is done and time allows. They follow the same
-authoring contract. Each is sketched here; full signals/queries get
-worked out when the recipe is actually written.
+The full field reference and CUE constraints live in [`RECIPES-DSL.md`](RECIPES-DSL.md).
+The fields most authors touch:
 
-### 4.1 Service profile
+```yaml
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: <snake_case>          # required; unique across all loaded recipes
+  section: <string>           # required; valid section for the declared profile
+  profile: service|infra|k8s  # required
+  confidence: <float>         # required; 0.0–1.0
+  description: <string>       # one-line human description
 
-| Recipe | Section | Primary signal | Shipped |
-|--------|---------|----------------|---------|
-| `service_client_http` | traffic | outbound HTTP counter with `status_code` / `code` and either `url` or `host` label | yes |
-| `service_db_pool` | saturation | `*_sql_pool_*` or `pgxpool_*` gauges (max, idle, in_use) | yes |
-| `service_db_query_latency` | latency | histogram named `*_query_duration_seconds` with no HTTP labels (is **not** matched by `service_http_latency`) | yes |
-| `service_cache_hits` | traffic | counter pair `cache_{hits,misses}_total` or `*_cache_hits_total` | yes |
-| `service_job_success` | errors | counter pair `*_jobs_{success,failure}_total` or `*_jobs_completed_total{status=...}` | yes |
-| `service_tls_expiry` | saturation | gauge `*_tls_not_after_timestamp` / `*_cert_expiry_timestamp_seconds` minus `time()` | yes |
-| `service_request_size` | traffic | histogram `*_request_size_bytes` with HTTP labels | yes |
-| `service_response_size` | traffic | histogram `*_response_size_bytes` with HTTP labels | yes |
+match:                        # at least one discriminating field required
+  type: counter|gauge|histogram|summary
+  name_equals: <string>       # exact metric name
+  name_contains: <string>     # substring match
+  name_suffix: <string>       # suffix match
+  any_trait: [<trait>, ...]   # any of these classifier traits must be present
+  not_traits: [<trait>, ...]  # none of these may be present
+  required_labels: [<label>, ...]
 
-### 4.2 Infra profile
+pair_with:                    # optional; enables multi-metric join panels
+  suffix_swap:
+    from_suffix: <string>
+    to_suffix: <string>
+  on_missing: omit|warn
 
-| Recipe | Section | Primary signal | Shipped |
-|--------|---------|----------------|---------|
-| `infra_disk_io_latency` | disk | histogram `node_disk_io_time_seconds_total` + per-device rate | yes |
-| `infra_disk_iops` | disk | counter pair `node_disk_{reads,writes}_completed_total` | yes |
-| `infra_conntrack` | network | `node_nf_conntrack_entries` / `node_nf_conntrack_entries_limit` | yes |
-| `infra_ntp_offset` | overview | gauge `node_timex_offset_seconds` | yes |
-| `infra_interrupts` | cpu | counter `node_interrupts_total` or `node_vmstat_nr_irq_*` | yes |
+panels:
+  - title_template: <go-template>    # required
+    kind: timeseries|stat|gauge      # required
+    unit: <string>                   # required (reqps, bytes, s, percentunit …)
+    query_template: <go-template>    # required
+    legend_template: <go-template>
+    rationale_template: <go-template>
+    preferred_labels: [<label>, ...] # passed to groupBy helper
+    requires_pair: true|false
+```
 
-### 4.3 k8s profile
-
-| Recipe | Section | Primary signal | Shipped |
-|--------|---------|----------------|---------|
-| `k8s_hpa_scaling` | workloads | `kube_horizontalpodautoscaler_status_*` | yes |
-| `k8s_apiserver_latency` | resources | `apiserver_request_duration_seconds` histogram | yes |
-| `k8s_etcd_commit` | resources | `etcd_disk_backend_commit_duration_seconds` histogram | yes |
-| `k8s_scheduler_latency` | resources | `scheduler_scheduling_attempt_duration_seconds` histogram | yes |
-| `k8s_coredns` | resources | `coredns_dns_request_duration_seconds` histogram | yes |
-
----
-
-## 5. v0.3+ Tier-3 candidates (deferred)
-
-Not in scope for v0.2; listed so the catalog stays visible.
-
-- JVM runtime family (jvm_memory, jvm_gc, jvm_threads, jvm_classes).
-- Node.js runtime (`nodejs_*`).
-- Python/Gunicorn runtime.
-- Kafka broker / consumer lag (`kafka_consumergroup_lag`).
-- RabbitMQ (`rabbitmq_queue_messages`).
-- Redis-specific (`redis_commands_total`).
-- NATS / NSQ.
-- SMART disk health (`smartmon_*`).
-- Power / thermal (`node_power_supply_*`, `node_hwmon_temp_celsius`).
-- Nginx / Caddy / Envoy / HAProxy specific recipes (currently covered
-  generically by `service_http_*`).
-- CNI / eBPF networking plane.
-- Gatekeeper / Kyverno policy metrics.
+Available template helpers: `groupBy`, `legendFor`, `firstLabelOf`, `.Window`,
+`.Metric`, `.Profile`. Full helper reference in [`RECIPES-DSL.md`](RECIPES-DSL.md).
 
 ---
 
-## 6. New classifier traits required by Tier-1 recipes
+## 5. Worked example — Tier-A recipe
 
-| Trait | Signal | Recipes that consume it |
-|-------|--------|-------------------------|
-| `service_grpc` | any of `grpc_method`, `grpc_service`, `grpc_type`, `grpc_code` labels | `service_grpc_rate`, `service_grpc_errors`, `service_grpc_latency` |
-| `go_runtime` | metric name prefix `go_` with `instance`/`job` labels | `service_goroutines`, `service_gc_pause` |
-| `node_exporter_present` | metric name prefix `node_` with `instance` label | guards `infra_*` recipes against matching cAdvisor-only backends |
-| `kube_state_present` | metric name prefix `kube_` | guards `k8s_*` recipes (kube-state-metrics specifically, not cAdvisor) |
+A Tier-A recipe matches on a single type + trait, with no conditional logic in
+the query template. `service_http_rate` is the canonical example:
 
-The two "present" traits are *guards*, not positive signals on
-individual metrics. They're set once on the classified inventory, not
-per-metric. Useful so `inspect` can explain why a recipe section is
-empty — "kube-state-metrics not detected" beats silent omission.
+```yaml
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_http_rate
+  section: traffic
+  profile: service
+  confidence: 0.85
+  description: "HTTP request rate by route/handler for counters carrying the service_http trait."
+  tags: [http, traffic, counter]
 
----
+match:
+  type: counter
+  any_trait: [service_http]
 
-## 7. Fixture requirements
+panels:
+  - title_template: 'Request rate: {{ .Metric }}'
+    kind: timeseries
+    unit: reqps
+    preferred_labels: [route, handler]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Counter "{{ .Metric }}" with HTTP-shaped labels; rate over {{ .Window }} grouped by {{ groupBy . }}.'
+```
 
-v0.2 adds three new committed fixtures alongside the v0.1
-`*-basic` + `service-realistic`:
-
-### 7.1 `testdata/fixtures/service-realistic-v2`
-
-Extends `service-realistic` with:
-
-- gRPC server metrics (rate + errors + latency, positive matches).
-- Go runtime metrics (`go_goroutines`, `go_gc_duration_seconds` summary).
-- A look-alike gRPC client counter that lacks `grpc_method` — must
-  NOT match `service_grpc_rate`.
-- A DB query latency histogram with no HTTP label — must NOT match
-  `service_http_latency` (already covered by v0.1's
-  `queue_processing_duration_seconds` but reaffirmed with a DB-named
-  metric).
-
-### 7.2 `testdata/fixtures/infra-realistic`
-
-Built from a canonical `node_exporter` metric subset. Must include:
-
-- `node_load{1,5,15}` for `infra_load`.
-- `node_filesystem_*` with multiple mountpoints (one near-full, one
-  empty) for `infra_filesystem_usage`.
-- `process_{open,max}_fds` pair for `infra_file_descriptors`.
-- `node_network_*_{errs,drop}_total` for `infra_nic_errors`.
-- A cAdvisor-style `container_*` metric that must NOT be picked up by
-  `infra_*` recipes (discrimination guard).
-
-### 7.3 `testdata/fixtures/k8s-realistic`
-
-Built from a canonical kube-state-metrics subset. Must include:
-
-- `kube_deployment_status_replicas_{available,unavailable}` pair plus
-  `kube_deployment_spec_replicas`.
-- `kube_node_status_condition` with one node in each of
-  {`Ready=true`, `MemoryPressure=true`}.
-- `kubelet_volume_stats_{available,capacity}_bytes` for one PVC.
-- `kube_pod_container_status_terminated_reason{reason="OOMKilled"}`
-  for one pod.
-- A look-alike cAdvisor `container_memory_working_set_bytes` that must
-  NOT accidentally be picked up by a kube recipe.
-
-Each fixture ships with pre-recorded `instant/` responses for every
-query the pipeline generates against it, so goldens are clean
-(no empty_result noise).
+`{{ groupBy . }}` calls `safeGroupLabels` under the hood: always includes
+`job` and `instance` if present, appends `preferred_labels` that exist on the
+metric descriptor, filters banned labels, and sorts for determinism.
+`{{ .Window }}` resolves to the configured rate window (default `5m`).
 
 ---
 
-## 8. Test matrix
+## 6. Determinism and golden stability
 
-For each recipe in §3 (Tier-1), the test suite runs:
+Every YAML recipe produces the same output for the same inventory input. The
+five-stage validate pipeline runs on every emitted query — recipes cannot
+bypass safety. Panel UIDs are derived from `(dashboardUID, section,
+metricName, kind)`, so they are stable across re-runs as long as the recipe
+name and metric name stay the same.
 
-| Test | Asserts |
-|------|---------|
-| `Test<Recipe>_Match` table | Match returns true for every positive case; false for every negative case (especially the look-alike classes §3 names). |
-| `Test<Recipe>_BuildPanels` | Returns the expected number of panels; emits the expected number of query candidates per panel; query expressions pass `promql/parser.ParseExpr`. |
-| `TestGolden_<Profile>Realistic` | Updated golden includes the new panel(s); diff is reviewable. |
-| `TestDiscrimination_<Profile>Realistic` | The specific look-alike metrics from §3 are asserted absent from `dashboard.json`. |
-
-CI runs `-race -cover ./...` as it does for v0.1. No recipe is allowed
-to lower overall coverage.
+Changing a recipe's `name` field breaks golden stability and requires
+`UPDATE_GOLDENS=1 go test ./internal/app/generate/...`.
 
 ---
 
-## 9. How AI-assisted recipe authoring fits in (v0.2 Phase 5)
+## 7. Test coverage
 
-The goal of AI authoring support is to compress the loop
-"I notice a new metric family → I write a recipe". It is **not** to
-let AI emit recipes at runtime.
+The YAML harness replaces the per-recipe Go test files that existed in
+v0.1–v0.2. Every built-in recipe is exercised via parameterized tests driven
+by `testdata/*.json` fixture tables in `internal/recipes/`:
 
-Workflow:
-
-1. Engineer runs `dashgen inspect --prom-url ... --profile service
-   --propose-recipes --provider anthropic` against a real backend.
-2. `inspect` identifies metrics the classifier could not match.
-3. The engineer hands each cluster to the provider with a prompt
-   asking for (a) a recipe name, (b) signal description, (c) proposed
-   query shape.
-4. The provider returns a draft Go file.
-5. The engineer reviews, edits, and commits. The committed code is
-   plain deterministic Go that goes through the authoring contract in
-   §1.
-
-The provider never sees label values. Prompts include only metric
-names, metadata (type, help, unit), and label names.
+| Test type | Asserts |
+|---|---|
+| `TestRecipeLoader` | Every YAML in `data/` loads without CUE validation errors. |
+| `TestYAMLRecipe_Match` (table) | Match returns true for positive fixture metrics; false for named look-alikes. |
+| `TestYAMLRecipe_BuildPanels` (table) | Expected panel count; queries pass `promql/parser.ParseExpr`; expected grouping labels present. |
+| `TestGolden_<Profile><Class>` | Byte-identical `dashboard.json` + `rationale.md` + `warnings.json` vs `testdata/goldens/<fixture>/`. |
+| `TestDeterminism_<Profile><Class>` | Two pipeline runs produce byte-identical output. |
+| `TestDiscrimination_<Profile><Class>Realistic` | Named look-alike metrics are absent from `dashboard.json`. |
 
 ---
 
-## 10. Forward-compatibility with enrichment
+## 8. Adding a new recipe
 
-Recipes themselves are unaware of enrichment. The pipeline passes
-`dashboard := synth.Synthesize(...)` to the enricher; the enricher
-mutates title and rationale strings on panels but never the query
-candidates.
+1. Scaffold: `dashgen recipe scaffold --metric <name> --type <type> --section <section> --profile <profile> --output ~/.config/dashgen/recipes/<name>.yaml`
+2. Edit the scaffolded file: tune `match`, `confidence`, `panels`.
+3. Lint: `dashgen recipe lint ~/.config/dashgen/recipes/<name>.yaml`
+4. Test: `dashgen recipe test ~/.config/dashgen/recipes/<name>.yaml --fixture testdata/fixtures/service-realistic`
+5. To contribute built-in: move to `internal/recipes/data/<profile>/<name>.yaml`, add fixture entries, add look-alike negative assertion, regenerate goldens.
 
-If a future enrichment feature wants to influence query shape, that
-change requires a new spec, not a new enricher. This is an explicit
-wall to prevent creep.
+See [`RECIPES-USER-GUIDE.md`](RECIPES-USER-GUIDE.md) for a full worked walkthrough with copy-pasteable commands.

@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] — TBD (tagged in T8.3)
+
+### Added
+
+- **YAML+CUE+text/template recipe DSL** replacing the Go-per-recipe authoring contract.
+  Schema validated at load time via CUE; PromQL produced by `text/template` with a
+  closed helper namespace. See [`docs/RECIPES-DSL.md`](docs/RECIPES-DSL.md).
+- **`dashgen recipe` subcommand group** — 8 sub-verbs covering the full authoring lifecycle:
+  `init`, `scaffold`, `lint`, `list`, `show`, `test`, `explain`, `diff`.
+  See [`docs/RECIPES-CLI.md`](docs/RECIPES-CLI.md).
+- **`--recipes-dir` flag** (repeatable) on `dashgen generate` — load additional recipe
+  directories alongside the built-ins.
+- **XDG default user recipe directory** — `$XDG_CONFIG_HOME/dashgen/recipes/`
+  (fallback `~/.config/dashgen/recipes/`) is checked automatically on every run;
+  no flag required for the common case.
+- **User extensibility** — drop a `*.yaml` recipe in the user dir and it fires alongside
+  built-ins. Same-named user recipe shadows the built-in with a deterministic load-time
+  warning.
+- **30 adversary tests** — 20 DSL adversary tests (threat catalog in
+  [`docs/RECIPES-DSL-ADVERSARY.md`](docs/RECIPES-DSL-ADVERSARY.md)) + 10 CLI adversary
+  tests (threat catalog in [`docs/RECIPES-CLI.md`](docs/RECIPES-CLI.md) §9.4).
+- **Performance benchmarks with budget assertions** — lint ≤200 ms, list ≤500 ms,
+  loader ≤500 ms; enforced in `internal/recipes/bench_test.go`.
+
+### Changed
+
+- **44 Go recipes migrated to 47 YAML recipes** — 3 deliberate Tier-C splits:
+  `service_db_pool` → `service_db_pool_go_sql_stats` + `service_db_pool_pgxpool`;
+  `infra_network` → `infra_network_receive` + `infra_network_transmit`;
+  `k8s_container_resources` → `k8s_container_cpu` + `k8s_container_memory`.
+- **Goldens regenerated** for `service-realistic`, `infra-basic`, `infra-realistic`,
+  `k8s-basic`, `k8s-realistic` — panel UIDs shift because recipe `Name()` changes
+  in the three splits; per-panel PromQL content is unchanged.
+- **`TestEval_RedosImmunity` wall-clock ceiling** widened from 10 ms to 25 ms to
+  accommodate `-race` overhead without flaking (T7.3).
+
+### Removed
+
+- **Per-recipe Go test files** — the YAML harness covers the same surface via
+  parameterized `testdata/*.json` fixture tables. Zero `<name>_test.go` files remain
+  in `internal/recipes/` for individual recipe logic.
+- **44 `<recipe_name>.go` files** from `internal/recipes/` — `service_db_pool.go`,
+  `infra_network.go`, `k8s_container_resources.go`, and 41 others. The package now
+  contains only: `loader.go`, `matcher.go`, `pair.go`, `registry.go`, `template.go`,
+  `helpers.go`, `types.go`, `schema_embed.go`, `data_embed.go`, `yaml_recipe.go`.
+
 ## [Unreleased]
 
 ### Changed
