@@ -1,0 +1,18 @@
+# adversary: T5 — template AST node-count budget (loader must reject)
+# Each `{{ .Metric }}` action contributes ~4 AST nodes; 80 repetitions
+# (~320 nodes) exceeds the 256-node budget enforced by validateAST.
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: template_nested_if
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}{{ .Metric }}"
+    legend_template: "x"

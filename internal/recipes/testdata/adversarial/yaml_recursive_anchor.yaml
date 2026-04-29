@@ -1,0 +1,21 @@
+# adversary: T1 — YAML recursive anchor / alias loop
+# A reference back to an enclosing anchor produces a cyclic structure that
+# yaml.v3 detects and rejects (or, when accepted, the schema rejects the
+# downstream cycle). Either way, load fails — never reaches the registry.
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: recursive_anchor
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match: &cycle
+  type: counter
+  any_of:
+    - *cycle
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"

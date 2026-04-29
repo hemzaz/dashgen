@@ -1,0 +1,27 @@
+# adversary: T7 — predicate nesting depth (loader must reject via ValidateBudget)
+# 9 levels of `not` nesting (depth 0..9, leaf at depth 9). ValidateBudget
+# rejects with ErrPredicateTooDeep when depth >= maxPredicateDepth (8).
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: predicate_deep_nesting
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  not:
+    not:
+      not:
+        not:
+          not:
+            not:
+              not:
+                not:
+                  not:
+                    type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"

@@ -1,0 +1,20 @@
+# adversary: T10 — map iteration determinism (text/template sorts map keys)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: template_map_iteration
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+  name_equals: http_requests_total
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    # Iterates over .Labels map. text/template sorts keys before iteration,
+    # guaranteeing byte-identical output across runs (invariant I11).
+    query_template: |
+      {{ range $k, $_ := .Labels }}{{ $k }} {{ end }}rate({{ .Metric }}[5m])
+    legend_template: "x"

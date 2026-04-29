@@ -1,0 +1,20 @@
+# adversary: T8 — banned-label injection in query template (loader accepts; validate refuses downstream)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: banned_label_grouping
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+  name_equals: http_requests_total
+panels:
+  - title_template: "Bad grouping"
+    unit: ops/sec
+    # user_id is a banned high-cardinality label. Recipe loads (templates are
+    # opaque strings to the loader); the validate pipeline's safety stage
+    # refuses any query whose grouping references it.
+    query_template: "sum by (user_id) (rate({{ .Metric }}[5m]))"
+    legend_template: "{{ legendFor . }}"

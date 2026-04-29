@@ -1,0 +1,83 @@
+# adversary: T7 — predicate node-count budget (loader must reject via ValidateBudget)
+# 65 sibling primitive predicates inside an all_of (root + 65 = 66 nodes).
+# ValidateBudget rejects with ErrPredicateTooMany when total > maxPredicateNodes (64).
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: predicate_node_explosion
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  all_of:
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+    - type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"

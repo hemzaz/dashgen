@@ -1,0 +1,17 @@
+# adversary: T4 — regex denial-of-service (loader accepts; RE2 makes match linear)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: redos_pattern
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+  name_matches: "^(a+)+b$"
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate({{ .Metric }}[5m])"
+    legend_template: "x"

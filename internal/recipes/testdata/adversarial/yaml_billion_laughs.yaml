@@ -1,0 +1,25 @@
+# adversary: T1 — YAML billion-laughs / anchor expansion DoS
+# yaml.v3 caps anchor expansion depth at 1024 and total expanded size
+# (DefaultDecoderMaxAliasRatio); a deeply chained alias forest blows the cap
+# before the schema sees the document. The loader surfaces this as a YAML
+# parse error.
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: billion_laughs
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+  tags: &a ["x", "x", "x", "x", "x", "x", "x", "x", "x", "x"]
+match:
+  type: counter
+  any_trait: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"
+    preferred_labels: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+    group_by: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
+    quantiles: *d

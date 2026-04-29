@@ -297,6 +297,12 @@ const (
 	ErrCodeBadRegexp     = "loader.bad_regexp"
 	ErrCodeAPIVersion    = "loader.api_version"
 	ErrCodeDeadline      = "loader.deadline"
+
+	// Post-decode mitigation codes (T7.1).
+	// adversary: T7 — predicate depth + node-count budgets.
+	ErrCodePredicateBudget = "loader.predicate_budget"
+	// adversary: T5 — template forbidden directives + AST node-count budget.
+	ErrCodeTemplateInvalid = "loader.template_invalid"
 )
 
 // Error returns the file:line:col: message format documented in DSL §9.3.
@@ -491,8 +497,8 @@ func walkUserDir(dir string, cfg LoaderConfig) ([]walkEntry, error) {
 			return nil
 		}
 
-		// T11: resolve any symlink leaf and ensure the target stays within
-		// the canonical root.
+		// adversary: T11 — symlink escape. Resolve any symlink leaf and
+		// ensure the target stays within the canonical root.
 		resolved, rerr := filepath.EvalSymlinks(path)
 		if rerr != nil {
 			return &LoadError{
@@ -515,7 +521,8 @@ func walkUserDir(dir string, cfg LoaderConfig) ([]walkEntry, error) {
 		if ierr != nil {
 			return &LoadError{File: path, Code: ErrCodeIO, Message: "stat: " + ierr.Error(), Err: ierr}
 		}
-		// T1: file size cap — enforced BEFORE we read the file body.
+		// adversary: T1 — file size cap (per-file 64 KB by default),
+		// enforced BEFORE we read the file body.
 		if info.Size() > cfg.MaxFileSize {
 			return &LoadError{
 				File:    path,
@@ -524,7 +531,7 @@ func walkUserDir(dir string, cfg LoaderConfig) ([]walkEntry, error) {
 			}
 		}
 
-		// T2: per-dir file count cap.
+		// adversary: T2 — per-dir file-count cap (default 1024).
 		count++
 		if count > cfg.MaxFilesPerDir {
 			return &LoadError{
@@ -726,12 +733,13 @@ func decodeOne(
 		}
 	}
 
-	// Defense in depth (T16): explicitly verify apiVersion appears at the
-	// top of the YAML. CUE's unification semantics fill in concrete schema
-	// values for absent fields silently — so a YAML that omits apiVersion
-	// would otherwise pass unification with apiVersion="dashgen.io/v1"
-	// implicitly populated. The schema documents this is "loader
-	// responsibility" in the ADVERSARY comment on #Recipe.apiVersion.
+	// adversary: T16 — apiVersion downgrade. Defense in depth: explicitly
+	// verify apiVersion appears at the top of the YAML. CUE's unification
+	// semantics fill in concrete schema values for absent fields silently —
+	// so a YAML that omits apiVersion would otherwise pass unification with
+	// apiVersion="dashgen.io/v1" implicitly populated. The schema documents
+	// this is "loader responsibility" in the ADVERSARY comment on
+	// #Recipe.apiVersion.
 	if rawMap, ok := raw.(map[string]any); ok {
 		if _, hasAPIVer := rawMap["apiVersion"]; !hasAPIVer {
 			return LoadedRecipe{}, &LoadError{
@@ -755,7 +763,10 @@ func decodeOne(
 		}
 	}
 
-	// Step 3-5: CUE compile + unify + validate, with a wall-clock deadline (T3).
+	// Step 3-5: CUE compile + unify + validate, with a wall-clock deadline.
+	// adversary: T3 — catastrophic CUE evaluation. The deadline ensures a
+	// pathological recipe cannot hang the loader; default 5s, override via
+	// LoaderConfig.CUEDeadline.
 	deadlineCtx, cancel := context.WithTimeout(ctx, cfg.CUEDeadline)
 	defer cancel()
 
@@ -783,12 +794,80 @@ func decodeOne(
 		return LoadedRecipe{}, mapCUEError(path, ErrCodeDecode, derr)
 	}
 
+	// Step 7: post-decode adversary mitigations (T7.1).
+	//
+	// CUE's structural unification cannot bound recursive predicate trees
+	// or walk text/template ASTs; both are walked here so the loader is the
+	// single throat that turns "untrusted YAML" into "trusted RecipeSpec".
+	//
+	// adversary: T7 — predicate depth + node-count budget. Eagerly compiles
+	// every name_matches regex into the package cache as a side effect.
+	if perr := ValidateBudget(spec.Match); perr != nil {
+		return LoadedRecipe{}, &LoadError{
+			File:    path,
+			Code:    ErrCodePredicateBudget,
+			Message: "predicate budget: " + perr.Error(),
+			Err:     perr,
+		}
+	}
+	// adversary: T5 — template parse-bomb mitigations (forbidden directives
+	// + AST node-count budget). Pre-parses every panel template against the
+	// closed FuncMap so user templates never reach the render path with
+	// {{ define }}, {{ template }}, {{ block }} or oversized AST trees.
+	for i, panel := range spec.Panels {
+		if terr := validatePanelTemplates(spec.Metadata.Name, i, panel); terr != nil {
+			return LoadedRecipe{}, &LoadError{
+				File:    path,
+				Code:    ErrCodeTemplateInvalid,
+				Message: terr.Error(),
+				Err:     terr,
+			}
+		}
+	}
+
 	return LoadedRecipe{
 		Spec:   spec,
 		Source: source,
 		Path:   path,
 		Value:  val,
 	}, nil
+}
+
+// validatePanelTemplates parses every template string in panel and surfaces
+// the first parse failure. Forbidden directives ({{ define }}, {{ template }},
+// {{ block }}) and oversize AST trees are caught here at load time so they
+// never reach NewYAMLRecipe / render.
+//
+// adversary: T5 — template forbidden directives + AST budget.
+func validatePanelTemplates(recipeName string, idx int, panel PanelTemplate) error {
+	base := fmt.Sprintf("%s.panels[%d]", recipeName, idx)
+	if _, err := Parse(base+".title", panel.TitleTemplate); err != nil {
+		return err
+	}
+	if panel.RationaleTemplate != "" {
+		if _, err := Parse(base+".rationale", panel.RationaleTemplate); err != nil {
+			return err
+		}
+	}
+	if len(panel.Queries) > 0 {
+		for j, pq := range panel.Queries {
+			qbase := fmt.Sprintf("%s.queries[%d]", base, j)
+			if _, err := Parse(qbase+".query", pq.QueryTemplate); err != nil {
+				return err
+			}
+			if _, err := Parse(qbase+".legend", pq.LegendTemplate); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if _, err := Parse(base+".query", panel.QueryTemplate); err != nil {
+		return err
+	}
+	if _, err := Parse(base+".legend", panel.LegendTemplate); err != nil {
+		return err
+	}
+	return nil
 }
 
 // cueResult is the channel-passed value from withDeadline's worker.

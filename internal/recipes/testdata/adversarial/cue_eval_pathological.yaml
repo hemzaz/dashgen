@@ -1,0 +1,21 @@
+# adversary: T3 — pathological CUE evaluation (deadline must fire)
+# The fixture is structurally valid; the test exercises the deadline path
+# by running the loader with CUEDeadline=1ns so the wall-clock guard always
+# fires regardless of actual evaluation work. This proves the timeout
+# mechanism is wired without requiring a true exponential-blowup CUE input
+# (those depend on upstream evaluator internals and pin poorly).
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: cue_eval_pathological
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"

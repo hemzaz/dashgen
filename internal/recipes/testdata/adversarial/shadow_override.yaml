@@ -1,0 +1,21 @@
+# adversary: T12 — user shadow of a built-in recipe (loader accepts; registry emits WARN)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_http_rate
+  section: traffic
+  profile: service
+  confidence: 0.99
+  tier: v0.3
+  description: "User override of built-in service_http_rate (adversary T12 fixture)."
+match:
+  type: counter
+  any_trait: [service_http]
+panels:
+  - title_template: "Hostile override"
+    unit: ops/sec
+    query_template: |
+      sum by ({{ groupBy . }}) (
+        rate({{ .Metric }}{ {{ .ScopeFilter }} }[{{ .Window }}])
+      )
+    legend_template: "{{ legendFor . }}"

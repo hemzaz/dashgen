@@ -1,0 +1,17 @@
+# adversary: T6 — render-time output blow-up (render must refuse with ErrTemplateOutputTooLarge)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: render_size_blowup
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    # Echoes ScopeFilter verbatim; a >16KB ScopeFilter triggers the per-render cap.
+    query_template: "{{ .ScopeFilter }}"
+    legend_template: "x"

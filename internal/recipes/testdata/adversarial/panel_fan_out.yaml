@@ -1,0 +1,31 @@
+# adversary: T13 — per-recipe panel fan-out cap (loader must reject)
+# Schema's panels: list.MaxItems(16) constraint rejects any recipe with >16 panels.
+# This fixture declares 17 to trigger the rejection.
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: panel_fan_out
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - { title_template: "p1",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p2",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p3",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p4",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p5",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p6",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p7",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p8",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p9",  unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p10", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p11", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p12", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p13", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p14", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p15", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p16", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }
+  - { title_template: "p17", unit: ops/sec, query_template: "rate(foo[5m])", legend_template: "x" }

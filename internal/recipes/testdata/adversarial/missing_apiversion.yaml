@@ -1,0 +1,15 @@
+# adversary: T16 — missing apiVersion (loader must reject)
+kind: Recipe
+metadata:
+  name: missing_apiversion
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"

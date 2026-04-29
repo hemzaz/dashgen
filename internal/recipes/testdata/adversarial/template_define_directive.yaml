@@ -1,0 +1,16 @@
+# adversary: T5 — template parse-bomb via {{ define }} (loader must reject)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: template_define_directive
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: '{{ define "evil" }}rate(foo[5m]){{ end }}{{ template "evil" }}'
+    legend_template: "x"

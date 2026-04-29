@@ -1,0 +1,16 @@
+# adversary: T5 — template parse-bomb via {{ template }} (loader must reject)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: template_template_directive
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: '{{ template "missing" . }}'
+    legend_template: "x"

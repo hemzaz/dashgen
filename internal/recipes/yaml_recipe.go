@@ -180,7 +180,8 @@ func (y *YAMLRecipe) Match(m ClassifiedMetricView) bool {
 // The returned panels carry UID="" — synth fills the UID after computing
 // the dashboard UID (preserves the v0.1/v0.2 contract).
 func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profiles.Profile) []ir.Panel {
-	// T17: profile binding. A recipe never fires outside its declared profile.
+	// adversary: T17 — profile contamination. A recipe never fires outside
+	// its declared profile; cross-profile leak is structurally impossible.
 	if string(p) != y.Spec.Metadata.Profile {
 		return nil
 	}

@@ -11,12 +11,13 @@ import (
 )
 
 const (
-	// maxTemplateOutputBytes is the per-render output cap (T6).
-	// Any rendered PromQL string exceeding this is rejected.
+	// maxTemplateOutputBytes is the per-render output cap.
+	// adversary: T6 — render-time DoS. Any rendered PromQL string
+	// exceeding this is rejected with ErrTemplateOutputTooLarge.
 	maxTemplateOutputBytes = 16 * 1024 // 16 KB
 
-	// maxASTNodes is the per-template node-count budget (T5).
-	// Prevents parse-bomb attacks via deeply nested template ASTs.
+	// maxASTNodes is the per-template node-count budget.
+	// adversary: T5 — template parse-bomb via deeply nested ASTs.
 	maxASTNodes = 256
 )
 

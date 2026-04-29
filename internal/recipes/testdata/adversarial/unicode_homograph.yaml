@@ -1,0 +1,20 @@
+# adversary: T20 — unicode homograph in metric-name field (loader must reject)
+# The 'е' in "sеrvice_http_rate" (offset 1) is Cyrillic U+0435, not Latin
+# U+0065. The CUE schema's #MetricNameASCII constraint rejects any non-ASCII
+# byte in name-shape fields, surfacing a friendly load error.
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: unicode_homograph
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+  name_equals: "sеrvice_http_rate"
+panels:
+  - title_template: "x"
+    unit: ops/sec
+    query_template: "rate(foo[5m])"
+    legend_template: "x"

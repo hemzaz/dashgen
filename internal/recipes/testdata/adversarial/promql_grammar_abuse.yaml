@@ -1,0 +1,18 @@
+# adversary: T9 — PromQL grammar abuse (loader accepts; validate stage-1 refuses)
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: promql_grammar_abuse
+  section: traffic
+  profile: service
+  confidence: 0.5
+  tier: v0.3
+match:
+  type: counter
+  name_equals: http_requests_total
+panels:
+  - title_template: "Malformed"
+    unit: ops/sec
+    # Mismatched parens + undefined function — syntactically invalid PromQL.
+    query_template: "totally_undefined_func(((rate({{ .Metric }}[5m]"
+    legend_template: "x"
