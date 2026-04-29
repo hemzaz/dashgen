@@ -20,11 +20,11 @@
 
 ### resources
 
-- **Container CPU: container_cpu_usage_seconds_total** (confidence: 0.80) — cAdvisor counter "container_cpu_usage_seconds_total"; rate over 5m per namespace+pod+container.
-  - query: `sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m]))` — verdict: accept
-  - warnings: none
 - **Container memory: container_memory_working_set_bytes** (confidence: 0.80) — cAdvisor gauge "container_memory_working_set_bytes"; summed by namespace+pod+container.
   - query: `sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", pod!=""})` — verdict: accept
+  - warnings: none
+- **Container CPU: container_cpu_usage_seconds_total** (confidence: 0.80) — cAdvisor counter "container_cpu_usage_seconds_total"; rate over 5m per namespace+pod+container.
+  - query: `sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m]))` — verdict: accept
   - warnings: none
 
 ## Omitted

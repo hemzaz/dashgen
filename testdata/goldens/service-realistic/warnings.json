@@ -63,17 +63,17 @@
     "severity": "warning"
   },
   {
-    "panel_uid": "0220784f8508e2b0",
-    "section": "saturation",
-    "code": "empty_result",
-    "detail": "go_sql_stats_connections_in_use / go_sql_stats_connections_max",
-    "severity": "warning"
-  },
-  {
     "panel_uid": "7352b5c75f41c610",
     "section": "saturation",
     "code": "empty_result",
     "detail": "(api_tls_not_after_timestamp - time()) / 86400",
+    "severity": "warning"
+  },
+  {
+    "panel_uid": "7796cc6efe3d906a",
+    "section": "saturation",
+    "code": "empty_result",
+    "detail": "go_sql_stats_connections_in_use / go_sql_stats_connections_max",
     "severity": "warning"
   },
   {

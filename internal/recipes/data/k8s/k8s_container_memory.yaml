@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_container_memory
+  section: resources
+  profile: k8s
+  confidence: 0.80
+  tier: v0.3
+  description: "Container working-set memory from cAdvisor (excludes machine-level rows with empty container/pod labels)."
+  tags: [container, memory, cadvisor, gauge]
+
+match:
+  type: gauge
+  name_equals: container_memory_working_set_bytes
+
+panels:
+  - title_template: 'Container memory: {{ .Metric }}'
+    kind: timeseries
+    unit: bytes
+    group_by: [namespace, pod, container]
+    query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }}{container!="", pod!=""})'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'cAdvisor gauge "{{ .Metric }}"; summed by namespace+pod+container.'

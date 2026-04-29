@@ -1,0 +1,55 @@
+{
+  "_recipe": "service_db_pool_go_sql_stats",
+  "_comment": "Split child of service_db_pool (T6A.2). Matches go_sql_stats_connections_in_use gauge; pair with go_sql_stats_connections_max via suffix_swap _in_use <-> _max. Emits one panel: ratio in_use/max.",
+
+  "positive_metrics": [
+    {
+      "name": "go_sql_stats_connections_in_use",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: suffix_swap to resolve. Does not Match() the recipe (Match keys on _in_use).",
+      "name": "go_sql_stats_connections_max",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: pgxpool acquired (handled by sibling split service_db_pool_pgxpool).",
+      "name": "pgxpool_acquired_connections",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: max-side gauge alone never matches (Match keys on _in_use suffix).",
+      "name": "go_sql_stats_connections_max",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: counter type is rejected by type predicate.",
+      "name": "go_sql_stats_connections_in_use",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "DB pool utilization: go_sql",
+      "query_contains": "go_sql_stats_connections_in_use / go_sql_stats_connections_max",
+      "kind": "timeseries"
+    }
+  ]
+}

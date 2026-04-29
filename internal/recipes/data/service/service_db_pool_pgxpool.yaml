@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_db_pool_pgxpool
+  section: saturation
+  profile: service
+  confidence: 0.80
+  tier: v0.3
+  description: "DB connection pool saturation ratio for pgxpool (jackc/pgx) connection counters."
+  tags: [db, pool, saturation, gauge, pair]
+
+pair_with:
+  explicit: { name: "pgxpool_max_connections" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: pgxpool_acquired_connections
+
+panels:
+  - title_template: 'DB pool utilization: pgxpool'
+    kind: timeseries
+    unit: percentunit
+    group_by: [instance, job]
+    requires_pair: true
+    query_template: 'pgxpool_acquired_connections / pgxpool_max_connections'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'pgxpool_acquired_connections / pgxpool_max_connections: connection pool utilisation ratio. Values near 1.0 indicate pool exhaustion.'

@@ -77,14 +77,14 @@
 
 ### saturation
 
-- **DB pool utilization: go_sql** (confidence: 0.80) — go_sql_stats_connections_in_use / go_sql_stats_connections_max: connection pool utilisation ratio. Values near 1.0 indicate pool exhaustion.
-  - query: `go_sql_stats_connections_in_use / go_sql_stats_connections_max` — verdict: accept_with_warning
-  - warnings: empty_result
 - **CPU (cores used): process_cpu_seconds_total** (confidence: 0.80) — CPU-seconds counter "process_cpu_seconds_total"; rate over 5m yields cores consumed.
   - query: `sum by (instance, job) (rate(process_cpu_seconds_total[5m]))` — verdict: accept
   - warnings: none
 - **TLS cert days to expiry: api_tls_not_after_timestamp** (confidence: 0.80) — Cert-expiry timestamp gauge "api_tls_not_after_timestamp"; (metric - time()) / 86400 yields days until expiry.
   - query: `(api_tls_not_after_timestamp - time()) / 86400` — verdict: accept_with_warning
+  - warnings: empty_result
+- **DB pool utilization: go_sql** (confidence: 0.80) — go_sql_stats_connections_in_use / go_sql_stats_connections_max: connection pool utilisation ratio. Values near 1.0 indicate pool exhaustion.
+  - query: `go_sql_stats_connections_in_use / go_sql_stats_connections_max` — verdict: accept_with_warning
   - warnings: empty_result
 - **GC pause: go_gc_duration_seconds** (confidence: 0.85) — Summary "go_gc_duration_seconds": p99 selected via quantile label; avg by (instance, job) collapses replicas.
   - query: `avg by (instance, job) (go_gc_duration_seconds{quantile="0.99"})` — verdict: accept

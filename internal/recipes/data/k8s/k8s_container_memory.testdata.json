@@ -1,0 +1,45 @@
+{
+  "_recipe": "k8s_container_memory",
+  "_comment": "Split child of k8s_container_resources (T6A.2). Exact name match on container_memory_working_set_bytes gauge; summed by namespace+pod+container, excluding machine-level rows with empty container/pod labels.",
+
+  "positive_metrics": [
+    {
+      "name": "container_memory_working_set_bytes",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: CPU usage counter (handled by sibling split k8s_container_cpu).",
+      "name": "container_cpu_usage_seconds_total",
+      "type": "counter",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: unrelated cAdvisor gauge — name not container_memory_working_set_bytes.",
+      "name": "container_memory_usage_bytes",
+      "type": "gauge",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: counter type is rejected by type predicate.",
+      "name": "container_memory_working_set_bytes",
+      "type": "counter",
+      "labels": ["container", "namespace", "pod"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Container memory: container_memory_working_set_bytes",
+      "query_contains": "sum by (namespace, pod, container) (container_memory_working_set_bytes{container!=\"\", pod!=\"\"})",
+      "kind": "timeseries"
+    }
+  ]
+}

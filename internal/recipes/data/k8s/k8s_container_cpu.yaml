@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_container_cpu
+  section: resources
+  profile: k8s
+  confidence: 0.80
+  tier: v0.3
+  description: "Container CPU rate from cAdvisor (excludes machine-level rows with empty container/pod labels)."
+  tags: [container, cpu, cadvisor, counter]
+
+match:
+  type: counter
+  name_equals: container_cpu_usage_seconds_total
+
+panels:
+  - title_template: 'Container CPU: {{ .Metric }}'
+    kind: timeseries
+    unit: short
+    group_by: [namespace, pod, container]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}{container!="", pod!=""}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'cAdvisor counter "{{ .Metric }}"; rate over {{ .Window }} per namespace+pod+container.'

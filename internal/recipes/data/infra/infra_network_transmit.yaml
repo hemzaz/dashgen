@@ -1,0 +1,23 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_network_transmit
+  section: network
+  profile: infra
+  confidence: 0.80
+  tier: v0.3
+  description: "Network transmit throughput per interface from node_exporter (excludes lo and veth.*)."
+  tags: [network, node_exporter, counter]
+
+match:
+  type: counter
+  name_equals: node_network_transmit_bytes_total
+
+panels:
+  - title_template: 'Network TX: {{ .Metric }}'
+    kind: timeseries
+    unit: Bps
+    group_by: [instance, device]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}{device!~"lo|veth.*"}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter counter "{{ .Metric }}"; rate over {{ .Window }} per instance+device, excluding lo and veth.*.'

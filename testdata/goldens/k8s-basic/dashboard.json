@@ -110,7 +110,7 @@
       "collapsed": false
     },
     {
-      "id": 661300320262136,
+      "id": 1066254201756595,
       "type": "timeseries",
       "title": "Container CPU: container_cpu_usage_seconds_total",
       "datasource": {
@@ -142,7 +142,7 @@
       ]
     },
     {
-      "id": 4612134405366662,
+      "id": 3534649035499949,
       "type": "timeseries",
       "title": "Container memory: container_memory_working_set_bytes",
       "datasource": {

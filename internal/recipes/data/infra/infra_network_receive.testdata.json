@@ -1,0 +1,45 @@
+{
+  "_recipe": "infra_network_receive",
+  "_comment": "Split child of infra_network (T6A.2). Exact name match on node_network_receive_bytes_total counter; rate yields RX throughput per interface, excluding lo and veth.*.",
+
+  "positive_metrics": [
+    {
+      "name": "node_network_receive_bytes_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: transmit-side counter (handled by sibling split infra_network_transmit).",
+      "name": "node_network_transmit_bytes_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: packets counter — name not in approved set.",
+      "name": "node_network_receive_packets_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "node_network_receive_bytes_total",
+      "type": "gauge",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Network RX: node_network_receive_bytes_total",
+      "query_contains": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

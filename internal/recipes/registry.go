@@ -48,7 +48,7 @@ func NewServiceRegistry() *Registry {
 	// service_cache_hits migrated to YAML (T5.0.E) — see data/service/service_cache_hits.yaml.
 	// service_job_success migrated to YAML (T6A.1) — see data/service/service_job_success.yaml.
 	// service_client_http migrated to YAML (T6A.1) — see data/service/service_client_http.yaml.
-	r.Register(NewServiceDBPool())
+	// service_db_pool split into service_db_pool_go_sql_stats + service_db_pool_pgxpool (T6A.2) — see data/service/service_db_pool_go_sql_stats.yaml and data/service/service_db_pool_pgxpool.yaml.
 	// service_kafka_consumer_lag migrated to YAML (T5.1) — see data/service/service_kafka_consumer_lag.yaml.
 	// service_request_size migrated to YAML (T5.1 continuation) — see data/service/service_request_size.yaml.
 	// service_response_size migrated to YAML (T5.1 continuation) — see data/service/service_response_size.yaml.
@@ -69,7 +69,7 @@ func NewInfraRegistry() *Registry {
 	// infra_cpu migrated to YAML (T1B.1) — see data/infra/infra_cpu.yaml.
 	// infra_memory migrated to YAML (T6A.1) — see data/infra/infra_memory.yaml.
 	// infra_disk migrated to YAML (T6A.1) — see data/infra/infra_disk.yaml.
-	r.Register(NewInfraNetwork())
+	// infra_network split into infra_network_receive + infra_network_transmit (T6A.2) — see data/infra/infra_network_receive.yaml and data/infra/infra_network_transmit.yaml.
 	// infra_load migrated to YAML (T4A.1) — see data/infra/infra_load.yaml.
 	// infra_filesystem_usage migrated to YAML (T6A.1) — see data/infra/infra_filesystem_usage.yaml.
 	// infra_file_descriptors migrated to YAML (T6A.1) — see data/infra/infra_file_descriptors.yaml.
@@ -94,7 +94,7 @@ func NewInfraRegistry() *Registry {
 func NewK8sRegistry() *Registry {
 	r := NewRegistry()
 	// k8s_pod_health migrated to YAML (T1B.1) — see data/k8s/k8s_pod_health.yaml.
-	r.Register(NewK8sContainerResources())
+	// k8s_container_resources split into k8s_container_cpu + k8s_container_memory (T6A.2) — see data/k8s/k8s_container_cpu.yaml and data/k8s/k8s_container_memory.yaml.
 	// k8s_restarts migrated to YAML (T4A.1) — see data/k8s/k8s_restarts.yaml.
 	// k8s_deployment_availability migrated to YAML (T6A.1) — see data/k8s/k8s_deployment_availability.yaml.
 	// k8s_node_conditions migrated to YAML (T6A.1) — see data/k8s/k8s_node_conditions.yaml.

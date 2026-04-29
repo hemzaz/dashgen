@@ -186,7 +186,7 @@
       "collapsed": false
     },
     {
-      "id": 3281003494981208,
+      "id": 4514385575778045,
       "type": "timeseries",
       "title": "Network RX: node_network_receive_bytes_total",
       "datasource": {
@@ -218,7 +218,7 @@
       ]
     },
     {
-      "id": 3060660265363410,
+      "id": 1950043719849159,
       "type": "timeseries",
       "title": "Network TX: node_network_transmit_bytes_total",
       "datasource": {

@@ -283,25 +283,11 @@ func TestList_YAMLBuiltinHasPath(t *testing.T) {
 	}
 }
 
-func TestList_GoRecipeHasEmptyPath(t *testing.T) {
-	t.Parallel()
-	// service_db_pool is a Go recipe (split into YAML in T6A.2); Path must be "".
-	out := runListCmd(t, []string{
-		"--no-user-recipes",
-		"--match", "service_db_pool",
-		"--output", "json",
-	})
-	var infos []recipeInfo
-	if err := json.Unmarshal([]byte(out), &infos); err != nil {
-		t.Fatalf("JSON unmarshal: %v", err)
-	}
-	if len(infos) != 1 {
-		t.Fatalf("expected exactly 1 result for service_db_pool, got %d", len(infos))
-	}
-	if infos[0].Path != "" {
-		t.Errorf("Go recipe service_db_pool Path = %q, want empty", infos[0].Path)
-	}
-}
+// TestList_GoRecipeHasEmptyPath was removed in T6A.2: the last remaining Go
+// recipes (service_db_pool, infra_network, k8s_container_resources) were
+// migrated to YAML splits. No Go recipes remain in the registry, so the
+// "Go recipe has empty Path" assertion no longer has a target. Reintroduce
+// only if a future feature reintroduces a Go-implementing Recipe.
 
 func TestList_UserRecipeFromDir(t *testing.T) {
 	t.Parallel()

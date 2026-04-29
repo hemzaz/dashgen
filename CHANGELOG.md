@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- T6A.2: Tier-C split — `service_db_pool`, `infra_network`, `k8s_container_resources` split into 6 child recipes; panel UIDs regenerated for affected metrics (v0.3 unreleased, deliberate per V0.3-PLAN).
+
 ## [0.2.0] — 2026-04-27
 
 ### Added

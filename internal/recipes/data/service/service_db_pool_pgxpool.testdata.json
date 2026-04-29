@@ -1,0 +1,55 @@
+{
+  "_recipe": "service_db_pool_pgxpool",
+  "_comment": "Split child of service_db_pool (T6A.2). Matches pgxpool_acquired_connections gauge; pair with pgxpool_max_connections via explicit name. Emits one panel: ratio acquired/max.",
+
+  "positive_metrics": [
+    {
+      "name": "pgxpool_acquired_connections",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: explicit to resolve. Does not Match() the recipe (Match keys on pgxpool_acquired_connections).",
+      "name": "pgxpool_max_connections",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: go_sql_stats in_use (handled by sibling split service_db_pool_go_sql_stats).",
+      "name": "go_sql_stats_connections_in_use",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: max-side gauge alone never matches (Match keys on pgxpool_acquired_connections).",
+      "name": "pgxpool_max_connections",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: counter type is rejected by type predicate.",
+      "name": "pgxpool_acquired_connections",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "DB pool utilization: pgxpool",
+      "query_contains": "pgxpool_acquired_connections / pgxpool_max_connections",
+      "kind": "timeseries"
+    }
+  ]
+}

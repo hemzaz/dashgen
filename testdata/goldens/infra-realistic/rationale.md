@@ -62,17 +62,17 @@
 - **NIC TX errors** (confidence: 0.85) — node_exporter counter "node_network_transmit_errs_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_network_transmit_errs_total[5m]))` — verdict: accept
   - warnings: none
-- **NIC RX drops** (confidence: 0.85) — node_exporter counter "node_network_receive_drop_total"; rate over 5m per instance+device.
-  - query: `sum by (instance, device) (rate(node_network_receive_drop_total[5m]))` — verdict: accept
-  - warnings: none
 - **Network TX: node_network_transmit_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_transmit_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
   - query: `sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
   - warnings: none
-- **NIC RX errors** (confidence: 0.85) — node_exporter counter "node_network_receive_errs_total"; rate over 5m per instance+device.
-  - query: `sum by (instance, device) (rate(node_network_receive_errs_total[5m]))` — verdict: accept
-  - warnings: none
 - **Network RX: node_network_receive_bytes_total** (confidence: 0.80) — node_exporter counter "node_network_receive_bytes_total"; rate over 5m per instance+device, excluding lo and veth.*.
   - query: `sum by (instance, device) (rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]))` — verdict: accept
+  - warnings: none
+- **NIC RX drops** (confidence: 0.85) — node_exporter counter "node_network_receive_drop_total"; rate over 5m per instance+device.
+  - query: `sum by (instance, device) (rate(node_network_receive_drop_total[5m]))` — verdict: accept
+  - warnings: none
+- **NIC RX errors** (confidence: 0.85) — node_exporter counter "node_network_receive_errs_total"; rate over 5m per instance+device.
+  - query: `sum by (instance, device) (rate(node_network_receive_errs_total[5m]))` — verdict: accept
   - warnings: none
 - **NIC TX drops** (confidence: 0.85) — node_exporter counter "node_network_transmit_drop_total"; rate over 5m per instance+device.
   - query: `sum by (instance, device) (rate(node_network_transmit_drop_total[5m]))` — verdict: accept
