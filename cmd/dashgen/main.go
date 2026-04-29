@@ -15,6 +15,12 @@ import (
 	applint "dashgen/internal/app/lint"
 )
 
+// version is the dashgen build version. The default ("dev") applies to local
+// builds (`go build`, `go install`); release builds override it via ldflags
+// (`-X main.version={{.Version}}` configured in .goreleaser.yaml). Surfaced
+// to users via `dashgen --version`.
+var version = "dev"
+
 // Exit codes. Mirrors the error categories exported by internal/app/generate,
 // internal/app/lint, and internal/app/coverage.
 const (
@@ -93,8 +99,9 @@ func exitCodeFor(err error) int {
 
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:   "dashgen",
-		Short: "Generate reviewable Grafana dashboards from a Prometheus backend",
+		Use:     "dashgen",
+		Short:   "Generate reviewable Grafana dashboards from a Prometheus backend",
+		Version: version,
 		// Suppress cobra's default usage+error noise for RunE failures — main
 		// prints a single "error:" line and picks the exit code. Usage is
 		// still shown by --help and on flag-parse errors.
