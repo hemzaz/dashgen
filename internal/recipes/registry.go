@@ -76,7 +76,7 @@ func NewInfraRegistry() *Registry {
 	// infra_nic_errors migrated to YAML (T5.0.B) — see data/infra/infra_nic_errors.yaml.
 	r.Register(NewInfraConntrack())
 	// infra_disk_iops migrated to YAML (T5.1) — see data/infra/infra_disk_iops.yaml.
-	r.Register(NewInfraDiskIOLatency())
+	// infra_disk_io_latency migrated to YAML (T5.0.D) — see data/infra/infra_disk_io_latency.yaml.
 	// infra_ntp_offset migrated to YAML (T1B.1) — see data/infra/infra_ntp_offset.yaml.
 	// infra_interrupts migrated to YAML (T4A.1) — see data/infra/infra_interrupts.yaml.
 	LoadBuiltinYAMLs(r, "infra")

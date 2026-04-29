@@ -1,0 +1,56 @@
+{
+  "_recipe": "infra_disk_io_latency",
+  "_comment": "Exact name match on the two node_exporter IO-time counters; rate yields busy fraction or weighted queue depth per device.",
+
+  "positive_metrics": [
+    {
+      "name": "node_disk_io_time_seconds_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "node_disk_io_time_weighted_seconds_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: IOPS counter belongs to infra_disk_iops, not io-time latency.",
+      "name": "node_disk_reads_completed_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: byte throughput counter is a different family.",
+      "name": "node_disk_written_bytes_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "node_disk_io_time_seconds_total",
+      "type": "gauge",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Disk IO busy fraction",
+      "query_contains": "rate(node_disk_io_time_seconds_total[5m])",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Disk IO weighted time",
+      "query_contains": "rate(node_disk_io_time_weighted_seconds_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

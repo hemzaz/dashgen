@@ -1,0 +1,30 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_disk_io_latency
+  section: disk
+  profile: infra
+  confidence: 0.85
+  tier: v0.3
+  description: "IO-time saturation signals from node_exporter: busy fraction and weighted queue depth per block device."
+  tags: [disk, saturation, node_exporter, counter]
+
+match:
+  type: counter
+  name_equals_any:
+    - node_disk_io_time_seconds_total
+    - node_disk_io_time_weighted_seconds_total
+
+panels:
+  - title_template: 'Disk IO busy fraction'
+    title_per_metric:
+      node_disk_io_time_seconds_total: Disk IO busy fraction
+      node_disk_io_time_weighted_seconds_total: Disk IO weighted time
+    kind: timeseries
+    unit: percentunit
+    unit_per_metric:
+      node_disk_io_time_weighted_seconds_total: s
+    group_by: [instance, device]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter counter "{{ .Metric }}"; rate over {{ .Window }} per instance+device.'

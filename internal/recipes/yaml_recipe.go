@@ -280,11 +280,12 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 					rationaleStr = strings.TrimSpace(rendered)
 				}
 			}
+			unit := renderUnit(panel, m)
 			out = append(out, ir.Panel{
 				UID:        "", // set by synth after dashboardUID computed
 				Title:      strings.TrimSpace(titleStr),
 				Kind:       panelKindFor(panel.Kind),
-				Unit:       panel.Unit,
+				Unit:       unit,
 				Confidence: y.Spec.Metadata.Confidence,
 				Queries:    queries,
 				Rationale:  rationaleStr,
@@ -377,6 +378,17 @@ func (y *YAMLRecipe) renderTitle(i int, panel PanelTemplate, ctx RenderContext, 
 	return y.titleTmpls[i].Render(ctx)
 }
 
+// renderUnit returns the Grafana unit for metric m. If the panel declares
+// unit_per_metric and m's name is a key, the mapped unit is returned;
+// otherwise panel.Unit is used. Mirrors the renderTitle pattern for the
+// unit dimension (e.g. infra_disk_io_latency: percentunit vs s).
+func renderUnit(panel PanelTemplate, m ClassifiedMetricView) string {
+	if u, ok := panel.UnitPerMetric[m.Descriptor.Name]; ok {
+		return u
+	}
+	return panel.Unit
+}
+
 // renderSinglePanel renders one ir.Panel from the i-th panel template under
 // ctx. Returns (panel, true) on success or (zero, false) if any template
 // render failed. Used by the non-quantile path; the quantile path inlines
@@ -407,16 +419,17 @@ func (y *YAMLRecipe) renderSinglePanel(
 			rationaleStr = strings.TrimSpace(rendered)
 		}
 	}
+	unit := renderUnit(panel, m)
 	return ir.Panel{
 		UID:        "", // set by synth after dashboardUID computed
 		Title:      strings.TrimSpace(title),
 		Kind:       panelKindFor(panel.Kind),
-		Unit:       panel.Unit,
+		Unit:       unit,
 		Confidence: y.Spec.Metadata.Confidence,
 		Queries: []ir.QueryCandidate{{
 			Expr:         strings.TrimSpace(expr),
 			LegendFormat: strings.TrimSpace(legend),
-			Unit:         panel.Unit,
+			Unit:         unit,
 		}},
 		Rationale: rationaleStr,
 	}, true

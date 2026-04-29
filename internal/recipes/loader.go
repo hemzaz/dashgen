@@ -183,6 +183,7 @@ type MatchPredicate struct {
 type PanelTemplate struct {
 	TitleTemplate      string            `json:"title_template"`
 	TitlePerMetric     map[string]string `json:"title_per_metric,omitempty"`
+	UnitPerMetric      map[string]string `json:"unit_per_metric,omitempty"`
 	Kind               string            `json:"kind,omitempty"`
 	Unit               string            `json:"unit"`
 	QueryTemplate      string            `json:"query_template"`

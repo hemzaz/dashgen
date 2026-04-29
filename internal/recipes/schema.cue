@@ -193,6 +193,12 @@ import (
 	// are bounded by the same 160-rune redaction cap as title_template.
 	title_per_metric?: [#MetricNameASCII]: string & strings.MaxRunes(160)
 
+	// Optional per-metric unit override. When the matched metric's name is a
+	// key in this map, the mapped unit is used for this panel instead of the
+	// top-level unit field. Required for Go recipes that emit different Grafana
+	// units per metric (e.g. infra_disk_io_latency: "percentunit" vs "s").
+	unit_per_metric?: [#MetricNameASCII]: #Unit
+
 	kind:           "timeseries" | "stat" | "gauge" | "barchart" | *"timeseries"
 	unit:           #Unit
 	query_template: string & strings.MaxRunes(2048)
