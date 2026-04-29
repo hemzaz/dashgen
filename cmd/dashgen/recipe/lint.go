@@ -30,11 +30,11 @@ var (
 	ErrLintResourceLimit = errors.New("recipe lint failed: resource limit exceeded")
 )
 
-// lintMaxFilesPerInvocation is the CT2 per-invocation file count cap.
+// adversary: CT2 — per-invocation file count cap (recipe-list explosion).
 // Exceeded → ErrLintResourceLimit (exit code 5).
 const lintMaxFilesPerInvocation = 4096
 
-// lintPerFileDeadline is the CT9 per-file wall-clock budget.
+// adversary: CT9 — per-file wall-clock budget (lint as DoS vector).
 // Exceeded → file marked invalid; loader returns ErrCodeDeadline.
 const lintPerFileDeadline = 5 * time.Second
 

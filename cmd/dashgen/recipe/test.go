@@ -127,6 +127,11 @@ func runTest(cmd *cobra.Command, f testFlags, files []string) error {
 		return err
 	}
 
+	// adversary: CT7 — fixture file-size cap (per-file 16 MB, cumulative 64 MB).
+	if err := guardFixtureSize(f.fixtureDir); err != nil {
+		return fmt.Errorf("%w: %v", ErrTestFixtureError, err)
+	}
+
 	src, err := discover.NewFixtureSource(f.fixtureDir)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrTestFixtureError, err)

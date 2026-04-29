@@ -19,8 +19,9 @@ const (
 	scaffoldNameMaxRunes   = 64
 )
 
-// scaffoldMetricRe is the Prometheus metric-name constraint applied to
-// --metric, --name, and --with-pair halves (RECIPES-CLI.md §9 CT3).
+// adversary: CT3 — Prometheus metric-name constraint applied to --metric,
+// --name, and --with-pair halves (rejects shell metacharacters and
+// path-traversal sequences at flag parse time).
 var scaffoldMetricRe = regexp.MustCompile(`^[a-zA-Z_:][a-zA-Z0-9_:]*$`)
 
 // validScaffoldSections is the closed #Section enum from schema.cue.
@@ -119,6 +120,8 @@ func runScaffold(cmd *cobra.Command, a scaffoldArgs) error {
 		return fmt.Errorf("internal error: scaffold produced invalid YAML: %w", err)
 	}
 
+	// adversary: CT10 — scaffolder as attack vector. Without an explicit
+	// --output, scaffold emits to stdout only; no implicit filesystem write.
 	if a.output == "" {
 		fmt.Fprint(cmd.OutOrStdout(), yaml)
 		return nil
@@ -367,7 +370,10 @@ func validateScaffoldOutput(yaml string) error {
 	return err
 }
 
-// writeScaffoldFile writes the YAML to path, respecting --force (CT1/CT4).
+// writeScaffoldFile writes the YAML to path, respecting --force.
+// adversary: CT1 — refuses to overwrite an existing file unless --force is set.
+// adversary: CT4 — uses O_EXCL|O_CREATE so an existing symlink at <path> is
+// rejected (the link target is never followed and never modified).
 func writeScaffoldFile(cmd *cobra.Command, path string, force bool, yaml string) error {
 	var (
 		f   *os.File

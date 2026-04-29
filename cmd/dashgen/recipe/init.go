@@ -50,11 +50,15 @@ func runInit(cmd *cobra.Command, configDir string, force bool) error {
 		return fmt.Errorf("create recipes directory %s: %w", dir, err)
 	}
 
-	// Without --force, refuse if any of the three scaffolded files already exist.
+	// adversary: CT4 — symlink target via init writes. Use os.Lstat (not Stat)
+	// so an existing symlink at the path counts as "exists" without --force,
+	// even when the link target is missing. Without this guard, a dangling
+	// symlink would slip past Stat (which follows the link) and the
+	// subsequent WriteFile would create a new file at the symlink's target.
 	if !force {
 		for _, f := range scaffoldedFiles {
 			p := filepath.Join(dir, f)
-			if _, statErr := os.Stat(p); statErr == nil {
+			if _, statErr := os.Lstat(p); statErr == nil {
 				return fmt.Errorf("%w: %s", ErrDirExists, p)
 			}
 		}
@@ -70,6 +74,13 @@ func runInit(cmd *cobra.Command, configDir string, force bool) error {
 	}
 	for _, w := range writes {
 		p := filepath.Join(dir, w.name)
+		// adversary: CT4 — when overwriting with --force, remove any existing
+		// entry first so a symlink at the path is replaced with a regular
+		// file (never followed). os.Remove on a missing path is a no-op as
+		// far as the subsequent WriteFile is concerned.
+		if force {
+			_ = os.Remove(p)
+		}
 		if err := os.WriteFile(p, []byte(w.content), 0o644); err != nil {
 			return fmt.Errorf("write %s: %w", p, err)
 		}

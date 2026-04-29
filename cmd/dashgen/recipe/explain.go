@@ -5,12 +5,12 @@
 // "why didn't my recipe fire on metric X?". Output formats: text (tree)
 // and json. See docs/RECIPES-CLI.md §3.7.
 //
-// Invariant CT5 (RECIPES-CLI.md §9.2): the explain output exposes label
-// NAMES only — never label values. This is enforced structurally: every
-// "actual" value rendered here is sourced from MetricDescriptor.Labels
-// (which is []string of label names), the predicate spec (authored by the
-// user), or the classifier's enumerated traits/types. The fixture's raw
-// series.json (which carries label values) is never read by this command.
+// adversary: CT5 — RECIPES-CLI.md §9.2: explain output exposes label
+// NAMES only — never label values. Enforced structurally: every "actual"
+// value rendered here is sourced from MetricDescriptor.Labels (which is
+// []string of label names), the predicate spec (authored by the user), or
+// the classifier's enumerated traits/types. The fixture's raw series.json
+// (which carries label values) is never read by this command.
 package recipe
 
 import (
@@ -246,6 +246,10 @@ func loadExplainRecipe(a explainArgs) (*recipes.YAMLRecipe, string, error) {
 // fields (Descriptor.Name, .Labels, classifier traits/types) are read.
 // The raw series.json values are not touched by this code path.
 func loadExplainMetric(fixtureDir, metric string) (recipes.ClassifiedMetricView, error) {
+	// adversary: CT7 — fixture file-size cap (per-file 16 MB, cumulative 64 MB).
+	if err := guardFixtureSize(fixtureDir); err != nil {
+		return recipes.ClassifiedMetricView{}, fmt.Errorf("%w: %v", ErrExplainNotFound, err)
+	}
 	src, err := discover.NewFixtureSource(fixtureDir)
 	if err != nil {
 		return recipes.ClassifiedMetricView{}, fmt.Errorf("%w: open fixture: %w", ErrExplainNotFound, err)

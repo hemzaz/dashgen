@@ -305,6 +305,17 @@ const (
 	ErrCodeTemplateInvalid = "loader.template_invalid"
 )
 
+// adversary: CT8 — RECIPES-CLI.md §9.2 caps the user-facing error excerpt at
+// 80 columns. CUE / yaml libraries occasionally splat the entire offending
+// field value (e.g. a 4 KB metadata.description) into the error message, so
+// the loader's stringifier truncates over-long messages defensively. The
+// budget (160 runes) keeps short schema/template errors intact while
+// clipping pathological field-value dumps before more than a small head is
+// echoed. Combined with file:line:col positional context, this matches the
+// "offending line excerpt" intent of the spec while staying generous enough
+// for CUE's verbose constraint messages.
+const loadErrorMaxMessageRunes = 160
+
 // Error returns the file:line:col: message format documented in DSL §9.3.
 func (e *LoadError) Error() string {
 	if e == nil {
@@ -317,10 +328,22 @@ func (e *LoadError) Error() string {
 	case e.Line > 0:
 		pos = fmt.Sprintf(":%d", e.Line)
 	}
+	msg := clampLoadErrorMessage(e.Message)
 	if e.File == "" {
-		return fmt.Sprintf("recipes%s: %s", pos, e.Message)
+		return fmt.Sprintf("recipes%s: %s", pos, msg)
 	}
-	return fmt.Sprintf("%s%s: %s", e.File, pos, e.Message)
+	return fmt.Sprintf("%s%s: %s", e.File, pos, msg)
+}
+
+// clampLoadErrorMessage truncates an over-long Message at the rune boundary
+// closest to loadErrorMaxMessageRunes and appends a "…[truncated]" marker so
+// callers can tell the message was cut. Short messages pass through verbatim.
+func clampLoadErrorMessage(msg string) string {
+	runes := []rune(msg)
+	if len(runes) <= loadErrorMaxMessageRunes {
+		return msg
+	}
+	return string(runes[:loadErrorMaxMessageRunes]) + "…[truncated]"
 }
 
 // Unwrap exposes the underlying error for errors.Is / errors.As.
@@ -921,7 +944,7 @@ func mapCUEError(file, code string, err error) *LoadError {
 
 	errs := cueerrors.Errors(err)
 	if len(errs) == 0 {
-		out.Message = err.Error()
+		out.Message = clampLoadErrorMessage(err.Error()) // adversary: CT8
 		return out
 	}
 
@@ -944,7 +967,7 @@ func mapCUEError(file, code string, err error) *LoadError {
 			parts = append(parts, text)
 		}
 	}
-	out.Message = strings.Join(parts, "; ")
+	out.Message = clampLoadErrorMessage(strings.Join(parts, "; ")) // adversary: CT8
 
 	// Refine Code based on the inferred class for richer test matching.
 	switch {

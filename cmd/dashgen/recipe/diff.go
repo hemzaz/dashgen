@@ -284,6 +284,11 @@ func validateDiffArgs(a diffArgs, args []string) error {
 
 // loadDiffRecipeFile loads a single user-supplied YAML file from disk and
 // wraps it as a *YAMLRecipe. Failure surfaces as ErrDiffLoadFailure (exit 1).
+//
+// adversary: CT6 — diff with malicious user override. All loader limits
+// from RECIPES-DSL-ADVERSARY.md (file size, CUE deadline, template AST
+// budget, predicate depth/node caps) apply transparently here; a
+// pathological override surfaces as ErrDiffLoadFailure rather than hanging.
 func loadDiffRecipeFile(path string) (*recipes.YAMLRecipe, error) {
 	loaded, err := recipes.LoadFile(context.Background(), recipes.LoaderConfig{}, path, recipes.SourceUser)
 	if err != nil {
@@ -332,6 +337,10 @@ func loadDiffBuiltinByName(name, profileFilter string) (*recipes.YAMLRecipe, str
 // classify, snapshot. Errors (path missing, malformed JSON) surface as
 // ErrDiffFixtureError (exit 2).
 func loadDiffFixture(dir string) (recipes.ClassifiedInventorySnapshot, error) {
+	// adversary: CT7 — fixture file-size cap (per-file 16 MB, cumulative 64 MB).
+	if err := guardFixtureSize(dir); err != nil {
+		return recipes.ClassifiedInventorySnapshot{}, fmt.Errorf("%w: %v", ErrDiffFixtureError, err)
+	}
 	src, err := discover.NewFixtureSource(dir)
 	if err != nil {
 		return recipes.ClassifiedInventorySnapshot{}, fmt.Errorf("%w: %v", ErrDiffFixtureError, err)
