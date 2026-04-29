@@ -1,0 +1,34 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_node_conditions
+  section: resources
+  profile: k8s
+  confidence: 0.90
+  tier: v0.3
+  description: "Node health conditions (NotReady, MemoryPressure, DiskPressure, PIDPressure) sourced from kube-state-metrics."
+  tags: [k8s, node, kube-state-metrics]
+
+match:
+  type: gauge
+  name_equals: kube_node_status_condition
+
+panels:
+  - title_template: 'Node conditions'
+    kind: timeseries
+    unit: ""
+    group_by: [node, condition]
+    rationale_template: 'kube-state-metrics gauge "{{ .Metric }}"; max by node+condition for each of [NotReady MemoryPressure DiskPressure PIDPressure] shows which nodes are unhealthy.'
+    queries:
+      - query_template: 'max by (node, condition) ({{ .Metric }}{condition="NotReady", status="true"})'
+        legend_template: '{{ legendFor . }}'
+        unit: ""
+      - query_template: 'max by (node, condition) ({{ .Metric }}{condition="MemoryPressure", status="true"})'
+        legend_template: '{{ legendFor . }}'
+        unit: ""
+      - query_template: 'max by (node, condition) ({{ .Metric }}{condition="DiskPressure", status="true"})'
+        legend_template: '{{ legendFor . }}'
+        unit: ""
+      - query_template: 'max by (node, condition) ({{ .Metric }}{condition="PIDPressure", status="true"})'
+        legend_template: '{{ legendFor . }}'
+        unit: ""

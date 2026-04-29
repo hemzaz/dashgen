@@ -97,8 +97,8 @@ func NewK8sRegistry() *Registry {
 	r.Register(NewK8sContainerResources())
 	// k8s_restarts migrated to YAML (T4A.1) — see data/k8s/k8s_restarts.yaml.
 	// k8s_deployment_availability migrated to YAML (T6A.1) — see data/k8s/k8s_deployment_availability.yaml.
-	r.Register(NewK8sNodeConditions())
-	r.Register(NewK8sPVCUsage())
+	// k8s_node_conditions migrated to YAML (T6A.1) — see data/k8s/k8s_node_conditions.yaml.
+	// k8s_pvc_usage migrated to YAML (T6A.1) — see data/k8s/k8s_pvc_usage.yaml.
 	// k8s_oom_kills migrated to YAML (T4A.1) — see data/k8s/k8s_oom_kills.yaml.
 	// k8s_apiserver_latency migrated to YAML (T5.1 continuation) — see data/k8s/k8s_apiserver_latency.yaml.
 	// k8s_etcd_commit migrated to YAML (T5.1 continuation) — see data/k8s/k8s_etcd_commit.yaml.

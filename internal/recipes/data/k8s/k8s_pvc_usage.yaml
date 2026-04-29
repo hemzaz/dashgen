@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_pvc_usage
+  section: resources
+  profile: k8s
+  confidence: 0.85
+  tier: v0.3
+  description: "PVC used ratio derived from kubelet volume stats avail/capacity gauges."
+  tags: [k8s, pvc, kubelet, gauge, pair]
+
+pair_with:
+  suffix_swap: { from_suffix: "_available_bytes", to_suffix: "_capacity_bytes" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: kubelet_volume_stats_available_bytes
+
+panels:
+  - title_template: 'PVC used ratio'
+    kind: timeseries
+    unit: percentunit
+    group_by: [namespace, persistentvolumeclaim]
+    requires_pair: true
+    query_template: '1 - (sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes) / sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'kubelet PVC gauges: 1 - (available / capacity) yields used ratio per namespace+PVC.'

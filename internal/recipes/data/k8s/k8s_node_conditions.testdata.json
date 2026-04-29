@@ -1,0 +1,56 @@
+{
+  "_recipe": "k8s_node_conditions",
+  "_comment": "kube-state-metrics gauge kube_node_status_condition; emits one panel with four queries (NotReady, MemoryPressure, DiskPressure, PIDPressure) max by (node, condition).",
+
+  "positive_metrics": [
+    {
+      "name": "kube_node_status_condition",
+      "type": "gauge",
+      "labels": ["node", "condition", "status"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: different metric family in the kube-state-metrics namespace.",
+      "name": "kube_pod_status_phase",
+      "type": "gauge",
+      "labels": ["namespace", "pod", "phase"]
+    },
+    {
+      "_comment": "Look-alike: unrelated gauge from node_exporter.",
+      "name": "node_cpu_seconds_total",
+      "type": "gauge",
+      "labels": ["instance", "cpu"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same base name is rejected.",
+      "name": "kube_node_status_condition",
+      "type": "counter",
+      "labels": ["node", "condition", "status"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Node conditions",
+      "query_contains": "max by (node, condition) (kube_node_status_condition{condition=\"NotReady\", status=\"true\"})",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Node conditions",
+      "query_contains": "max by (node, condition) (kube_node_status_condition{condition=\"MemoryPressure\", status=\"true\"})",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Node conditions",
+      "query_contains": "max by (node, condition) (kube_node_status_condition{condition=\"DiskPressure\", status=\"true\"})",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Node conditions",
+      "query_contains": "max by (node, condition) (kube_node_status_condition{condition=\"PIDPressure\", status=\"true\"})",
+      "kind": "timeseries"
+    }
+  ]
+}

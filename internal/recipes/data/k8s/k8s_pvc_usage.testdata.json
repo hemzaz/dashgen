@@ -1,0 +1,50 @@
+{
+  "_recipe": "k8s_pvc_usage",
+  "_comment": "Match keys on kubelet_volume_stats_available_bytes; pair_with: suffix_swap _available_bytes->_capacity_bytes; literal 1 - (avail/capacity) ratio.",
+
+  "positive_metrics": [
+    {
+      "name": "kubelet_volume_stats_available_bytes",
+      "type": "gauge",
+      "labels": ["namespace", "persistentvolumeclaim"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: suffix_swap to resolve.",
+      "name": "kubelet_volume_stats_capacity_bytes",
+      "type": "gauge",
+      "labels": ["namespace", "persistentvolumeclaim"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: capacity-side gauge alone never matches (Match keys on _available_bytes).",
+      "name": "kubelet_volume_stats_capacity_bytes",
+      "type": "gauge",
+      "labels": ["namespace", "persistentvolumeclaim"]
+    },
+    {
+      "_comment": "Look-alike: same family different signal (used_bytes); different suffix.",
+      "name": "kubelet_volume_stats_used_bytes",
+      "type": "gauge",
+      "labels": ["namespace", "persistentvolumeclaim"]
+    },
+    {
+      "_comment": "Look-alike: cAdvisor filesystem family with similar label names but different prefix.",
+      "name": "container_fs_limit_bytes",
+      "type": "gauge",
+      "labels": ["namespace", "pod", "container"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "PVC used ratio",
+      "query_contains": "1 - (sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes) / sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))",
+      "kind": "timeseries"
+    }
+  ]
+}
