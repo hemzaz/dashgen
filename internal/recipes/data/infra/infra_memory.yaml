@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_memory
+  section: memory
+  profile: infra
+  confidence: 0.80
+  tier: v0.3
+  description: "Memory used ratio derived from node_exporter MemAvailable/MemTotal gauges."
+  tags: [memory, node_exporter, gauge, pair]
+
+pair_with:
+  explicit: { name: "node_memory_MemTotal_bytes" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: node_memory_MemAvailable_bytes
+
+panels:
+  - title_template: 'Memory used ratio'
+    kind: timeseries
+    unit: percentunit
+    group_by: [instance]
+    requires_pair: true
+    query_template: '1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter memory gauges: 1 - (MemAvailable / MemTotal) yields used ratio per instance.'

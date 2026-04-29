@@ -1,0 +1,56 @@
+{
+  "_recipe": "infra_file_descriptors",
+  "_comment": "Match keys on process_open_fds; pair_with: explicit pulls in process_max_fds; literal ratio query.",
+
+  "positive_metrics": [
+    {
+      "name": "process_open_fds",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: explicit to resolve.",
+      "name": "process_max_fds",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: max-side gauge alone never matches (Match keys on process_open_fds).",
+      "name": "process_max_fds",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: kernel-level fd counter — different namespace and semantics.",
+      "name": "node_filefd_allocated",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: kernel-level fd ceiling — different namespace.",
+      "name": "node_filefd_maximum",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same base name is rejected.",
+      "name": "process_open_fds",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Open fds vs max",
+      "query_contains": "process_open_fds / process_max_fds",
+      "kind": "timeseries"
+    }
+  ]
+}

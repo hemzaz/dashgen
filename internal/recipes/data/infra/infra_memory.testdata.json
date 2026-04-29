@@ -1,0 +1,50 @@
+{
+  "_recipe": "infra_memory",
+  "_comment": "Match keys on node_memory_MemAvailable_bytes; pair_with: explicit pulls in node_memory_MemTotal_bytes; literal ratio query.",
+
+  "positive_metrics": [
+    {
+      "name": "node_memory_MemAvailable_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: explicit to resolve. Does not itself Match() the recipe (Match keys on MemAvailable_bytes).",
+      "name": "node_memory_MemTotal_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: total-side gauge alone never matches (Match keys on MemAvailable_bytes).",
+      "name": "node_memory_MemTotal_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: unrelated memory gauge — different name.",
+      "name": "node_memory_Buffers_bytes",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same base name is rejected.",
+      "name": "node_memory_MemAvailable_bytes",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Memory used ratio",
+      "query_contains": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "_recipe": "infra_conntrack",
+  "_comment": "Match keys on node_nf_conntrack_entries; pair_with: explicit pulls in node_nf_conntrack_entries_limit; literal ratio query.",
+
+  "positive_metrics": [
+    {
+      "name": "node_nf_conntrack_entries",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: explicit to resolve.",
+      "name": "node_nf_conntrack_entries_limit",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: limit-side gauge alone never matches (Match keys on entries, not entries_limit).",
+      "name": "node_nf_conntrack_entries_limit",
+      "type": "gauge",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: counter with conntrack in the name but not the exact pair.",
+      "name": "node_nf_conntrack_stat_invalid",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same base name is rejected.",
+      "name": "node_nf_conntrack_entries",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Conntrack table saturation",
+      "query_contains": "node_nf_conntrack_entries / node_nf_conntrack_entries_limit",
+      "kind": "timeseries"
+    }
+  ]
+}

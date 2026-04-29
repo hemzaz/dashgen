@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_conntrack
+  section: saturation
+  profile: infra
+  confidence: 0.90
+  tier: v0.3
+  description: "Conntrack table fill ratio from node_exporter entries vs entries_limit gauges."
+  tags: [conntrack, saturation, node_exporter, gauge, pair]
+
+pair_with:
+  explicit: { name: "node_nf_conntrack_entries_limit" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: node_nf_conntrack_entries
+
+panels:
+  - title_template: 'Conntrack table saturation'
+    kind: timeseries
+    unit: percentunit
+    group_by: [instance]
+    requires_pair: true
+    query_template: 'node_nf_conntrack_entries / node_nf_conntrack_entries_limit'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter conntrack gauges: entries / entries_limit yields table fill ratio per instance.'

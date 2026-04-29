@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_file_descriptors
+  section: overview
+  profile: infra
+  confidence: 0.90
+  tier: v0.3
+  description: "Open vs max file descriptor saturation from process_open_fds / process_max_fds."
+  tags: [fds, saturation, process, gauge, pair]
+
+pair_with:
+  explicit: { name: "process_max_fds" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: process_open_fds
+
+panels:
+  - title_template: 'Open fds vs max'
+    kind: timeseries
+    unit: percentunit
+    group_by: [instance, job]
+    requires_pair: true
+    query_template: 'process_open_fds / process_max_fds'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'process_open_fds / process_max_fds: fd utilisation ratio per instance+job. Values near 1.0 indicate imminent fd exhaustion.'

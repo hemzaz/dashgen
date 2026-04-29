@@ -67,14 +67,14 @@ func NewServiceRegistry() *Registry {
 func NewInfraRegistry() *Registry {
 	r := NewRegistry()
 	// infra_cpu migrated to YAML (T1B.1) — see data/infra/infra_cpu.yaml.
-	r.Register(NewInfraMemory())
-	r.Register(NewInfraDisk())
+	// infra_memory migrated to YAML (T6A.1) — see data/infra/infra_memory.yaml.
+	// infra_disk migrated to YAML (T6A.1) — see data/infra/infra_disk.yaml.
 	r.Register(NewInfraNetwork())
 	// infra_load migrated to YAML (T4A.1) — see data/infra/infra_load.yaml.
-	r.Register(NewInfraFilesystemUsage())
-	r.Register(NewInfraFileDescriptors())
+	// infra_filesystem_usage migrated to YAML (T6A.1) — see data/infra/infra_filesystem_usage.yaml.
+	// infra_file_descriptors migrated to YAML (T6A.1) — see data/infra/infra_file_descriptors.yaml.
 	// infra_nic_errors migrated to YAML (T5.0.B) — see data/infra/infra_nic_errors.yaml.
-	r.Register(NewInfraConntrack())
+	// infra_conntrack migrated to YAML (T6A.1) — see data/infra/infra_conntrack.yaml.
 	// infra_disk_iops migrated to YAML (T5.1) — see data/infra/infra_disk_iops.yaml.
 	// infra_disk_io_latency migrated to YAML (T5.0.D) — see data/infra/infra_disk_io_latency.yaml.
 	// infra_ntp_offset migrated to YAML (T1B.1) — see data/infra/infra_ntp_offset.yaml.

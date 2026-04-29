@@ -1,0 +1,56 @@
+{
+  "_recipe": "infra_filesystem_usage",
+  "_comment": "Match keys on node_filesystem_size_bytes; pair_with: suffix_swap _size_bytes->_avail_bytes; (size - avail) / size literal expression with fstype!=\"\" filter.",
+
+  "positive_metrics": [
+    {
+      "name": "node_filesystem_size_bytes",
+      "type": "gauge",
+      "labels": ["device", "fstype", "instance", "mountpoint"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: suffix_swap to resolve.",
+      "name": "node_filesystem_avail_bytes",
+      "type": "gauge",
+      "labels": ["device", "fstype", "instance", "mountpoint"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: avail-side gauge alone never matches (Match keys on _size_bytes).",
+      "name": "node_filesystem_avail_bytes",
+      "type": "gauge",
+      "labels": ["device", "fstype", "instance", "mountpoint"]
+    },
+    {
+      "_comment": "Look-alike: inode counters — different family from bytes.",
+      "name": "node_filesystem_files",
+      "type": "gauge",
+      "labels": ["device", "fstype", "instance", "mountpoint"]
+    },
+    {
+      "_comment": "Look-alike: device-error gauge flag — different family.",
+      "name": "node_filesystem_device_error",
+      "type": "gauge",
+      "labels": ["device", "fstype", "instance", "mountpoint"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same base name is rejected.",
+      "name": "node_filesystem_size_bytes",
+      "type": "counter",
+      "labels": ["device", "fstype", "instance", "mountpoint"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Filesystem used ratio",
+      "query_contains": "(node_filesystem_size_bytes{fstype!=\"\"} - node_filesystem_avail_bytes{fstype!=\"\"}) / node_filesystem_size_bytes{fstype!=\"\"}",
+      "kind": "timeseries"
+    }
+  ]
+}

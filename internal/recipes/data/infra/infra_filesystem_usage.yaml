@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_filesystem_usage
+  section: disk
+  profile: infra
+  confidence: 0.85
+  tier: v0.3
+  description: "Filesystem used ratio per {instance, mountpoint, fstype} from node_exporter gauge pair."
+  tags: [disk, filesystem, node_exporter, gauge, pair]
+
+pair_with:
+  suffix_swap: { from_suffix: "_size_bytes", to_suffix: "_avail_bytes" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: node_filesystem_size_bytes
+
+panels:
+  - title_template: 'Filesystem used ratio'
+    kind: timeseries
+    unit: percentunit
+    group_by: [instance, mountpoint, fstype]
+    requires_pair: true
+    query_template: '(node_filesystem_size_bytes{fstype!=""} - node_filesystem_avail_bytes{fstype!=""}) / node_filesystem_size_bytes{fstype!=""}'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter filesystem gauge pair: (size - avail) / size yields used ratio per {instance, mountpoint, fstype}.'
