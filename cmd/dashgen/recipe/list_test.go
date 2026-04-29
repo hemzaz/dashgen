@@ -285,10 +285,10 @@ func TestList_YAMLBuiltinHasPath(t *testing.T) {
 
 func TestList_GoRecipeHasEmptyPath(t *testing.T) {
 	t.Parallel()
-	// service_http_rate is a Go recipe (not yet migrated to YAML); Path must be "".
+	// service_db_pool is a Go recipe (split into YAML in T6A.2); Path must be "".
 	out := runListCmd(t, []string{
 		"--no-user-recipes",
-		"--match", "service_http_rate",
+		"--match", "service_db_pool",
 		"--output", "json",
 	})
 	var infos []recipeInfo
@@ -296,10 +296,10 @@ func TestList_GoRecipeHasEmptyPath(t *testing.T) {
 		t.Fatalf("JSON unmarshal: %v", err)
 	}
 	if len(infos) != 1 {
-		t.Fatalf("expected exactly 1 result for service_http_rate, got %d", len(infos))
+		t.Fatalf("expected exactly 1 result for service_db_pool, got %d", len(infos))
 	}
 	if infos[0].Path != "" {
-		t.Errorf("Go recipe service_http_rate Path = %q, want empty", infos[0].Path)
+		t.Errorf("Go recipe service_db_pool Path = %q, want empty", infos[0].Path)
 	}
 }
 

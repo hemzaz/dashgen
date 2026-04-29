@@ -1,0 +1,45 @@
+{
+  "_recipe": "service_gc_pause",
+  "_comment": "Exact metric name go_gc_duration_seconds, dispatched per metric type (summary vs histogram).",
+
+  "positive_metrics": [
+    {
+      "name": "go_gc_duration_seconds",
+      "type": "summary",
+      "labels": ["instance", "job", "quantile"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: counter type rejected (only summary or histogram match).",
+      "name": "go_gc_duration_seconds",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: different metric name rejected.",
+      "name": "go_memstats_pause_total_seconds",
+      "type": "summary",
+      "labels": ["instance", "job", "quantile"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type rejected.",
+      "name": "go_gc_duration_seconds",
+      "type": "gauge",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "GC pause: go_gc_duration_seconds",
+      "query_contains": "avg by (instance, job) (go_gc_duration_seconds{quantile=\"0.99\"})",
+      "kind": "timeseries"
+    }
+  ]
+}

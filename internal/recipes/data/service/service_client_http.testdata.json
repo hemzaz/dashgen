@@ -1,0 +1,58 @@
+{
+  "_recipe": "service_client_http",
+  "_comment": "Counter + name contains 'client' + has at least one of {status_code, code} HTTP-status labels.",
+
+  "positive_metrics": [
+    {
+      "name": "http_client_requests_total",
+      "type": "counter",
+      "labels": ["host", "instance", "job", "status_code"],
+      "traits": []
+    },
+    {
+      "name": "outbound_http_client_total",
+      "type": "counter",
+      "labels": ["code", "instance", "job", "upstream"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: counter without 'client' in name (inbound server counter).",
+      "name": "http_requests_total",
+      "type": "counter",
+      "labels": ["instance", "job", "route", "status_code"],
+      "traits": ["service_http"]
+    },
+    {
+      "_comment": "Look-alike: 'client' in name but no HTTP-status label (cache client metric).",
+      "name": "cache_client_hits_total",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: bare 'status' label is ambiguous and is NOT in the accepted set.",
+      "name": "alertmanager_client_notifications_total",
+      "type": "counter",
+      "labels": ["instance", "integration", "job", "status"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type rejected.",
+      "name": "http_client_active_requests",
+      "type": "gauge",
+      "labels": ["instance", "job", "status_code"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Outbound HTTP call rate: http_client_requests_total",
+      "query_contains": "rate(http_client_requests_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

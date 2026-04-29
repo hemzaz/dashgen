@@ -33,7 +33,7 @@ func NewRegistry() *Registry {
 //   - service_request_size / service_response_size                     (v0.2 Tier-2 stragglers)
 func NewServiceRegistry() *Registry {
 	r := NewRegistry()
-	r.Register(NewServiceHTTPRate())
+	// service_http_rate migrated to YAML (T4A.1) — see data/service/service_http_rate.yaml.
 	// service_http_errors migrated to YAML (T5.0.C) — see data/service/service_http_errors.yaml.
 	// service_http_latency migrated to YAML (T5.0.A) — see data/service/service_http_latency.yaml.
 	// service_cpu migrated to YAML (T4A.1) — see data/service/service_cpu.yaml.
@@ -42,12 +42,12 @@ func NewServiceRegistry() *Registry {
 	// service_grpc_errors migrated to YAML (T5.1) — see data/service/service_grpc_errors.yaml.
 	// service_grpc_latency migrated to YAML (T5.1 continuation) — see data/service/service_grpc_latency.yaml.
 	// service_goroutines migrated to YAML (T1B.1) — see data/service/service_goroutines.yaml.
-	r.Register(NewServiceGCPause())
-	r.Register(NewServiceDBQueryLatency())
+	// service_gc_pause migrated to YAML (T6A.1) — see data/service/service_gc_pause.yaml.
+	// service_db_query_latency migrated to YAML (T6A.1) — see data/service/service_db_query_latency.yaml.
 	// service_tls_expiry migrated to YAML (T5.1) — see data/service/service_tls_expiry.yaml.
 	r.Register(NewServiceCacheHits())
 	r.Register(NewServiceJobSuccess())
-	r.Register(NewServiceClientHTTP())
+	// service_client_http migrated to YAML (T6A.1) — see data/service/service_client_http.yaml.
 	r.Register(NewServiceDBPool())
 	// service_kafka_consumer_lag migrated to YAML (T5.1) — see data/service/service_kafka_consumer_lag.yaml.
 	// service_request_size migrated to YAML (T5.1 continuation) — see data/service/service_request_size.yaml.

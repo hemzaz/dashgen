@@ -1,0 +1,25 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_db_query_latency
+  section: latency
+  profile: service
+  confidence: 0.75
+  tier: v0.3
+  description: "DB query latency p50/p95/p99 from a histogram whose name contains query/db/sql and that does not carry HTTP/gRPC traits."
+  tags: [db, latency, histogram, quantile]
+
+match:
+  type: histogram
+  all_traits: [latency_histogram]
+  none_trait: [service_http, service_grpc]
+  name_contains_any: [query, db, sql]
+
+panels:
+  - title_template: 'DB query latency (p50/p95/p99): {{ .Metric }}'
+    kind: timeseries
+    unit: s
+    quantiles: [0.5, 0.95, 0.99]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'DB query latency histogram "{{ .Metric }}"; p50/p95/p99 via histogram_quantile over {{ .Window }} with le grouping.'

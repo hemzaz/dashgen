@@ -1,0 +1,75 @@
+{
+  "_recipe": "service_db_query_latency",
+  "_comment": "Histogram + latency_histogram trait + name contains query/db/sql, with HTTP/gRPC traits explicitly excluded.",
+
+  "positive_metrics": [
+    {
+      "name": "db_query_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "name": "sql_query_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: HTTP request duration histogram — has service_http trait, must be excluded.",
+      "name": "http_request_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "route"],
+      "traits": ["latency_histogram", "service_http"]
+    },
+    {
+      "_comment": "Look-alike: gRPC handling duration histogram — has service_grpc trait, must be excluded.",
+      "name": "grpc_server_handling_seconds",
+      "type": "histogram",
+      "labels": ["grpc_method", "grpc_service", "instance", "job", "le"],
+      "traits": ["latency_histogram", "service_grpc"]
+    },
+    {
+      "_comment": "Look-alike: latency histogram without query/db/sql in the name (notification latency) — name predicate fails.",
+      "name": "notification_latency_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: counter whose name contains query — wrong type.",
+      "name": "db_query_total",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: histogram missing the latency_histogram trait.",
+      "name": "db_query_size_bytes",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "DB query latency (p50/p95/p99): db_query_duration_seconds",
+      "query_contains": "histogram_quantile(0.50, sum by (instance, job, le) (rate(db_query_duration_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "DB query latency (p50/p95/p99): db_query_duration_seconds",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "DB query latency (p50/p95/p99): db_query_duration_seconds",
+      "query_contains": "histogram_quantile(0.99,",
+      "kind": "timeseries"
+    }
+  ]
+}

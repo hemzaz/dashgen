@@ -1,0 +1,33 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_gc_pause
+  section: saturation
+  profile: service
+  confidence: 0.85
+  tier: v0.3
+  description: "Go GC pause duration, via summary quantile label or histogram_quantile over the bucket series."
+  tags: [go, gc, latency, runtime]
+
+match:
+  any_of:
+    - { name_equals: go_gc_duration_seconds, type: summary }
+    - { name_equals: go_gc_duration_seconds, type: histogram }
+
+panels:
+  - title_template: 'GC pause: {{ .Metric }}'
+    kind: timeseries
+    unit: s
+    requires_metric_type: summary
+    query_template: 'avg by ({{ groupBy . }}) ({{ .Metric }}{quantile="0.99"})'
+    legend_template: 'p99 {{ legendFor . }}'
+    rationale_template: 'Summary "{{ .Metric }}": p99 selected via quantile label; avg by ({{ groupBy . }}) collapses replicas.'
+
+  - title_template: 'GC pause: {{ .Metric }}'
+    kind: timeseries
+    unit: s
+    requires_metric_type: histogram
+    quantiles: [0.5, 0.95, 0.99]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'Histogram "{{ .Metric }}": p50/p95/p99 via histogram_quantile over {{ .Window }} with le grouping.'

@@ -1,0 +1,24 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_client_http
+  section: traffic
+  profile: service
+  confidence: 0.75
+  tier: v0.3
+  description: "Outbound HTTP client call rate from counters whose name contains client and that carry an HTTP-status label."
+  tags: [http, client, traffic, counter]
+
+match:
+  type: counter
+  name_contains: client
+  has_label_any: [status_code, code]
+
+panels:
+  - title_template: 'Outbound HTTP call rate: {{ .Metric }}'
+    kind: timeseries
+    unit: reqps
+    preferred_labels: [host, target, upstream, url]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'Counter "{{ .Metric }}" has "client" in name and an HTTP-status label; rate over {{ .Window }} grouped by {{ groupBy . }}.'

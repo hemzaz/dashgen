@@ -1,0 +1,44 @@
+{
+  "_recipe": "service_http_rate",
+  "_comment": "Counter + service_http trait; broken out per HTTP route/handler.",
+
+  "positive_metrics": [
+    {
+      "name": "http_requests_total",
+      "type": "counter",
+      "labels": ["instance", "job", "method", "route"],
+      "traits": ["service_http"]
+    },
+    {
+      "name": "api_http_requests_total",
+      "type": "counter",
+      "labels": ["handler", "instance", "job"],
+      "traits": ["service_http"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: histogram, not counter — fails type predicate.",
+      "name": "http_request_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "route"],
+      "traits": ["service_http", "latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: counter but missing service_http trait.",
+      "name": "kafka_messages_total",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Request rate: http_requests_total",
+      "query_contains": "rate(http_requests_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}
