@@ -217,40 +217,6 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 			labelList := append([]string(nil), m.Descriptor.Labels...)
 			sort.Strings(labelList)
 
-			emit := func(ctx RenderContext) {
-				title, err := y.titleTmpls[i].Render(ctx)
-				if err != nil {
-					return
-				}
-				expr, err := y.queryTmpls[i].Render(ctx)
-				if err != nil {
-					return
-				}
-				legend, err := y.legendTmpls[i].Render(ctx)
-				if err != nil {
-					return
-				}
-				rationaleStr := y.rationale(m, panel, group, pair)
-				if y.rationaleTmpls[i] != nil {
-					if rendered, rerr := y.rationaleTmpls[i].Render(ctx); rerr == nil {
-						rationaleStr = strings.TrimSpace(rendered)
-					}
-				}
-				out = append(out, ir.Panel{
-					UID:        "", // set by synth after dashboardUID computed
-					Title:      strings.TrimSpace(title),
-					Kind:       panelKindFor(panel.Kind),
-					Unit:       panel.Unit,
-					Confidence: y.Spec.Metadata.Confidence,
-					Queries: []ir.QueryCandidate{{
-						Expr:         strings.TrimSpace(expr),
-						LegendFormat: strings.TrimSpace(legend),
-						Unit:         panel.Unit,
-					}},
-					Rationale: rationaleStr,
-				})
-			}
-
 			baseCtx := RenderContext{
 				Metric:          m.Descriptor.Name,
 				Type:            string(m.Type),
@@ -263,16 +229,66 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 				Pair:            pair,
 			}
 
+			// Non-quantile panel: render and emit one panel with one query.
 			if len(panel.Quantiles) == 0 {
-				emit(baseCtx)
+				if rendered, ok := y.renderSinglePanel(i, panel, baseCtx, m, group, pair); ok {
+					out = append(out, rendered)
+				}
 				continue
 			}
+
+			// Histogram-quantile panel: render the title once (without
+			// quantile context) and accumulate one query per quantile into a
+			// single ir.Panel. This mirrors the v0.1/v0.2 Go-recipe contract
+			// where one matched histogram emits one panel carrying refIds
+			// A/B/C for p50/p95/p99.
+			//
+			// Templates: title_template is quantile-agnostic (rendered with
+			// baseCtx, so .Quantile* fields are empty). query_template and
+			// legend_template are quantile-aware (rendered per-quantile with
+			// .Quantile / .Quantile2 / .Quantile100 set).
+			titleStr, err := y.titleTmpls[i].Render(baseCtx)
+			if err != nil {
+				continue
+			}
+			queries := make([]ir.QueryCandidate, 0, len(panel.Quantiles))
 			for _, q := range panel.Quantiles {
 				ctx := baseCtx
 				ctx.Quantile = formatQuantile(q)
+				ctx.Quantile2 = formatQuantile2(q)
 				ctx.Quantile100 = formatQuantile100(q)
-				emit(ctx)
+				expr, err := y.queryTmpls[i].Render(ctx)
+				if err != nil {
+					continue
+				}
+				legend, err := y.legendTmpls[i].Render(ctx)
+				if err != nil {
+					continue
+				}
+				queries = append(queries, ir.QueryCandidate{
+					Expr:         strings.TrimSpace(expr),
+					LegendFormat: strings.TrimSpace(legend),
+					Unit:         panel.Unit,
+				})
 			}
+			if len(queries) == 0 {
+				continue
+			}
+			rationaleStr := y.rationale(m, panel, group, pair)
+			if y.rationaleTmpls[i] != nil {
+				if rendered, rerr := y.rationaleTmpls[i].Render(baseCtx); rerr == nil {
+					rationaleStr = strings.TrimSpace(rendered)
+				}
+			}
+			out = append(out, ir.Panel{
+				UID:        "", // set by synth after dashboardUID computed
+				Title:      strings.TrimSpace(titleStr),
+				Kind:       panelKindFor(panel.Kind),
+				Unit:       panel.Unit,
+				Confidence: y.Spec.Metadata.Confidence,
+				Queries:    queries,
+				Rationale:  rationaleStr,
+			})
 		}
 	}
 
@@ -335,10 +351,62 @@ func formatQuantile(q float64) string {
 	return strconv.FormatFloat(q, 'f', -1, 64)
 }
 
+// formatQuantile2 returns the fixed two-decimal form, e.g. 0.5 → "0.50",
+// 0.95 → "0.95", 0.99 → "0.99". Used in histogram_quantile() templates that
+// must match v0.1/v0.2 Go-recipe %.2f goldens byte-for-byte.
+func formatQuantile2(q float64) string {
+	return strconv.FormatFloat(q, 'f', 2, 64)
+}
+
 // formatQuantile100 returns the integer-percent form, e.g. 0.99 → "99",
 // 0.5 → "50". Used in title templates: "p{{ .Quantile100 }}".
 func formatQuantile100(q float64) string {
 	return strconv.Itoa(int(q*100 + 0.5))
+}
+
+// renderSinglePanel renders one ir.Panel from the i-th panel template under
+// ctx. Returns (panel, true) on success or (zero, false) if any template
+// render failed. Used by the non-quantile path; the quantile path inlines
+// equivalent logic so the title is rendered once across N queries.
+func (y *YAMLRecipe) renderSinglePanel(
+	i int,
+	panel PanelTemplate,
+	ctx RenderContext,
+	m ClassifiedMetricView,
+	group []string,
+	pair *PairContext,
+) (ir.Panel, bool) {
+	title, err := y.titleTmpls[i].Render(ctx)
+	if err != nil {
+		return ir.Panel{}, false
+	}
+	expr, err := y.queryTmpls[i].Render(ctx)
+	if err != nil {
+		return ir.Panel{}, false
+	}
+	legend, err := y.legendTmpls[i].Render(ctx)
+	if err != nil {
+		return ir.Panel{}, false
+	}
+	rationaleStr := y.rationale(m, panel, group, pair)
+	if y.rationaleTmpls[i] != nil {
+		if rendered, rerr := y.rationaleTmpls[i].Render(ctx); rerr == nil {
+			rationaleStr = strings.TrimSpace(rendered)
+		}
+	}
+	return ir.Panel{
+		UID:        "", // set by synth after dashboardUID computed
+		Title:      strings.TrimSpace(title),
+		Kind:       panelKindFor(panel.Kind),
+		Unit:       panel.Unit,
+		Confidence: y.Spec.Metadata.Confidence,
+		Queries: []ir.QueryCandidate{{
+			Expr:         strings.TrimSpace(expr),
+			LegendFormat: strings.TrimSpace(legend),
+			Unit:         panel.Unit,
+		}},
+		Rationale: rationaleStr,
+	}, true
 }
 
 // panelKindFor maps the YAML panel.Kind string to ir.PanelKind. The IR

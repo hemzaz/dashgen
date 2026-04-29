@@ -35,7 +35,7 @@ func NewServiceRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(NewServiceHTTPRate())
 	r.Register(NewServiceHTTPErrors())
-	r.Register(NewServiceHTTPLatency())
+	// service_http_latency migrated to YAML (T5.0.A) — see data/service/service_http_latency.yaml.
 	// service_cpu migrated to YAML (T4A.1) — see data/service/service_cpu.yaml.
 	// service_memory migrated to YAML (T4A.1) — see data/service/service_memory.yaml.
 	// service_grpc_rate migrated to YAML (T1B.1) — see data/service/service_grpc_rate.yaml.

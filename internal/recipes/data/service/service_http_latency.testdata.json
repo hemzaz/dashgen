@@ -1,0 +1,55 @@
+{
+  "_recipe": "service_http_latency",
+  "_comment": "Histogram + latency_histogram + service_http traits; emits one panel with three quantile queries (p50/p95/p99).",
+
+  "positive_metrics": [
+    {
+      "name": "http_request_duration_seconds",
+      "type": "histogram",
+      "labels": ["handler", "instance", "job", "le", "method", "route"],
+      "traits": ["latency_histogram", "service_http"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: histogram with latency_histogram but missing service_http (e.g. internal notification latency).",
+      "name": "notification_latency_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: histogram with service_http but missing latency_histogram (e.g. request size distribution).",
+      "name": "http_request_size_bytes",
+      "type": "histogram",
+      "labels": ["handler", "instance", "job", "le", "route"],
+      "traits": ["service_http"]
+    },
+    {
+      "_comment": "Look-alike: counter type with both traits is rejected by type predicate.",
+      "name": "http_request_duration_seconds",
+      "type": "counter",
+      "labels": ["handler", "instance", "job", "route"],
+      "traits": ["latency_histogram", "service_http"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Latency (p50/p95/p99): http_request_duration_seconds",
+      "query_contains": "histogram_quantile(0.50, sum by (handler, instance, job, le, route) (rate(http_request_duration_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Latency (p50/p95/p99): http_request_duration_seconds",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Latency (p50/p95/p99): http_request_duration_seconds",
+      "query_contains": "histogram_quantile(0.99,",
+      "kind": "timeseries"
+    }
+  ]
+}

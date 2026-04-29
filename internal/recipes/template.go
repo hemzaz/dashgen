@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -76,6 +77,11 @@ type RenderContext struct {
 	// Used in title_template: "HTTP latency p{{ .Quantile100 }}".
 	Quantile100 string
 
+	// Quantile2 is Quantile fixed-precision-formatted to two decimals
+	// ("0.50", "0.95", "0.99"). Required by histogram_quantile templates that
+	// need byte-stable %.2f output to match v0.1/v0.2 Go-recipe goldens.
+	Quantile2 string
+
 	// Pair is non-nil iff pair_with was declared and resolution succeeded
 	// (invariant RC5). Panels with requires_pair: true are skipped before
 	// render when Pair is nil.
@@ -113,11 +119,12 @@ type Template struct {
 //   - regexpMatch/regexpReplace (on user input): ReDoS + value-leak (I2)
 func helperFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"groupBy":     templateGroupBy,
-		"groupByWith": templateGroupByWith,
-		"legendFor":   templateLegendFor,
-		"bucketName":  templateBucketName,
-		"stripSuffix": templateStripSuffix,
+		"groupBy":           templateGroupBy,
+		"groupByWith":       templateGroupByWith,
+		"groupByWithSorted": templateGroupByWithSorted,
+		"legendFor":         templateLegendFor,
+		"bucketName":        templateBucketName,
+		"stripSuffix":       templateStripSuffix,
 	}
 }
 
@@ -149,6 +156,33 @@ func templateGroupByWith(ctx RenderContext, extras ...string) string {
 		result = append(result, e)
 	}
 	return strings.Join(result, ", ")
+}
+
+// templateGroupByWithSorted is like groupByWith, but re-sorts the merged
+// label set alphabetically. Required for histogram_quantile templates that
+// must match v0.1/v0.2 Go-recipe goldens byte-for-byte (those Go recipes
+// inject "le" via ensureLabel, which sorts the full set after merging).
+//
+// Used in: sum by ({{ groupByWithSorted . "le" }}) (...)
+func templateGroupByWithSorted(ctx RenderContext, extras ...string) string {
+	seen := make(map[string]bool, len(ctx.GroupBy)+len(extras))
+	merged := make([]string, 0, len(ctx.GroupBy)+len(extras))
+	for _, l := range ctx.GroupBy {
+		if seen[l] {
+			continue
+		}
+		seen[l] = true
+		merged = append(merged, l)
+	}
+	for _, e := range extras {
+		if bannedLabels[e] || seen[e] {
+			continue
+		}
+		seen[e] = true
+		merged = append(merged, e)
+	}
+	sort.Strings(merged)
+	return strings.Join(merged, ", ")
 }
 
 // templateLegendFor renders the Grafana legend template for this panel.

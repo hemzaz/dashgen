@@ -74,3 +74,32 @@ func legendFor(labels []string) string {
 	}
 	return strings.Join(parts, " ")
 }
+
+// ensureLabel returns a sorted copy of labels with want included.
+//
+//nolint:unparam // helper currently called only with "le", but kept generic for future histogram bucket-axis labels
+func ensureLabel(labels []string, want string) []string {
+	for _, l := range labels {
+		if l == want {
+			return labels
+		}
+	}
+	out := append([]string(nil), labels...)
+	out = append(out, want)
+	sort.Strings(out)
+	return out
+}
+
+// without returns a copy of labels with drop removed, preserving order.
+//
+//nolint:unparam // helper currently called only with "le", but kept generic for future histogram bucket-axis labels
+func without(labels []string, drop string) []string {
+	out := make([]string, 0, len(labels))
+	for _, l := range labels {
+		if l == drop {
+			continue
+		}
+		out = append(out, l)
+	}
+	return out
+}
