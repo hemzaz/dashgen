@@ -1,0 +1,26 @@
+dashgen v0.3.0 — recipe DSL migration
+
+This release migrates all 44 built-in Go recipes to 47 YAML recipes
+authored against a CUE-validated, text/template-rendered DSL. Users can
+now drop YAML recipes into ~/.config/dashgen/recipes/ to extend or
+override the built-in catalog without recompiling.
+
+New
+- Recipe DSL (CUE schema + text/template runtime + 8 `dashgen recipe`
+  subcommands: init, scaffold, lint, list, show, test, explain, diff)
+- --recipes-dir flag (repeatable) on `dashgen generate`
+- XDG_CONFIG_HOME default for user recipes
+- 30 adversary tests (20 DSL + 10 CLI) backing a documented threat model
+- Pre-built binaries for darwin/linux x amd64/arm64
+
+Changed
+- 44 Go recipes -> 47 YAML recipes (3 deliberate Tier-C splits:
+  service_db_pool -> 2, infra_network -> 2, k8s_container_resources -> 2)
+- Goldens for split-affected fixtures regenerated (panel UIDs only;
+  per-panel content unchanged)
+
+Removed
+- All per-recipe Go files (replaced by parameterized YAML harness)
+
+Binaries available on the release page:
+https://github.com/hemzaz/dashgen/releases/tag/v0.3.0
