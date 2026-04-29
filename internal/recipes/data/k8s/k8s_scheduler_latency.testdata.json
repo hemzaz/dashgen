@@ -1,0 +1,55 @@
+{
+  "_recipe": "k8s_scheduler_latency",
+  "_comment": "Exact name match on scheduler_scheduling_attempt_duration_seconds + result label; emits one panel with three quantile queries (p50/p95/p99) grouped by result/le.",
+
+  "positive_metrics": [
+    {
+      "name": "scheduler_scheduling_attempt_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "result"],
+      "traits": ["latency_histogram"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: kube-apiserver latency histogram — must NOT be claimed by the scheduler recipe.",
+      "name": "apiserver_request_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "resource", "verb"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: etcd internal histogram — must NOT match.",
+      "name": "etcd_disk_backend_commit_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same name — rejected by type predicate.",
+      "name": "scheduler_scheduling_attempt_duration_seconds",
+      "type": "counter",
+      "labels": ["instance", "job", "result"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Scheduler scheduling attempt latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.50, sum by (instance, job, le, result) (rate(scheduler_scheduling_attempt_duration_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Scheduler scheduling attempt latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Scheduler scheduling attempt latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.99,",
+      "kind": "timeseries"
+    }
+  ]
+}

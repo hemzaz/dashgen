@@ -1,0 +1,27 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_apiserver_latency
+  section: resources
+  profile: k8s
+  confidence: 0.90
+  tier: v0.3
+  description: "kube-apiserver request latency p50/p95/p99 from the canonical apiserver_request_duration_seconds histogram."
+  tags: [k8s, apiserver, latency, histogram, quantile]
+
+match:
+  all_of:
+    - type: histogram
+    - any_of:
+        - name_equals: apiserver_request_duration_seconds
+        - name_equals: apiserver_request_duration_seconds_bucket
+
+panels:
+  - title_template: 'Apiserver request latency (p50/p95/p99)'
+    kind: timeseries
+    unit: s
+    quantiles: [0.5, 0.95, 0.99]
+    preferred_labels: [verb, resource]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'kube-apiserver latency histogram "{{ .Metric }}"; p50/p95/p99 via histogram_quantile over {{ .Window }} grouped by verb, resource, le.'

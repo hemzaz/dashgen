@@ -1,0 +1,57 @@
+{
+  "_recipe": "service_request_size",
+  "_comment": "Histogram whose name ends in _request_size_bytes (or _bucket) AND has method or handler label; emits one panel with two quantile queries (p50/p95).",
+
+  "positive_metrics": [
+    {
+      "name": "http_request_size_bytes_bucket",
+      "type": "histogram",
+      "labels": ["handler", "instance", "job", "le", "method"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: gRPC byte histogram — correct family but no HTTP-shape label.",
+      "name": "grpc_server_msg_received_bytes",
+      "type": "histogram",
+      "labels": ["grpc_method", "grpc_service", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: DB byte histogram — _bucket suffix but no method/handler label.",
+      "name": "db_query_bytes_bucket",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "query_type"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: HTTP latency histogram — has HTTP labels but wrong name suffix.",
+      "name": "http_request_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["handler", "instance", "job", "le", "method"],
+      "traits": ["latency_histogram", "service_http"]
+    },
+    {
+      "_comment": "Look-alike: counter type is rejected by type predicate.",
+      "name": "http_request_size_bytes_bucket",
+      "type": "counter",
+      "labels": ["handler", "instance", "job", "method"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Request size (p50/p95): http_request_size_bytes_bucket",
+      "query_contains": "histogram_quantile(0.50, sum by (handler, instance, job, le, method) (rate(http_request_size_bytes_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Request size (p50/p95): http_request_size_bytes_bucket",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    }
+  ]
+}

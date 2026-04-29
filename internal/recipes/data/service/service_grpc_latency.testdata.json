@@ -1,0 +1,55 @@
+{
+  "_recipe": "service_grpc_latency",
+  "_comment": "Histogram + latency_histogram + service_grpc traits; emits one panel with three quantile queries (p50/p95/p99).",
+
+  "positive_metrics": [
+    {
+      "name": "grpc_server_handling_seconds",
+      "type": "histogram",
+      "labels": ["grpc_method", "grpc_service", "instance", "job", "le"],
+      "traits": ["latency_histogram", "service_grpc"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: latency trait without gRPC trait (e.g. DB query duration).",
+      "name": "db_query_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: gRPC trait without latency trait (e.g. counter typed wrong).",
+      "name": "grpc_server_started_seconds",
+      "type": "histogram",
+      "labels": ["grpc_method", "grpc_service", "instance", "job"],
+      "traits": ["service_grpc"]
+    },
+    {
+      "_comment": "Look-alike: counter type with both traits is rejected by type predicate.",
+      "name": "grpc_server_handling_seconds",
+      "type": "counter",
+      "labels": ["grpc_method", "grpc_service", "instance", "job"],
+      "traits": ["latency_histogram", "service_grpc"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "gRPC latency (p50/p95/p99): grpc_server_handling_seconds",
+      "query_contains": "histogram_quantile(0.50, sum by (grpc_method, grpc_service, instance, job, le) (rate(grpc_server_handling_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "gRPC latency (p50/p95/p99): grpc_server_handling_seconds",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "gRPC latency (p50/p95/p99): grpc_server_handling_seconds",
+      "query_contains": "histogram_quantile(0.99,",
+      "kind": "timeseries"
+    }
+  ]
+}

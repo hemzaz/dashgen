@@ -1,0 +1,26 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_etcd_commit
+  section: resources
+  profile: k8s
+  confidence: 0.90
+  tier: v0.3
+  description: "etcd disk backend commit latency p50/p95/p99 — the critical signal for k8s control-plane write health."
+  tags: [k8s, etcd, latency, histogram, quantile]
+
+match:
+  all_of:
+    - type: histogram
+    - any_of:
+        - name_equals: etcd_disk_backend_commit_duration_seconds
+        - name_equals: etcd_disk_backend_commit_duration_seconds_bucket
+
+panels:
+  - title_template: 'etcd backend commit latency (p50/p95/p99)'
+    kind: timeseries
+    unit: s
+    quantiles: [0.5, 0.95, 0.99]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'etcd disk backend commit latency histogram "{{ .Metric }}"; p50/p95/p99 via histogram_quantile over {{ .Window }} grouped by instance, le. p99 > 25ms sustained indicates control-plane write pressure.'

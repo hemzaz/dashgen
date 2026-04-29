@@ -1,0 +1,48 @@
+{
+  "_recipe": "k8s_etcd_commit",
+  "_comment": "Exact name match on etcd_disk_backend_commit_duration_seconds; emits one panel with three quantile queries (p50/p95/p99) grouped by instance/le.",
+
+  "positive_metrics": [
+    {
+      "name": "etcd_disk_backend_commit_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: etcd WAL fsync histogram — distinct signal, must NOT match.",
+      "name": "etcd_disk_wal_fsync_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le"],
+      "traits": ["latency_histogram"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same name — rejected by type predicate.",
+      "name": "etcd_disk_backend_commit_duration_seconds",
+      "type": "counter",
+      "labels": ["instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "etcd backend commit latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.50, sum by (instance, job, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "etcd backend commit latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "etcd backend commit latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.99,",
+      "kind": "timeseries"
+    }
+  ]
+}

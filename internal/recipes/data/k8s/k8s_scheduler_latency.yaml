@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_scheduler_latency
+  section: resources
+  profile: k8s
+  confidence: 0.85
+  tier: v0.3
+  description: "kube-scheduler scheduling attempt latency p50/p95/p99 broken down by result."
+  tags: [k8s, scheduler, latency, histogram, quantile]
+
+match:
+  all_of:
+    - type: histogram
+    - any_of:
+        - name_equals: scheduler_scheduling_attempt_duration_seconds
+        - name_equals: scheduler_scheduling_attempt_duration_seconds_bucket
+    - has_label: result
+
+panels:
+  - title_template: 'Scheduler scheduling attempt latency (p50/p95/p99)'
+    kind: timeseries
+    unit: s
+    quantiles: [0.5, 0.95, 0.99]
+    preferred_labels: [result]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'kube-scheduler scheduling attempt latency histogram "{{ .Metric }}"; p50/p95/p99 via histogram_quantile over {{ .Window }} grouped by result, le.'

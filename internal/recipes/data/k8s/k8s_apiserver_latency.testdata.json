@@ -1,0 +1,48 @@
+{
+  "_recipe": "k8s_apiserver_latency",
+  "_comment": "Exact name match on apiserver_request_duration_seconds; emits one panel with three quantile queries (p50/p95/p99) grouped by verb/resource/le.",
+
+  "positive_metrics": [
+    {
+      "name": "apiserver_request_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "resource", "verb"],
+      "traits": ["latency_histogram"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: app-level HTTP latency histogram — must not be claimed by the k8s recipe.",
+      "name": "http_request_duration_seconds",
+      "type": "histogram",
+      "labels": ["instance", "job", "le", "method"],
+      "traits": ["latency_histogram", "service_http"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same name — rejected by type predicate.",
+      "name": "apiserver_request_duration_seconds",
+      "type": "counter",
+      "labels": ["instance", "job", "resource", "verb"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Apiserver request latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.50, sum by (instance, job, le, resource, verb) (rate(apiserver_request_duration_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Apiserver request latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.95,",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Apiserver request latency (p50/p95/p99)",
+      "query_contains": "histogram_quantile(0.99,",
+      "kind": "timeseries"
+    }
+  ]
+}

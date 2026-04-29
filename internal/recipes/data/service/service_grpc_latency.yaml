@@ -1,0 +1,24 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_grpc_latency
+  section: latency
+  profile: service
+  confidence: 0.85
+  tier: v0.3
+  description: "gRPC RPC handling latency p50/p95/p99 from a histogram carrying both the latency_histogram and service_grpc traits."
+  tags: [grpc, latency, histogram, quantile]
+
+match:
+  type: histogram
+  all_traits: [latency_histogram, service_grpc]
+
+panels:
+  - title_template: 'gRPC latency (p50/p95/p99): {{ .Metric }}'
+    kind: timeseries
+    unit: s
+    quantiles: [0.5, 0.95, 0.99]
+    preferred_labels: [grpc_service, grpc_method]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'gRPC latency histogram "{{ .Metric }}"; p50/p95/p99 via histogram_quantile over {{ .Window }} with grpc_service/grpc_method + le grouping.'

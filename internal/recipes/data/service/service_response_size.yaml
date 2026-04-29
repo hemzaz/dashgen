@@ -1,0 +1,28 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_response_size
+  section: saturation
+  profile: service
+  confidence: 0.75
+  tier: v0.3
+  description: "HTTP response body size p50/p95 from a histogram whose name ends in _response_size_bytes and carries an HTTP-shape label."
+  tags: [http, response-size, histogram, quantile]
+
+match:
+  all_of:
+    - type: histogram
+    - any_of:
+        - name_has_suffix: _response_size_bytes
+        - name_has_suffix: _response_size_bytes_bucket
+    - has_label_any: [method, handler]
+
+panels:
+  - title_template: 'Response Size (p50/p95): {{ .Metric }}'
+    kind: timeseries
+    unit: bytes
+    quantiles: [0.5, 0.95]
+    preferred_labels: [method, handler]
+    query_template: 'histogram_quantile({{ .Quantile2 }}, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p{{ .Quantile100 }} {{ legendFor . }}'
+    rationale_template: 'Response size histogram "{{ .Metric }}"; p50/p95 via histogram_quantile over {{ .Window }} with le grouping.'
