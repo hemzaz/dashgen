@@ -1,0 +1,60 @@
+{
+  "_recipe": "k8s_deployment_availability",
+  "_comment": "kube-state-metrics gauge pair (deployment available vs spec replicas); emits one panel with three queries (desired, available, ratio) summed by namespace+deployment.",
+
+  "positive_metrics": [
+    {
+      "name": "kube_deployment_status_replicas_available",
+      "type": "gauge",
+      "labels": ["namespace", "deployment"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: explicit to resolve. Does not itself Match() the recipe (Match keys on status_replicas_available).",
+      "name": "kube_deployment_spec_replicas",
+      "type": "gauge",
+      "labels": ["namespace", "deployment"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: total replicas (not available) — different name.",
+      "name": "kube_deployment_status_replicas",
+      "type": "gauge",
+      "labels": ["namespace", "deployment"]
+    },
+    {
+      "_comment": "Look-alike: unavailable variant — different name.",
+      "name": "kube_deployment_status_replicas_unavailable",
+      "type": "gauge",
+      "labels": ["namespace", "deployment"]
+    },
+    {
+      "_comment": "Look-alike: ReplicaSet — wrong resource kind.",
+      "name": "kube_replicaset_status_replicas_available",
+      "type": "gauge",
+      "labels": ["namespace", "replicaset"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Deployment availability",
+      "query_contains": "sum by (namespace, deployment) (kube_deployment_spec_replicas)",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Deployment availability",
+      "query_contains": "sum by (namespace, deployment) (kube_deployment_status_replicas_available)",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Deployment availability",
+      "query_contains": "sum by (namespace, deployment) (kube_deployment_status_replicas_available) / sum by (namespace, deployment) (kube_deployment_spec_replicas)",
+      "kind": "timeseries"
+    }
+  ]
+}

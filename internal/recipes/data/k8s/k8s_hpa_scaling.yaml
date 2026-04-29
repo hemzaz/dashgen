@@ -1,0 +1,33 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_hpa_scaling
+  section: workloads
+  profile: k8s
+  confidence: 0.90
+  tier: v0.3
+  description: "Horizontal Pod Autoscaler current vs. desired replica counts (kube-state-metrics gauge pair)."
+  tags: [k8s, hpa, kube-state-metrics, pair]
+
+pair_with:
+  suffix_swap: { from_suffix: "_current_replicas", to_suffix: "_desired_replicas" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: kube_horizontalpodautoscaler_status_current_replicas
+
+panels:
+  - title_template: 'HPA scaling (current vs desired)'
+    kind: timeseries
+    unit: short
+    group_by: [namespace, horizontalpodautoscaler]
+    requires_pair: true
+    rationale_template: 'kube-state-metrics pair "{{ .Metric }}" + "{{ .Pair.Name }}"; current and desired replica counts per namespace+HPA.'
+    queries:
+      - query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }})'
+        legend_template: 'current {{ legendFor . }}'
+        unit: short
+      - query_template: 'sum by ({{ groupBy . }}) ({{ .Pair.Name }})'
+        legend_template: 'desired {{ legendFor . }}'
+        unit: short

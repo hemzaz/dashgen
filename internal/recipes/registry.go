@@ -46,7 +46,7 @@ func NewServiceRegistry() *Registry {
 	// service_db_query_latency migrated to YAML (T6A.1) — see data/service/service_db_query_latency.yaml.
 	// service_tls_expiry migrated to YAML (T5.1) — see data/service/service_tls_expiry.yaml.
 	// service_cache_hits migrated to YAML (T5.0.E) — see data/service/service_cache_hits.yaml.
-	r.Register(NewServiceJobSuccess())
+	// service_job_success migrated to YAML (T6A.1) — see data/service/service_job_success.yaml.
 	// service_client_http migrated to YAML (T6A.1) — see data/service/service_client_http.yaml.
 	r.Register(NewServiceDBPool())
 	// service_kafka_consumer_lag migrated to YAML (T5.1) — see data/service/service_kafka_consumer_lag.yaml.
@@ -96,15 +96,15 @@ func NewK8sRegistry() *Registry {
 	// k8s_pod_health migrated to YAML (T1B.1) — see data/k8s/k8s_pod_health.yaml.
 	r.Register(NewK8sContainerResources())
 	// k8s_restarts migrated to YAML (T4A.1) — see data/k8s/k8s_restarts.yaml.
-	r.Register(NewK8sDeploymentAvailability())
+	// k8s_deployment_availability migrated to YAML (T6A.1) — see data/k8s/k8s_deployment_availability.yaml.
 	r.Register(NewK8sNodeConditions())
 	r.Register(NewK8sPVCUsage())
 	// k8s_oom_kills migrated to YAML (T4A.1) — see data/k8s/k8s_oom_kills.yaml.
 	// k8s_apiserver_latency migrated to YAML (T5.1 continuation) — see data/k8s/k8s_apiserver_latency.yaml.
 	// k8s_etcd_commit migrated to YAML (T5.1 continuation) — see data/k8s/k8s_etcd_commit.yaml.
-	r.Register(NewK8sHPAScaling())
+	// k8s_hpa_scaling migrated to YAML (T6A.1) — see data/k8s/k8s_hpa_scaling.yaml.
 	// k8s_scheduler_latency migrated to YAML (T5.1 continuation) — see data/k8s/k8s_scheduler_latency.yaml.
-	r.Register(NewK8sCoreDNS())
+	// k8s_coredns migrated to YAML (T6A.1) — see data/k8s/k8s_coredns.yaml.
 	LoadBuiltinYAMLs(r, "k8s")
 	return r
 }

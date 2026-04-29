@@ -1,0 +1,34 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_coredns
+  section: resources
+  profile: k8s
+  confidence: 0.85
+  tier: v0.3
+  description: "CoreDNS request-latency p95 (histogram) and per-second request rate (counter), grouped by server, zone."
+  tags: [k8s, coredns, dns, latency, histogram]
+
+match:
+  any_of:
+    - { type: histogram, name_equals_any: [coredns_dns_request_duration_seconds, coredns_dns_request_duration_seconds_bucket] }
+    - { type: counter, name_equals: coredns_dns_requests_total }
+
+panels:
+  - title_template: 'CoreDNS request latency (p95)'
+    kind: timeseries
+    unit: s
+    requires_metric_type: histogram
+    preferred_labels: [server, zone]
+    query_template: 'histogram_quantile(0.95, sum by ({{ groupByWithSorted . "le" }}) (rate({{ bucketName .Metric }}[{{ .Window }}])))'
+    legend_template: 'p95 {{ legendFor . }}'
+    rationale_template: 'CoreDNS request latency histogram "{{ .Metric }}"; p95 via histogram_quantile over {{ .Window }} grouped by server, zone, le.'
+
+  - title_template: 'CoreDNS request rate'
+    kind: timeseries
+    unit: reqps
+    requires_metric_type: counter
+    preferred_labels: [server, zone]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'CoreDNS request rate counter "{{ .Metric }}"; per-second rate over {{ .Window }} grouped by server, zone.'

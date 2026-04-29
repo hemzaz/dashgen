@@ -1,0 +1,55 @@
+{
+  "_recipe": "k8s_hpa_scaling",
+  "_comment": "kube-state-metrics gauge pair (HPA current vs desired replicas); emits one panel with two queries (current, desired) summed by namespace+horizontalpodautoscaler.",
+
+  "positive_metrics": [
+    {
+      "name": "kube_horizontalpodautoscaler_status_current_replicas",
+      "type": "gauge",
+      "labels": ["namespace", "horizontalpodautoscaler"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: suffix_swap to resolve. Does not itself Match() the recipe (Match keys on _current_replicas).",
+      "name": "kube_horizontalpodautoscaler_status_desired_replicas",
+      "type": "gauge",
+      "labels": ["namespace", "horizontalpodautoscaler"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: desired-side gauge alone never matches (Match keys on current_replicas).",
+      "name": "kube_horizontalpodautoscaler_status_desired_replicas",
+      "type": "gauge",
+      "labels": ["namespace", "horizontalpodautoscaler"]
+    },
+    {
+      "_comment": "Look-alike: deployment resource is a different controller.",
+      "name": "kube_deployment_spec_replicas",
+      "type": "gauge",
+      "labels": ["namespace", "deployment"]
+    },
+    {
+      "_comment": "Look-alike: counter type with same base name is rejected.",
+      "name": "kube_horizontalpodautoscaler_status_current_replicas",
+      "type": "counter",
+      "labels": ["namespace", "horizontalpodautoscaler"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "HPA scaling (current vs desired)",
+      "query_contains": "sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas)",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "HPA scaling (current vs desired)",
+      "query_contains": "sum by (namespace, horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas)",
+      "kind": "timeseries"
+    }
+  ]
+}

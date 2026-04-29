@@ -1,0 +1,57 @@
+{
+  "_recipe": "k8s_coredns",
+  "_comment": "CoreDNS recipe: histogram metric -> latency p95 panel; counter metric -> request rate panel. Two type-dispatched panels with no pair_with.",
+
+  "positive_metrics": [
+    {
+      "name": "coredns_dns_request_duration_seconds",
+      "type": "histogram",
+      "labels": ["le", "server", "zone"]
+    },
+    {
+      "name": "coredns_dns_requests_total",
+      "type": "counter",
+      "labels": ["server", "zone"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: legacy kube-dns counter must not match.",
+      "name": "kube_dns_responses_total",
+      "type": "counter",
+      "labels": ["instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: coredns health-check duration histogram is a different signal.",
+      "name": "coredns_health_request_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["le", "instance", "job"]
+    },
+    {
+      "_comment": "Look-alike: apiserver latency histogram is a different component entirely.",
+      "name": "apiserver_request_duration_seconds_bucket",
+      "type": "histogram",
+      "labels": ["le", "verb", "resource"]
+    },
+    {
+      "_comment": "Look-alike: correct latency name but wrong type (counter, not histogram).",
+      "name": "coredns_dns_request_duration_seconds",
+      "type": "counter",
+      "labels": ["server", "zone"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "CoreDNS request latency (p95)",
+      "query_contains": "histogram_quantile(0.95, sum by (le, server, zone) (rate(coredns_dns_request_duration_seconds_bucket[5m])))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "CoreDNS request rate",
+      "query_contains": "sum by (server, zone) (rate(coredns_dns_requests_total[5m]))",
+      "kind": "timeseries"
+    }
+  ]
+}

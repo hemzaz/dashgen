@@ -1,0 +1,55 @@
+{
+  "_recipe": "service_job_success",
+  "_comment": "Counter pair <prefix>_jobs_succeeded_total / <prefix>_jobs_failed_total; emits one panel with two queries (success rate, failure rate) in cps.",
+
+  "positive_metrics": [
+    {
+      "name": "worker_jobs_succeeded_total",
+      "type": "counter",
+      "labels": ["instance", "job", "queue"]
+    }
+  ],
+
+  "pair_metrics": [
+    {
+      "_comment": "Pair partner — required for pair_with: suffix_swap to resolve. Does not itself Match() the recipe (Match keys on _jobs_succeeded_total).",
+      "name": "worker_jobs_failed_total",
+      "type": "counter",
+      "labels": ["instance", "job", "queue"]
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: failure-side counter alone never matches (Match keys on succeeded suffix).",
+      "name": "worker_jobs_failed_total",
+      "type": "counter",
+      "labels": ["instance", "job", "queue"]
+    },
+    {
+      "_comment": "Look-alike: shape (B) status-label counter is excluded by suffix.",
+      "name": "jobs_completed_total",
+      "type": "counter",
+      "labels": ["instance", "job", "status"]
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected.",
+      "name": "worker_jobs_succeeded_total",
+      "type": "gauge",
+      "labels": ["instance", "job", "queue"]
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "Jobs success/fail rate: worker",
+      "query_contains": "sum by (instance, job, queue) (rate(worker_jobs_succeeded_total[5m]))",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "Jobs success/fail rate: worker",
+      "query_contains": "sum by (instance, job, queue) (rate(worker_jobs_failed_total[5m]))",
+      "kind": "timeseries"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: k8s_deployment_availability
+  section: workloads
+  profile: k8s
+  confidence: 0.90
+  tier: v0.3
+  description: "Deployment desired vs available replicas (kube-state-metrics gauge pair) plus availability ratio."
+  tags: [k8s, deployment, kube-state-metrics, pair]
+
+pair_with:
+  explicit: { name: "kube_deployment_spec_replicas" }
+  on_missing: omit
+
+match:
+  type: gauge
+  name_equals: kube_deployment_status_replicas_available
+
+panels:
+  - title_template: 'Deployment availability'
+    kind: timeseries
+    unit: short
+    group_by: [namespace, deployment]
+    requires_pair: true
+    rationale_template: 'kube-state-metrics pair "{{ .Pair.Name }}" + "{{ .Metric }}"; desired, available, and availability ratio per namespace+deployment.'
+    queries:
+      - query_template: 'sum by ({{ groupBy . }}) ({{ .Pair.Name }})'
+        legend_template: 'desired {{ legendFor . }}'
+        unit: short
+      - query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }})'
+        legend_template: 'available {{ legendFor . }}'
+        unit: short
+      - query_template: 'sum by ({{ groupBy . }}) ({{ .Metric }}) / sum by ({{ groupBy . }}) ({{ .Pair.Name }})'
+        legend_template: 'ratio {{ legendFor . }}'
+        unit: short

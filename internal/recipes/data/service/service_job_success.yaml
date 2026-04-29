@@ -1,0 +1,33 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: service_job_success
+  section: errors
+  profile: service
+  confidence: 0.80
+  tier: v0.3
+  description: "Background-job success vs. failure rate from a counter pair (<prefix>_jobs_succeeded_total / <prefix>_jobs_failed_total)."
+  tags: [jobs, errors, pair]
+
+pair_with:
+  suffix_swap: { from_suffix: "_jobs_succeeded_total", to_suffix: "_jobs_failed_total" }
+  on_missing: warn
+
+match:
+  type: counter
+  name_has_suffix: "_jobs_succeeded_total"
+
+panels:
+  - title_template: 'Jobs success/fail rate: {{ stripSuffix .Metric "_jobs_succeeded_total" }}'
+    kind: timeseries
+    unit: cps
+    preferred_labels: [queue, handler]
+    requires_pair: true
+    rationale_template: 'job success/failure pair {{ .Metric }} / {{ .Pair.Name }}: rates per second per ({{ groupBy . }}).'
+    queries:
+      - query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+        legend_template: '{{ legendFor . }} success'
+        unit: cps
+      - query_template: 'sum by ({{ groupBy . }}) (rate({{ .Pair.Name }}[{{ .Window }}]))'
+        legend_template: '{{ legendFor . }} failure'
+        unit: cps
