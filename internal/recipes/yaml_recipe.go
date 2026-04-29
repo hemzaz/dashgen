@@ -247,7 +247,7 @@ func (y *YAMLRecipe) BuildPanels(snapshot ClassifiedInventorySnapshot, p profile
 			// baseCtx, so .Quantile* fields are empty). query_template and
 			// legend_template are quantile-aware (rendered per-quantile with
 			// .Quantile / .Quantile2 / .Quantile100 set).
-			titleStr, err := y.titleTmpls[i].Render(baseCtx)
+			titleStr, err := y.renderTitle(i, panel, baseCtx, m)
 			if err != nil {
 				continue
 			}
@@ -364,6 +364,19 @@ func formatQuantile100(q float64) string {
 	return strconv.Itoa(int(q*100 + 0.5))
 }
 
+// renderTitle returns the panel title for metric m. If the panel declares
+// title_per_metric and m's name is a key, the mapped value is used verbatim;
+// otherwise the indexed title template is rendered against ctx. Centralizing
+// the lookup keeps the two BuildPanels paths (quantile / non-quantile) in
+// sync. The map lookup is O(1) and deterministic — keys are pre-validated
+// ASCII metric names by the CUE schema.
+func (y *YAMLRecipe) renderTitle(i int, panel PanelTemplate, ctx RenderContext, m ClassifiedMetricView) (string, error) {
+	if t, ok := panel.TitlePerMetric[m.Descriptor.Name]; ok {
+		return t, nil
+	}
+	return y.titleTmpls[i].Render(ctx)
+}
+
 // renderSinglePanel renders one ir.Panel from the i-th panel template under
 // ctx. Returns (panel, true) on success or (zero, false) if any template
 // render failed. Used by the non-quantile path; the quantile path inlines
@@ -376,7 +389,7 @@ func (y *YAMLRecipe) renderSinglePanel(
 	group []string,
 	pair *PairContext,
 ) (ir.Panel, bool) {
-	title, err := y.titleTmpls[i].Render(ctx)
+	title, err := y.renderTitle(i, panel, ctx, m)
 	if err != nil {
 		return ir.Panel{}, false
 	}

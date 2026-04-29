@@ -1,0 +1,56 @@
+{
+  "_recipe": "infra_nic_errors",
+  "_comment": "Exact name match on the four node_exporter NIC error/drop counters; rate yields per-second NIC errors.",
+
+  "positive_metrics": [
+    {
+      "name": "node_network_receive_errs_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "name": "node_network_transmit_drop_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "negative_metrics": [
+    {
+      "_comment": "Look-alike: bytes throughput counter belongs to infra_network, not nic_errors.",
+      "name": "node_network_receive_bytes_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: packets counter is not an error/drop metric.",
+      "name": "node_network_transmit_packets_total",
+      "type": "counter",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    },
+    {
+      "_comment": "Look-alike: gauge type is rejected by type predicate.",
+      "name": "node_network_receive_errs_total",
+      "type": "gauge",
+      "labels": ["device", "instance", "job"],
+      "traits": []
+    }
+  ],
+
+  "expected_panels": [
+    {
+      "title_contains": "NIC RX errors",
+      "query_contains": "rate(node_network_receive_errs_total[5m])",
+      "kind": "timeseries"
+    },
+    {
+      "title_contains": "NIC TX drops",
+      "query_contains": "rate(node_network_transmit_drop_total[5m])",
+      "kind": "timeseries"
+    }
+  ]
+}

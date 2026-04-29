@@ -1,0 +1,32 @@
+apiVersion: dashgen.io/v1
+kind: Recipe
+metadata:
+  name: infra_nic_errors
+  section: network
+  profile: infra
+  confidence: 0.85
+  tier: v0.3
+  description: "Per-NIC error and drop rates from node_exporter receive/transmit error and drop counters."
+  tags: [network, errors, node_exporter, counter]
+
+match:
+  type: counter
+  name_equals_any:
+    - node_network_receive_errs_total
+    - node_network_receive_drop_total
+    - node_network_transmit_errs_total
+    - node_network_transmit_drop_total
+
+panels:
+  - title_template: 'NIC error rate'
+    title_per_metric:
+      node_network_receive_errs_total: NIC RX errors
+      node_network_receive_drop_total: NIC RX drops
+      node_network_transmit_errs_total: NIC TX errors
+      node_network_transmit_drop_total: NIC TX drops
+    kind: timeseries
+    unit: cps
+    group_by: [instance, device]
+    query_template: 'sum by ({{ groupBy . }}) (rate({{ .Metric }}[{{ .Window }}]))'
+    legend_template: '{{ legendFor . }}'
+    rationale_template: 'node_exporter counter "{{ .Metric }}"; rate over {{ .Window }} per instance+device.'

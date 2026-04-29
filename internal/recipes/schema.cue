@@ -183,6 +183,16 @@ import (
 	//                 bound parse-time work. AST-node budget + forbidden-
 	//                 directive walk are loader-side (Phase 1A T1A.3).
 	title_template: string & strings.MaxRunes(160)
+
+	// Optional per-metric title override. When the matched metric's name is a
+	// key in this map, the loader uses the mapped string verbatim as the
+	// panel title instead of rendering title_template. Required for Go
+	// recipes whose if/else branching over fixed metric-name sets exceeds
+	// the 160-rune title_template cap (e.g. infra_nic_errors's 4 metrics).
+	// Each value is a literal title (no templating); both keys and values
+	// are bounded by the same 160-rune redaction cap as title_template.
+	title_per_metric?: [#MetricNameASCII]: string & strings.MaxRunes(160)
+
 	kind:           "timeseries" | "stat" | "gauge" | "barchart" | *"timeseries"
 	unit:           #Unit
 	query_template: string & strings.MaxRunes(2048)

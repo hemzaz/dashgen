@@ -181,18 +181,19 @@ type MatchPredicate struct {
 // PanelTemplate is one rendered output unit in a recipe (CUE:
 // #PanelTemplate).
 type PanelTemplate struct {
-	TitleTemplate      string    `json:"title_template"`
-	Kind               string    `json:"kind,omitempty"`
-	Unit               string    `json:"unit"`
-	QueryTemplate      string    `json:"query_template"`
-	LegendTemplate     string    `json:"legend_template"`
-	RationaleTemplate  string    `json:"rationale_template,omitempty"`
-	GroupBy            []string  `json:"group_by,omitempty"`
-	PreferredLabels    []string  `json:"preferred_labels,omitempty"`
-	RateWindow         string    `json:"rate_window,omitempty"`
-	Quantiles          []float64 `json:"quantiles,omitempty"`
-	RequiresPair       bool      `json:"requires_pair,omitempty"`
-	RequiresMetricType string    `json:"requires_metric_type,omitempty"`
+	TitleTemplate      string            `json:"title_template"`
+	TitlePerMetric     map[string]string `json:"title_per_metric,omitempty"`
+	Kind               string            `json:"kind,omitempty"`
+	Unit               string            `json:"unit"`
+	QueryTemplate      string            `json:"query_template"`
+	LegendTemplate     string            `json:"legend_template"`
+	RationaleTemplate  string            `json:"rationale_template,omitempty"`
+	GroupBy            []string          `json:"group_by,omitempty"`
+	PreferredLabels    []string          `json:"preferred_labels,omitempty"`
+	RateWindow         string            `json:"rate_window,omitempty"`
+	Quantiles          []float64         `json:"quantiles,omitempty"`
+	RequiresPair       bool              `json:"requires_pair,omitempty"`
+	RequiresMetricType string            `json:"requires_metric_type,omitempty"`
 }
 
 // PairSpec describes a multi-metric join (DSL §8). Exactly one of

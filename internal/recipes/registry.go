@@ -73,7 +73,7 @@ func NewInfraRegistry() *Registry {
 	// infra_load migrated to YAML (T4A.1) — see data/infra/infra_load.yaml.
 	r.Register(NewInfraFilesystemUsage())
 	r.Register(NewInfraFileDescriptors())
-	r.Register(NewInfraNICErrors())
+	// infra_nic_errors migrated to YAML (T5.0.B) — see data/infra/infra_nic_errors.yaml.
 	r.Register(NewInfraConntrack())
 	// infra_disk_iops migrated to YAML (T5.1) — see data/infra/infra_disk_iops.yaml.
 	r.Register(NewInfraDiskIOLatency())
