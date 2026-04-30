@@ -3,8 +3,9 @@
 `dashgen coverage --fixture-dir <dir>` reports which inventory metrics a
 dashboard covers, which it doesn't, and how the uncovered metrics
 cluster by family. It runs deterministically and offline; the
-unknown-family clustering is **naive string-prefix** grouping (the AI
-version lands in v0.2 Phase 5 behind `--enrich unknown-grouping`).
+unknown-family clustering is **naive string-prefix** grouping. (An AI
+clustering variant was scoped as v0.2 Phase 5 but did not ship in v0.2
+or v0.3; deferred until concrete demand surfaces.)
 
 ## Synopsis
 
@@ -86,9 +87,10 @@ families even though they share an exporter. Operators reading the
 report can collapse families themselves; the deterministic grouping
 just gives them a starting point.
 
-The AI version of family grouping (v0.2 Phase 5) clusters by semantic
-similarity instead of string prefix and proposes section names. It is
-opt-in only behind `--enrich unknown-grouping`.
+An AI version of family grouping was originally scoped as v0.2 Phase 5
+(cluster by semantic similarity, propose section names, opt-in behind
+`--enrich unknown-grouping`). It did not ship in v0.2 or v0.3 and is
+deferred until demand justifies the AI-trust surface.
 
 ## Exit codes
 

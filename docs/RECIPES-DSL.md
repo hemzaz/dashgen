@@ -11,7 +11,8 @@
 
 ## 0. TL;DR
 
-Move all 44 recipes out of Go and into a hybrid authoring layer:
+All 47 recipes live in a hybrid authoring layer (44 v0.2 Go recipes
+migrated + 3 deliberate Tier-C splits):
 
 - **Wire format:** YAML files, one recipe per file.
 - **Schema:** declared in CUE (`internal/recipes/schema.cue`); validated at load time via `cuelang.org/go/cue`.
@@ -21,7 +22,7 @@ Move all 44 recipes out of Go and into a hybrid authoring layer:
 - **Tier-C migration:** schema accepts a bounded set of join primitives (`pair_with: { suffix_swap, prefix_swap, explicit }`) that cover every multi-metric pattern in the existing catalog (filesystem usage, db pool, job success, cache hits, gc pause type-dispatch, k8s pairs). No "if this look at that" general logic; only the patterns that already exist.
 - **Determinism:** preserved end-to-end. Same inventory + same recipe set ⇒ byte-identical output.
 
-The strategic shift: BIG_ROCKS optimized for maintainer simplicity; this spec optimizes for user-population growth. Different objective functions; the v0.3 phase chooses the second.
+The strategic shift (now historical): the original `BIG_ROCKS.md` analysis recommended staying in Go for maintainer simplicity; v0.3 chose user-population growth instead. See [`BIG_ROCKS.md §B`](BIG_ROCKS.md) for the closed debate.
 
 ---
 
