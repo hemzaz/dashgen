@@ -12,10 +12,10 @@ The goal is not to design for every future feature today.
 The goal is to make likely future changes cheap without making current implementation blurry.
 
 This document should be read together with:
-- [PRODUCT_DOC.md](/Users/elad/PROJ/dashgen/PRODUCT_DOC.md)
-- [ARCHITECTURE.md](/Users/elad/PROJ/dashgen/ARCHITECTURE.md)
-- [SPECS.md](/Users/elad/PROJ/dashgen/SPECS.md)
-- [ADVERSARY.md](/Users/elad/PROJ/dashgen/ADVERSARY.md)
+- [PRODUCT_DOC.md](PRODUCT_DOC.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [SPECS.md](SPECS.md)
+- [ADVERSARY.md](ADVERSARY.md)
 
 ## 1. Design Goals
 The repository should optimize for:

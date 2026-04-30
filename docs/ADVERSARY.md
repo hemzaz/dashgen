@@ -13,9 +13,10 @@ It asks:
 - where are we underspecified and pretending otherwise?
 
 This file should be used alongside:
-- [PRODUCT_DOC.md](/Users/elad/PROJ/dashgen/PRODUCT_DOC.md)
-- [ARCHITECTURE.md](/Users/elad/PROJ/dashgen/ARCHITECTURE.md)
-- [SPECS.md](/Users/elad/PROJ/dashgen/SPECS.md)
+- [PRODUCT_DOC.md](PRODUCT_DOC.md) — product scope + release gates
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system design, validation architecture
+- [SPECS.md](SPECS.md) — non-negotiables, determinism contract
+- [RECIPES-DSL-ADVERSARY.md](RECIPES-DSL-ADVERSARY.md) — DSL-specific threat model (T7.1 implemented)
 
 ## 1. Adversarial Posture
 Assume the following:

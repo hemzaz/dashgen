@@ -83,21 +83,25 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 |---|---|
 | [`docs/CODEBASE_MAP.md`](docs/CODEBASE_MAP.md) | **Start here.** Architecture, recipe catalog, fixture layout, navigation cheatsheet. |
 | [`docs/PRODUCT_DOC.md`](docs/PRODUCT_DOC.md) | Product scope + release gates (owns what ships in each stage). |
-| [`docs/SPECS.md`](docs/SPECS.md) | v0.1 execution contract — non-negotiables, validation pipeline, Rule 5. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design + package responsibilities. |
-| [`docs/STRUCTURE.md`](docs/STRUCTURE.md) | Repo layout + dependency direction. |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Staged timeline + cross-stage rules. |
-| [`docs/RECIPES.md`](docs/RECIPES.md) | Recipe catalog + authoring contract + test matrix (current Go-recipe contract). |
-| [`docs/RECIPES-DSL.md`](docs/RECIPES-DSL.md) | **v0.3 DRAFT.** YAML wire + CUE schema + text/template runtime spec; full migration plan for all 44 → 47 recipes. Supersedes the Go-recipe contract once Phase 0 of the DSL plan ships. |
-| [`docs/RECIPES-DSL-ADVERSARY.md`](docs/RECIPES-DSL-ADVERSARY.md) | **v0.3 DRAFT.** DSL threat model: 20 threats, 15 invariants, adversary corpus, reviewer checklist. |
-| [`docs/RECIPES-CLI.md`](docs/RECIPES-CLI.md) | **v0.3 DRAFT.** `dashgen recipe ...` 8-subcommand spec (init / scaffold / lint / list / show / test / explain / diff) + 10-threat CLI adversary catalog. |
-| [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md) | v0.2 enrichment contract + AI boundary + phased delivery. |
-| [`docs/V0.2-REMAINDER.md`](docs/V0.2-REMAINDER.md) | v0.2 RALPLAN-DR consensus implementation plan (historical; everything in scope shipped at v0.2.0). |
-| [`docs/V0.3-PLAN.md`](docs/V0.3-PLAN.md) | **v0.3 implementation plan** — 8-phase rollout for the recipe DSL migration with team assignments, per-task DoD, risk register, release acceptance criteria. Companion to the three RECIPES-DSL specs above. |
-| [`docs/lint.md`](docs/lint.md) | `dashgen lint` check catalog + JSON output schema (Phase 6). |
-| [`docs/coverage.md`](docs/coverage.md) | `dashgen coverage` report schema + family-grouping behavior (Phase 6). |
-| [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
-| [`docs/PRD.md`](docs/PRD.md) | Historical PRD; superseded by `PRODUCT_DOC.md`. |
+| [`docs/CODEBASE_MAP.md`](docs/CODEBASE_MAP.md) | Current repo snapshot — package layout, file inventory, navigation cheatsheet. |
+| [`docs/SPECS.md`](docs/SPECS.md) | Non-negotiables, validation pipeline, determinism contract, definition-of-done. Written pre-v0.1; principles still load-bearing. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Determinism strategy, 5-stage validation architecture, safety + render boundaries, package responsibilities. |
+| [`docs/STRUCTURE.md`](docs/STRUCTURE.md) | Repo layout + maintainability rules + Final Structural Rule ("make the next obvious feature easy"). |
+| [`docs/RECIPES.md`](docs/RECIPES.md) | Recipe authoring contract (v0.3+ YAML). Built-in catalog + schema gist. |
+| [`docs/RECIPES-USER-GUIDE.md`](docs/RECIPES-USER-GUIDE.md) | Beginner walkthrough — install, init, scaffold, lint, test, override; 3 worked examples. |
+| [`docs/RECIPES-DSL.md`](docs/RECIPES-DSL.md) | YAML wire + CUE schema + text/template runtime spec (SHIPPED v0.3.0). |
+| [`docs/RECIPES-DSL-ADVERSARY.md`](docs/RECIPES-DSL-ADVERSARY.md) | DSL threat model: 20 threats + invariants (T7.1 implemented). |
+| [`docs/RECIPES-DSL-HELPERS.md`](docs/RECIPES-DSL-HELPERS.md) | Closed `text/template` FuncMap + RenderContext spec. |
+| [`docs/RECIPES-CLI.md`](docs/RECIPES-CLI.md) | `dashgen recipe ...` 8-subcommand spec + 10-threat CLI adversary catalog (T7.2 implemented). |
+| [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md) | v0.2 plan — closed historical (v0.2.0 shipped). |
+| [`docs/V0.3-PLAN.md`](docs/V0.3-PLAN.md) | v0.3 implementation plan — closed historical (v0.3.0 shipped); preserved as execution record. |
+| [`docs/V0.3-PHASE-0-REVIEW.md`](docs/V0.3-PHASE-0-REVIEW.md) | Phase 0 critic review (frozen artifact). |
+| [`docs/V0.3.0-VERIFICATION-REPORT.md`](docs/V0.3.0-VERIFICATION-REPORT.md) | v0.3.0 release verifier sign-off (frozen artifact). |
+| [`docs/V0.4-QUEUE.md`](docs/V0.4-QUEUE.md) | v0.4 small-item queue (active). |
+| [`docs/lint.md`](docs/lint.md) | `dashgen lint` check catalog + JSON output schema. |
+| [`docs/coverage.md`](docs/coverage.md) | `dashgen coverage` report schema + family-grouping behavior. |
+| [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Project-wide trust validation + code review checklist. |
 | [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) | AI provider setup, redaction contract, extension contract. |
 | [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) | Strategic-revisit doc: §A v0.4+ rocks (specs + adversary specs for `dashgen publish`, heatmaps, pair-overlay, foundation-sdk migration, namespace grouping, template variables, alerts) + §B historical postscript on the v0.2→v0.3 authoring debate. Each rock has its own forcing function. |
 

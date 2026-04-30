@@ -11,8 +11,8 @@ It is designed for "vibe coding" with guardrails:
 - treat determinism, safety, and reviewability as non-negotiable
 
 This file is derived from:
-- [PRODUCT_DOC.md](/Users/elad/PROJ/dashgen/PRODUCT_DOC.md)
-- [ARCHITECTURE.md](/Users/elad/PROJ/dashgen/ARCHITECTURE.md)
+- [PRODUCT_DOC.md](PRODUCT_DOC.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## 1. Product Contract
 DashGen is:

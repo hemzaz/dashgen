@@ -424,24 +424,26 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 |-----|-------------------|
 | `README.md` | User-facing quickstart; CLI flags |
 | `docs/PRODUCT_DOC.md` | **Product scope + release gates** (owns what ships in each stage) |
-| `docs/SPECS.md` | **v0.1 execution contract** (non-negotiables, validation pipeline, Rule 5) |
-| `docs/ARCHITECTURE.md` | **System design + package responsibilities** |
-| `docs/STRUCTURE.md` | **Repo layout + dependency direction** |
 | `docs/ROADMAP.md` | Staged timeline + cross-stage rules |
+| `docs/SPECS.md` | Non-negotiables, validation pipeline, determinism contract, definition-of-done |
+| `docs/ARCHITECTURE.md` | Determinism strategy, 5-stage validation architecture, safety + render boundaries |
+| `docs/STRUCTURE.md` | Repo layout + maintainability rules + Final Structural Rule |
 | `docs/RECIPES.md` | **Recipe authoring contract (v0.3+ YAML)** — replaces the Go-recipe contract |
 | `docs/RECIPES-USER-GUIDE.md` | **Beginner walkthrough** — install, init, scaffold, lint, test, override; 3 worked examples |
-| `docs/V0.2-PLAN.md` | **v0.2 enrichment contract + AI boundary + phased delivery** |
-| `docs/V0.2-REMAINDER.md` | v0.2 RALPLAN-DR consensus plan (historical; v0.2.0 shipped) |
-| `docs/V0.3-PLAN.md` | **v0.3 implementation plan** — 8-phase rollout, team assignments, per-task DoD, risk register, release-level acceptance |
-| `docs/RECIPES-DSL.md` | **v0.3 DRAFT.** YAML wire + CUE schema + text/template runtime; migration plan for all 44 → 47 recipes; supersedes the Go-recipe authoring contract once Phase 0 ships |
-| `docs/RECIPES-DSL-ADVERSARY.md` | **v0.3 DRAFT.** DSL threat model: 20 threats, 15 invariants, adversary corpus, reviewer audit checklist |
-| `docs/RECIPES-CLI.md` | **v0.3 DRAFT.** `dashgen recipe ...` 8-subcommand surface (init / scaffold / lint / list / show / test / explain / diff) + 10 CLI-surface threats |
-| `docs/AI-PROVIDERS.md` | **Anthropic + OpenAI + ollama provider matrix:** setup, env vars, default models, redaction contract, cache behavior, failure modes |
-| `docs/lint.md` | `dashgen lint` check catalog + JSON output schema (Phase 6) |
-| `docs/coverage.md` | `dashgen coverage` report schema + family-grouping behavior (Phase 6) |
+| `docs/RECIPES-DSL.md` | YAML wire + CUE schema + text/template runtime spec (SHIPPED v0.3.0) |
+| `docs/RECIPES-DSL-HELPERS.md` | Closed `text/template` FuncMap + RenderContext spec |
+| `docs/RECIPES-DSL-ADVERSARY.md` | DSL threat model: 20 threats + invariant I16 (T7.1 implemented) |
+| `docs/RECIPES-CLI.md` | `dashgen recipe ...` 8-subcommand surface (init / scaffold / lint / list / show / test / explain / diff) + 10-threat CLI adversary catalog (T7.2 implemented) |
+| `docs/V0.2-PLAN.md` | v0.2 plan — closed historical (v0.2.0 shipped) |
+| `docs/V0.3-PLAN.md` | v0.3 implementation plan — closed historical (v0.3.0 shipped); preserved as execution record |
+| `docs/V0.3-PHASE-0-REVIEW.md` | Phase 0 critic review (frozen artifact) |
+| `docs/V0.3.0-VERIFICATION-REPORT.md` | v0.3.0 release verifier sign-off (frozen artifact) |
+| `docs/V0.4-QUEUE.md` | v0.4 small-item queue (active) |
+| `docs/AI-PROVIDERS.md` | **Anthropic + OpenAI provider matrix:** setup, env vars, default models, redaction contract, cache behavior, failure modes (ollama deferred post-v0.3) |
+| `docs/lint.md` | `dashgen lint` check catalog + JSON output schema |
+| `docs/coverage.md` | `dashgen coverage` report schema + family-grouping behavior |
 | `docs/BIG_ROCKS.md` | Strategic-revisit doc: §A v0.4+ specs + adversary specs (publish, heatmaps, pair-overlay, foundation-sdk, namespace grouping, template variables, alerts); §B historical postscript on the closed v0.2→v0.3 authoring debate. |
-| `docs/ADVERSARY.md` | **Trust validation + code review checklist** |
-| `docs/PRD.md` | Historical PRD; superseded by PRODUCT_DOC |
+| `docs/ADVERSARY.md` | **Project-wide trust validation + code review checklist** |
 | `CLAUDE.md` | LLM coding guidelines |
 | `CONTRIBUTING.md` | PR checklist + commit style |
 

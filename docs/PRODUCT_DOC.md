@@ -2,8 +2,8 @@
 
 ## Document Status
 - Product: DashGen
-- Status: consolidated draft
-- Sources merged: `PRD.md`, `ROADMAP.md`
+- Status: consolidated source of truth (v0.3.0 shipped 2026-04-29)
+- Sources merged: original kickoff PRD + roadmap (predecessor docs retired)
 - Purpose: one clear source of truth for product scope, principles, roadmap, and release gates
 
 ## 1. Product Summary
