@@ -1,9 +1,11 @@
 # DashGen Recipe DSL — v0.3 Specification
 
-> Status: DRAFT (2026-04-27). Not yet implemented. Supersedes the
-> "stay in Go" conclusion of `BIG_ROCKS.md` once the open questions
-> in §16 resolve. Companion adversary spec:
+> Status: SHIPPED (v0.3.0, 2026-04-29). All 47 recipes load from this
+> schema; zero `internal/recipes/<name>.go` files remain. The §16 open
+> questions are now resolved (recorded in `V0.3-PHASE-0-REVIEW.md`).
+> Companion adversary spec:
 > [`RECIPES-DSL-ADVERSARY.md`](RECIPES-DSL-ADVERSARY.md).
+> Historical context: [`BIG_ROCKS.md`](BIG_ROCKS.md) §B.
 
 ---
 
@@ -1200,9 +1202,11 @@ Existing `TestDiscrimination_<Profile><Class>Realistic` tests run unchanged. The
 
 ---
 
-## 16. Open Questions
+## 16. Open Questions (resolved)
 
-These must resolve before Phase 1 starts:
+The following questions were live during v0.3 design and were resolved before
+Phase 1A. Resolutions are recorded in [`V0.3-PHASE-0-REVIEW.md`](V0.3-PHASE-0-REVIEW.md).
+Preserved here for historical context:
 
 - [ ] **CUE library version.** Pin to a specific minor version of `cuelang.org/go`. Survey current upstream stability; pin to most recent compatible with Go 1.25.
 - [ ] **Schema v1 freeze.** Once Phase 1 ships, the v1 schema is the public contract. Any breaking change requires a v2 sibling. Confirm willingness to commit.

@@ -1,10 +1,11 @@
 # DashGen Recipe DSL — Helper Namespace + RenderContext
 
-> Status: DRAFT (2026-04-27). Phase 0 deliverable T0.2. Locks the closed
-> `text/template.FuncMap` and the `RenderContext` struct that
-> `query_template`, `legend_template`, and `title_template` strings are
-> rendered against. The schema in `internal/recipes/schema.cue` (T0.1)
-> references helpers by name; this doc pins what those names mean.
+> Status: SHIPPED (v0.3.0, 2026-04-29). The closed
+> `text/template.FuncMap` is locked and used in production by all 47
+> recipes; `RenderContext` is defined in `internal/recipes/template.go`.
+> Schema in `internal/recipes/schema.cue` references helpers by name;
+> this doc pins what those names mean. Helper-namespace evolution is
+> governed via the process described in [`V0.4-QUEUE.md §3.4`](V0.4-QUEUE.md).
 >
 > Companion specs:
 > - [`RECIPES-DSL.md`](RECIPES-DSL.md) §7 — template engine spec.

@@ -29,7 +29,7 @@ selections, validation verdicts, panel UIDs, and section ordering are identical 
 |----------|--------|--------------|---------------|------------------|
 | `anthropic` | Shipped (v0.2 Phase 3) | `ANTHROPIC_API_KEY` | `claude-opus-4-7` | `https://api.anthropic.com` |
 | `openai` | Shipped (v0.2 Phase 4) | `OPENAI_API_KEY` | `gpt-5` | `https://api.openai.com` |
-| `ollama` | Placeholder (v0.3 backlog) | n/a | TBD | localhost only when shipped |
+| `ollama` | Placeholder (deferred post-v0.3) | n/a | TBD | localhost only when shipped |
 
 ## Anthropic setup
 

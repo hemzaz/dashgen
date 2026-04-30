@@ -439,7 +439,7 @@ Both providers share defaults: 1024 max tokens, 30s HTTP timeout, 1 retry (10ms 
 | `docs/AI-PROVIDERS.md` | **Anthropic + OpenAI + ollama provider matrix:** setup, env vars, default models, redaction contract, cache behavior, failure modes |
 | `docs/lint.md` | `dashgen lint` check catalog + JSON output schema (Phase 6) |
 | `docs/coverage.md` | `dashgen coverage` report schema + family-grouping behavior (Phase 6) |
-| `docs/BIG_ROCKS.md` | Strategic-revisit doc on recipe authoring & user extensibility (revisit when forcing functions in §9 fire); v0.3+ scaffolder + contrib path |
+| `docs/BIG_ROCKS.md` | Strategic-revisit doc: §A v0.4+ specs + adversary specs (publish, heatmaps, pair-overlay, foundation-sdk, namespace grouping, template variables, alerts); §B historical postscript on the closed v0.2→v0.3 authoring debate. |
 | `docs/ADVERSARY.md` | **Trust validation + code review checklist** |
 | `docs/PRD.md` | Historical PRD; superseded by PRODUCT_DOC |
 | `CLAUDE.md` | LLM coding guidelines |

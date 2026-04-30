@@ -1,9 +1,12 @@
 # DashGen Recipe DSL — Adversary Specification
 
-> Status: DRAFT (2026-04-27). Companion to [`RECIPES-DSL.md`](RECIPES-DSL.md).
-> Defines the threat model for the YAML wire format + CUE schema + text/template
-> runtime described there. Pairs with the project-wide trust doc
-> [`ADVERSARY.md`](ADVERSARY.md), which covers higher-level trust boundaries.
+> Status: SHIPPED (v0.3.0, 2026-04-29). All 20 documented adversary
+> fixtures plus invariant I16 are implemented in
+> `internal/recipes/adversary_test.go` with mitigation traceability via
+> `// adversary: T<n>` annotations (T7.1). Companion to
+> [`RECIPES-DSL.md`](RECIPES-DSL.md). Pairs with the project-wide trust
+> doc [`ADVERSARY.md`](ADVERSARY.md). The CLI threat catalog is in
+> [`RECIPES-CLI.md §9.4`](RECIPES-CLI.md) (T7.2 implements those).
 
 ---
 

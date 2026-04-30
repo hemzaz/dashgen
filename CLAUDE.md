@@ -99,7 +99,7 @@ All long-form docs live under `docs/` (root holds only `README.md`, `CONTRIBUTIN
 | [`docs/ADVERSARY.md`](docs/ADVERSARY.md) | Trust validation + code review checklist. |
 | [`docs/PRD.md`](docs/PRD.md) | Historical PRD; superseded by `PRODUCT_DOC.md`. |
 | [`docs/AI-PROVIDERS.md`](docs/AI-PROVIDERS.md) | AI provider setup, redaction contract, extension contract. |
-| [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) | Strategic-revisit doc on recipe authoring & user extensibility (revisit when forcing functions in §9 fire). |
+| [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) | Strategic-revisit doc: §A v0.4+ rocks (specs + adversary specs for `dashgen publish`, heatmaps, pair-overlay, foundation-sdk migration, namespace grouping, template variables, alerts) + §B historical postscript on the v0.2→v0.3 authoring debate. Each rock has its own forcing function. |
 
 All v0.2 and v0.3 design + implementation plans live under `docs/` as tracked content (see the index above).
 

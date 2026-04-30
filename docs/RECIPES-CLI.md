@@ -1,9 +1,10 @@
 # DashGen Recipe Authoring CLI — Specification
 
-> Status: DRAFT (2026-04-27). Companion to [`RECIPES-DSL.md`](RECIPES-DSL.md)
-> and [`RECIPES-DSL-ADVERSARY.md`](RECIPES-DSL-ADVERSARY.md).
-> Specifies the `dashgen recipe ...` subcommand surface for maintaining,
-> creating, linting, and testing recipes.
+> Status: SHIPPED (v0.3.0, 2026-04-29). All 8 `dashgen recipe ...`
+> subcommands (init/scaffold/lint/list/show/test/explain/diff) are
+> implemented; CLI adversary corpus (10 fixtures) implemented in T7.2.
+> Companion specs: [`RECIPES-DSL.md`](RECIPES-DSL.md),
+> [`RECIPES-DSL-ADVERSARY.md`](RECIPES-DSL-ADVERSARY.md).
 
 ---
 
@@ -711,9 +712,10 @@ Phases A–B can ship independently of the DSL phases (they only need the loader
 
 ---
 
-## 12. Open Questions
+## 12. Open Questions (resolved)
 
-These must resolve before Phase B starts:
+These were live during v0.3 design and were resolved before the CLI shipped.
+Preserved here for historical context:
 
 - [ ] **JSON output stability.** Should the JSON output schemas be versioned (e.g. `version: 1` in every JSON output)? Default position: yes, but only ≥1.0 once we ship a stable contract.
 - [ ] **Color output detection.** Do we use `mattn/go-isatty` or roll our own? Default: use stdlib `os.Stdout.Stat` mode-bit check + `--no-color` override.

@@ -294,21 +294,32 @@ the same lookup the `--fixture-dir` backend uses at replay time.
 - **v0.1** (shipped): deterministic core, three profiles, three CLI
   commands, three-file output. Validated end-to-end against the public
   Prometheus demo + Grafana.
-- **v0.2** (current): optional AI enrichment (titles + rationale) behind a
+- **v0.2** (shipped): optional AI enrichment (titles + rationale) behind a
   `--provider` flag (`anthropic` and `openai` both live, shared redaction
-  contract and on-disk cache), expanded recipe catalog (44 recipes across
-  service / infra / k8s profiles), `dashgen lint` (offline bundle audit, seven
-  check classes) and `dashgen coverage` (metrics coverage report). Detailed
-  plan in [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md); recipe catalog in
-  [`docs/RECIPES.md`](docs/RECIPES.md). Stage definitions in
+  contract and on-disk cache), expanded recipe catalog, `dashgen lint`
+  (offline bundle audit, seven check classes) and `dashgen coverage`
+  (metrics coverage report). Detailed plan in
+  [`docs/V0.2-PLAN.md`](docs/V0.2-PLAN.md); stage definitions in
   [`docs/ROADMAP.md`](docs/ROADMAP.md).
-- **v0.3** (planned): unknown-family metric grouping, user-extensible recipe
-  catalog, and further enrichment improvements.
+- **v0.3** (shipped, current — 2026-04-29): YAML+CUE+text/template recipe
+  DSL replacing the per-recipe Go authoring contract; 47 YAML recipes (up
+  from 44 Go recipes); `dashgen recipe ...` subcommand group with 8
+  sub-verbs (init/scaffold/lint/list/show/test/explain/diff);
+  `--recipes-dir` flag and `$XDG_CONFIG_HOME/dashgen/recipes/`
+  user-extensibility (zero rebuild); 30 adversary tests across DSL + CLI;
+  performance benchmarks with budget assertions; pre-built binaries for
+  darwin/linux × amd64/arm64. Spec: [`docs/RECIPES-DSL.md`](docs/RECIPES-DSL.md);
+  authoring guide: [`docs/RECIPES-USER-GUIDE.md`](docs/RECIPES-USER-GUIDE.md);
+  release notes: [`CHANGELOG.md`](CHANGELOG.md).
+- **v0.4** (queued): direct Grafana publish, template variables, heatmap
+  panels, threshold overlays. See [`docs/V0.4-QUEUE.md`](docs/V0.4-QUEUE.md)
+  for small items and [`docs/BIG_ROCKS.md`](docs/BIG_ROCKS.md) for the
+  larger speculative rocks.
 
-AI enrichment in v0.2 is strictly non-overriding: it cannot generate
-PromQL, cannot upgrade a refused verdict, and cannot bypass the
-validation pipeline. Every run with a populated cache is byte-identical
-to the last.
+AI enrichment is strictly non-overriding: it cannot generate PromQL,
+cannot upgrade a refused verdict, and cannot bypass the validation
+pipeline. Every run with a populated cache is byte-identical to the
+last.
 
 ## License
 
